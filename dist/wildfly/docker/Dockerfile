@@ -1,4 +1,4 @@
-# WildFly with OpenShift.
+# JBoss WildFly with openshift.KUBE_PING impl.
 # Name: 10.245.2.2:5000/dward/wildfly-openshift:v1
 
 # Use latest jboss/base-jdk:7 image as the base

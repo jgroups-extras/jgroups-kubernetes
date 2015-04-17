@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.openshift.ping</groupId>
+        <artifactId>openshift-ping-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <groupId>org.openshift.ping.examples</groupId>
+    <artifactId>openshift-ping-examples-apps</artifactId>
+    <packaging>pom</packaging>
+
+    <name>OpenShift PING - Examples - Apps</name>
+    <description>Openshift PING - Examples - Apps</description>
+
+    <modules>
+        <module>basic-app-cache</module>
+        <module>basic-web-session</module>
+        <module>hello-servlet</module>
+    </modules>
+
+</project>

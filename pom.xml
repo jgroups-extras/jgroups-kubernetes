@@ -63,6 +63,7 @@
         <module>dns</module>
         <module>kube</module>
         <module>dist</module>
+        <module>examples/apps</module>
     </modules>
 
     <dependencyManagement>
