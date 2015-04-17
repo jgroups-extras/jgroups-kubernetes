@@ -24,11 +24,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jboss</groupId>
-            <artifactId>jboss-dmr</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>net.oauth.core</groupId>
             <artifactId>oauth</artifactId>
         </dependency>
