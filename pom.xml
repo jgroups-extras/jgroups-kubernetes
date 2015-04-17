@@ -62,16 +62,11 @@
         <module>server</module>
         <module>dns</module>
         <module>kube</module>
+        <module>dist</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.openshift.ping</groupId>
-                <artifactId>openshift-ping-server</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>org.openshift.ping</groupId>
                 <artifactId>openshift-ping-dns</artifactId>
@@ -81,6 +76,12 @@
             <dependency>
                 <groupId>org.openshift.ping</groupId>
                 <artifactId>openshift-ping-kube</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.openshift.ping</groupId>
+                <artifactId>openshift-ping-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

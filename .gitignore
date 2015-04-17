@@ -12,5 +12,7 @@
 .project
 .settings/
 atlassian*
+dist/eap/docker/jboss-eap-openshift.zip
+dist/wildfly/docker/wildfly-openshift.zip
 hs_err_pid*
 target/

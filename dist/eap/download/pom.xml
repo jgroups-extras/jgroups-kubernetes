@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.openshift.ping</groupId>
+        <artifactId>openshift-ping-dist-eap</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>openshift-ping-dist-eap-download</artifactId>
+    <packaging>pom</packaging>
+
+    <name>OpenShift PING - Dist - EAP - Download</name>
+    <description>Openshift PING - Dist - EAP - Download</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-eap</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.build.directory}"/>
+                                <echo message="Downloading JBoss EAP ${version.org.jboss.eap}... If it fails, go to http://www.jboss.org/products/eap/download/ to download manually, agree to the Terms and Conditions, place here: ${project.build.directory}/jboss-eap-${version.org.jboss.eap}.zip, and restart the build."/>
+                                <get src="http://download.devel.redhat.com/released/${version.org.jboss.eap.urlpath}/jboss-eap-${version.org.jboss.eap}.zip"
+                                    dest="${project.build.directory}" skipexisting="true"/>
+                                <unzip src="${project.build.directory}/jboss-eap-${version.org.jboss.eap}.zip"
+                                    dest="${project.build.directory}/jboss-eap-${version.org.jboss.eap}"
+                                    overwrite="false">
+                                    <cutdirsmapper dirs="1"/>
+                                </unzip>
+                                <chmod dir="${project.build.directory}/jboss-eap-${version.org.jboss.eap}" perm="755" includes="**/*.sh"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
