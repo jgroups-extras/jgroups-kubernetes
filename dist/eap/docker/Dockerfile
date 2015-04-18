@@ -1,4 +1,4 @@
-# JBoss EAP with openshift.KUBE_PING impl.
+# JBoss EAP with openshift.DNS_PING impl.
 # Name: 10.245.2.2:5000/dward/eap-openshift:v1
 
 # Use latest jboss/base-jdk:7 image as the base
