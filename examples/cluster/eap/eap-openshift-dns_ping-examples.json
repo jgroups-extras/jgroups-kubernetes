@@ -61,15 +61,15 @@
                                     "env": [
                                         {
                                             "name": "OPENSHIFT_PING_SERVICE",
-                                            "value": "ping" // this example is default value
+                                            "value": "ping"
                                         },
                                         {
                                             "name": "OPENSHIFT_PING_NAMESPACE",
-                                            "value": "default" // this example is default value
+                                            "value": "default"
                                         },
                                         {
                                             "name": "OPENSHIFT_PING_DOMAIN",
-                                            "value": "local" // this example is default value
+                                            "value": "local"
                                         }
                                     ],
                                     "ports": [
@@ -86,6 +86,7 @@
                                             "name": "ping",
                                             "containerPort": 8888
                                         }
+                                    ]
                                 }
                             ]
                         }

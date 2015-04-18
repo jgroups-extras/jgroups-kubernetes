@@ -66,11 +66,11 @@
                                         },
                                         {
                                             "name": "KUBERNETES_CLIENT_KEY_PASSWORD",
-                                            "value": "" // this example is default value
+                                            "value": ""
                                         },
                                         {
                                             "name": "KUBERNETES_CLIENT_KEY_ALGO",
-                                            "value": "RSA" // this example is default value
+                                            "value": "RSA"
                                         },
                                         {
                                             "name": "KUBERNETES_CA_CERTIFICATE_FILE",
