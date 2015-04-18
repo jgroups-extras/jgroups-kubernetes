@@ -1,12 +1,18 @@
 #!/bin/sh
-#shortcut to boot JBoss WildFly with openshift.KUBE_PING configuration
-#if you need to set other boot options, please use standalone.sh
+#shortcut to boot JBoss WildFly with openshift.DNS_PING configuration
+set -ue
 
-DIRNAME=`dirname "$0"`
-#REALPATH=`cd "$DIRNAME/../bin"; pwd`
+# Set HA args
+JBOSS_HA_ARGS="-b 0.0.0.0"
+if [ -n "${EAP_NODE_NAME+_}" ]; then
+    JBOSS_NODE_NAME="${EAP_NODE_NAME}"
+elif [ -n "${container_uuid+_}" ]; then
+    JBOSS_NODE_NAME="${container_uuid}"
+elif [ -n "${HOSTNAME+_}" ]; then
+    JBOSS_NODE_NAME="${HOSTNAME}"
+fi
+if [ -n "${JBOSS_NODE_NAME+_}" ]; then
+    JBOSS_HA_ARGS="${JBOSS_HA_ARGS} -Djboss.node.name=${JBOSS_NODE_NAME}"
+fi
 
-#DOCKER_IP=$(ip addr show eth0 | grep -E '^\s*inet' | grep -m1 global | awk '{ print $2 }' | sed 's|/.*||')
-#${DIRNAME}/standalone.sh -b $DOCKER_IP -c standalone-openshift.xml
-
-DOCKER_UNAME=`uname -n`
-${DIRNAME}/standalone.sh -b $DOCKER_UNAME -c standalone-openshift.xml
+exec $JBOSS_HOME/bin/standalone.sh -c standalone-openshift.xml $JBOSS_HA_ARGS

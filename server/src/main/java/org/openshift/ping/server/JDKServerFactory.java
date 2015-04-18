@@ -16,21 +16,17 @@
 
 package org.openshift.ping.server;
 
-import java.util.logging.Logger;
-
 import org.jgroups.Channel;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public class JDKServerFactory implements ServerFactory {
-    private static final Logger log = Logger.getLogger(JDKServerFactory.class.getName());
 
     public boolean isAvailable() {
         try {
             return JDKServerFactory.class.getClassLoader().loadClass("com.sun.net.httpserver.HttpServer") != null;
         } catch (Exception e) {
-            log.warning(e.getClass().getName() + ": " + e.getMessage());
             return false;
         }
     }
@@ -38,4 +34,5 @@ public class JDKServerFactory implements ServerFactory {
     public Server create(int port, Channel channel) {
         return new JDKServer(port, channel);
     }
+
 }

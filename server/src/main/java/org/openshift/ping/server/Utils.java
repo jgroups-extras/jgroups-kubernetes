@@ -21,6 +21,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jgroups.Address;
@@ -54,10 +55,14 @@ public class Utils {
     public static Server createServer(int port, Channel channel) {
         for (ServerFactory factory : factories) {
             if (factory.isAvailable()) {
-                log.info(factory.getClass().getSimpleName() + " is available.");
+                if (log.isLoggable(Level.FINE)) {
+                    log.fine(factory.getClass().getSimpleName() + " is available.");
+                }
                 return factory.create(port, channel);
             } else {
-                log.warning(factory.getClass().getSimpleName() + " is not available.");
+                if (log.isLoggable(Level.FINE)) {
+                    log.fine(factory.getClass().getSimpleName() + " is not available.");
+                }
             }
         }
         throw new IllegalStateException("No available ServerFactory.");

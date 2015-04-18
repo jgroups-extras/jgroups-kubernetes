@@ -177,7 +177,7 @@ public class DnsPing extends FILE_PING {
                 retval.add(pingData);
             } catch (Exception e) {
                 log.error(String.format("Problem getting ping data for cluster [%s], service [%s], hostAddress [%s], servicePort [%s]; encountered [%s: %s]",
-                        clusterName, serviceName, hostAddress, servicePort, e.getClass().getName(), e.getMessage()));
+                        clusterName, serviceName, hostAddress, servicePort, e.getClass().getName(), e.getMessage()), e);
             }
         }
         return retval;
@@ -192,7 +192,7 @@ public class DnsPing extends FILE_PING {
             }
         } catch (Exception e) {
             log.error(String.format("Problem getting service hosts by name [%s]; encountered [%s: %s]",
-                    serviceName, e.getClass().getName(), e.getMessage()));
+                    serviceName, e.getClass().getName(), e.getMessage()), e);
         }
         return serviceHosts;
     }
@@ -224,7 +224,7 @@ public class DnsPing extends FILE_PING {
             }
         } catch (Exception e) {
             log.error(String.format("Problem getting DNS SRV records for service [%s]; encountered [%s: %s]",
-                    serviceName, e.getClass().getName(), e.getMessage()));
+                    serviceName, e.getClass().getName(), e.getMessage()), e);
         }
         return dnsRecords;
     }

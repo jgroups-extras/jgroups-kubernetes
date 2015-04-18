@@ -16,21 +16,17 @@
 
 package org.openshift.ping.server;
 
-import java.util.logging.Logger;
-
 import org.jgroups.Channel;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public class UndertowServerFactory implements ServerFactory {
-    private static final Logger log = Logger.getLogger(UndertowServerFactory.class.getName());
 
     public boolean isAvailable() {
         try {
             return UndertowServerFactory.class.getClassLoader().loadClass("io.undertow.Undertow") != null;
         } catch (Exception e) {
-            log.warning(e.getClass().getName() + ": " + e.getMessage());
             return false;
         }
     }
@@ -38,4 +34,5 @@ public class UndertowServerFactory implements ServerFactory {
     public Server create(int port, Channel channel) {
         return new UndertowServer(port, channel);
     }
+
 }

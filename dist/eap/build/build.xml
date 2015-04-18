@@ -56,6 +56,10 @@
             <maven-resource group="net.oauth.core" artifact="oauth"/>
         </module-def>
 
+        <module-def name="org.jboss.as.clustering.common">
+            <maven-resource group="org.jboss.as" artifact="jboss-as-clustering-common"/>
+        </module-def>
+
         <module-def name="org.jboss.as.clustering.jgroups">
             <maven-resource group="org.jboss.as" artifact="jboss-as-clustering-jgroups"/>
         </module-def>

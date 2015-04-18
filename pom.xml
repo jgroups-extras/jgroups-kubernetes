@@ -148,6 +148,11 @@
                     </dependency>
                     <dependency>
                         <groupId>org.wildfly</groupId>
+                        <artifactId>wildfly-clustering-common</artifactId>
+                        <version>${version.org.wildfly}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.wildfly</groupId>
                         <artifactId>wildfly-clustering-jgroups</artifactId>
                         <version>${version.org.wildfly}</version>
                     </dependency>
@@ -170,6 +175,11 @@
             </properties>
             <dependencyManagement>
                 <dependencies>
+                    <dependency>
+                        <groupId>org.jboss.as</groupId>
+                        <artifactId>jboss-as-clustering-common</artifactId>
+                        <version>${version.org.jboss.as.clustering}</version>
+                    </dependency>
                     <dependency>
                         <groupId>org.jboss.as</groupId>
                         <artifactId>jboss-as-clustering-jgroups</artifactId>
