@@ -41,7 +41,6 @@ import org.openshift.ping.server.Server;
 import org.openshift.ping.server.ServerFactory;
 import org.openshift.ping.server.Utils;
 
-
 @MBean(description = "DNS based discovery protocol")
 public class DnsPing extends FILE_PING {
 
@@ -170,54 +169,62 @@ public class DnsPing extends FILE_PING {
     protected synchronized List<PingData> readAll(String clusterName) {
         List<PingData> retval = new ArrayList<>();
         String serviceName = getServiceName();
-        try {
-            int servicePort = getServicePort(serviceName);
-            Set<String> hostAddresses = getServiceHosts(serviceName);
-            for (String hostAddress : hostAddresses) {
+        int servicePort = getServicePort(serviceName);
+        Set<String> hostAddresses = getServiceHosts(serviceName);
+        for (String hostAddress : hostAddresses) {
+            try {
                 PingData pingData = getPingData(hostAddress, servicePort);
                 retval.add(pingData);
+            } catch (Exception e) {
+                log.error(String.format("Problem getting ping data for cluster [%s], service [%s], hostAddress [%s], servicePort [%s]; encountered [%s: %s]",
+                        clusterName, serviceName, hostAddress, servicePort, e.getClass().getName(), e.getMessage()));
             }
-        } catch (Exception e) {
-            log.warn(String.format("Failed to read ping data from DNS [%s] for cluster: %s", serviceName, clusterName), e);
         }
         return retval;
     }
 
-    private Set<String> getServiceHosts(String serviceName) throws Exception {
+    private Set<String> getServiceHosts(String serviceName) {
         Set<String> serviceHosts = new LinkedHashSet<String>();
-        InetAddress[] inetAddresses = InetAddress.getAllByName(serviceName);
-        for (InetAddress inetAddress : inetAddresses) {
-           serviceHosts.add(inetAddress.getHostAddress());
+        try {
+            InetAddress[] inetAddresses = InetAddress.getAllByName(serviceName);
+            for (InetAddress inetAddress : inetAddresses) {
+               serviceHosts.add(inetAddress.getHostAddress());
+            }
+        } catch (Exception e) {
+            log.error(String.format("Problem getting service hosts by name [%s]; encountered [%s: %s]",
+                    serviceName, e.getClass().getName(), e.getMessage()));
         }
         return serviceHosts;
     }
 
-    private int getServicePort(String serviceName) throws Exception {
-        try {
-            Set<DnsRecord> dnsRecords = getDnsRecords(serviceName);
-            for (DnsRecord dnsRecord : dnsRecords) {
-                if (serviceName.equals(dnsRecord.getHost())) {
-                    return dnsRecord.getPort();
-                }
+    private int getServicePort(String serviceName) {
+        Set<DnsRecord> dnsRecords = getDnsRecords(serviceName);
+        for (DnsRecord dnsRecord : dnsRecords) {
+            if (serviceName.equals(dnsRecord.getHost())) {
+                return dnsRecord.getPort();
             }
-        } catch (Exception e) {
-            log.error(String.format("Problem getting DNS SRV records [%s]: %s: %s", serviceName, e.getClass().getName(), e.getMessage()));
         }
-        log.warn(String.format("Cannot find matching DNS SRV record [%s], defaulting to service port: %s", serviceName, getServerPort()));
+        log.warn(String.format("No matching DNS SRV record found for service [%s]; defaulting to service port [%s]",
+                serviceName, getServerPort()));
         return getServerPort();
     }
 
-    private Set<DnsRecord> getDnsRecords(String serviceName) throws Exception {
-        Hashtable<String, String> env = new Hashtable<String, String>();
-        env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
-        env.put("java.naming.provider.url", "dns:");
-        DirContext ctx = new InitialDirContext(env);
-        Attributes attrs = ctx.getAttributes(serviceName, new String[]{"SRV"});
-        NamingEnumeration<?> servers = attrs.get("SRV").getAll();
+    private Set<DnsRecord> getDnsRecords(String serviceName) {
         Set<DnsRecord> dnsRecords = new TreeSet<DnsRecord>();
-        while (servers.hasMore()) {
-            DnsRecord record = DnsRecord.fromString((String)servers.next());
-            dnsRecords.add(record);
+        try {
+            Hashtable<String, String> env = new Hashtable<String, String>();
+            env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
+            env.put("java.naming.provider.url", "dns:");
+            DirContext ctx = new InitialDirContext(env);
+            Attributes attrs = ctx.getAttributes(serviceName, new String[]{"SRV"});
+            NamingEnumeration<?> servers = attrs.get("SRV").getAll();
+            while (servers.hasMore()) {
+                DnsRecord record = DnsRecord.fromString((String)servers.next());
+                dnsRecords.add(record);
+            }
+        } catch (Exception e) {
+            log.error(String.format("Problem getting DNS SRV records for service [%s]; encountered [%s: %s]",
+                    serviceName, e.getClass().getName(), e.getMessage()));
         }
         return dnsRecords;
     }
