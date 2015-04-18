@@ -1,0 +1,124 @@
+{
+    "kind": "Config",
+    "id": "eap-config",
+    "apiVersion": "v1beta1",
+    "name": "JBoss EAP OpenShift Config",
+    "description": "Creates a JBoss EAP OpenShift Cluster",
+    "items": [
+        {
+            "kind": "Service",
+            "id": "eap-http-service",
+            "apiVersion": "v1beta1",
+            "port": 80,
+            "containerPort": 8080,
+            "selector": {
+                "name": "eapPod"
+            }
+        },
+        {
+            "kind": "Service",
+            "id": "eap-https-service",
+            "apiVersion": "v1beta1",
+            "port": 443,
+            "containerPort": 8443,
+            "selector": {
+                "name": "eapPod"
+            }
+        },
+        {
+            "kind": "ReplicationController",
+            "id": "eap-controller",
+            "apiVersion": "v1beta1",
+            "labels": {
+                "name": "eap-controller"
+            },
+            "desiredState": {
+                "replicas": 2,
+                "replicaSelector": {
+                    "name": "eapPod"
+                },
+                "podTemplate": {
+                    "desiredState": {
+                        "manifest": {
+                            "id": "eapPod",
+                            "version": "v1beta1",
+                            "containers": [
+                                {
+                                    "image": "10.245.2.2:5000/dward/eap-openshift-examples:v1",
+                                    "imagePullPolicy": "PullIfNotPresent",
+                                    "name": "eap-container",
+                                    "env": [
+                                        {
+                                            "name": "OPENSHIFT_MASTER_HOST",
+                                            "value": "10.245.2.2"
+                                        },
+                                        {
+                                            "name": "OPENSHIFT_MASTER_PORT",
+                                            "value": "8443"
+                                        },
+                                        {
+                                            "name": "KUBERNETES_CLIENT_CERTIFICATE_FILE",
+                                            "value": "/vagrant/openshift.local.certificates/kube-client/cert.crt"
+                                        },
+                                        {
+                                            "name": "KUBERNETES_CLIENT_KEY_FILE",
+                                            "value": "/vagrant/openshift.local.certificates/kube-client/key.key"
+                                        },
+                                        {
+                                            "name": "KUBERNETES_CLIENT_KEY_PASSWORD",
+                                            "value": "" // this example is default value
+                                        },
+                                        {
+                                            "name": "KUBERNETES_CLIENT_KEY_ALGO",
+                                            "value": "RSA" // this example is default value
+                                        },
+                                        {
+                                            "name": "KUBERNETES_CA_CERTIFICATE_FILE",
+                                            "value": "/vagrant/openshift.local.certificates/kube-client/root.crt"
+                                        }
+                                    ],
+                                    "ports": [
+                                        {
+                                            "hostPort": 9080,
+                                            "containerPort": 8080
+                                        },
+                                        {
+                                            "hostPort": 9443,
+                                            "containerPort": 8443
+                                        },
+                                        {
+                                            "hostPort": 9888,
+                                            "name": "ping",
+                                            "containerPort": 8888
+                                        }
+                                    ],
+                                    "privileged": true,
+                                    "volumeMounts": [
+                                        {
+                                            "mountPath": "/vagrant/openshift.local.certificates/kube-client",
+                                            "name": "kube-client-dir",
+                                            "readOnly": true
+                                        }
+                                    ]
+                                }
+                            ],
+                            "volumes": [
+                                {
+                                    "name": "kube-client-dir",
+                                    "source": {
+                                        "hostDir": {
+                                            "path": "/vagrant/openshift.local.certificates/kube-client"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "labels": {
+                        "name": "eapPod"
+                    }
+                }
+            }
+        }
+    ]
+}

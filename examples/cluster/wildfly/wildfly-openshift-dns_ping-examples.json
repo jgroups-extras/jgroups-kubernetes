@@ -2,8 +2,8 @@
     "kind": "Config",
     "id": "wildfly-config",
     "apiVersion": "v1beta1",
-    "name": "JBoss EAP OpenShift Config",
-    "description": "Creates a JBoss EAP OpenShift Cluster",
+    "name": "JBoss WildFly OpenShift Config",
+    "description": "Creates a JBoss WildFly OpenShift Cluster",
     "items": [
         {
             "kind": "Service",
@@ -60,32 +60,16 @@
                                     "name": "wildfly-container",
                                     "env": [
                                         {
-                                            "name": "OPENSHIFT_MASTER_HOST",
-                                            "value": "10.245.2.2"
+                                            "name": "OPENSHIFT_PING_SERVICE",
+                                            "value": "ping" // this example is default value
                                         },
                                         {
-                                            "name": "OPENSHIFT_MASTER_PORT",
-                                            "value": "8443"
+                                            "name": "OPENSHIFT_PING_NAMESPACE",
+                                            "value": "default" // this example is default value
                                         },
                                         {
-                                            "name": "KUBERNETES_CLIENT_CERTIFICATE_FILE",
-                                            "value": "/vagrant/openshift.local.certificates/kube-client/cert.crt"
-                                        },
-                                        {
-                                            "name": "KUBERNETES_CLIENT_KEY_FILE",
-                                            "value": "/vagrant/openshift.local.certificates/kube-client/key.key"
-                                        },
-                                        {
-                                            "name": "KUBERNETES_CLIENT_KEY_PASSWORD",
-                                            "value": ""
-                                        },
-                                        {
-                                            "name": "KUBERNETES_CLIENT_KEY_ALGO",
-                                            "value": "RSA"
-                                        },
-                                        {
-                                            "name": "KUBERNETES_CA_CERTIFICATE_FILE",
-                                            "value": "/vagrant/openshift.local.certificates/kube-client/root.crt"
+                                            "name": "OPENSHIFT_PING_DOMAIN",
+                                            "value": "local" // this example is default value
                                         }
                                     ],
                                     "ports": [
@@ -102,25 +86,6 @@
                                             "name": "ping",
                                             "containerPort": 8888
                                         }
-                                    ],
-                                    "privileged": true,
-                                    "volumeMounts": [
-                                        {
-                                            "mountPath": "/vagrant/openshift.local.certificates/kube-client",
-                                            "name": "kube-client-dir",
-                                            "readOnly": true
-                                        }
-                                    ]
-                                }
-                            ],
-                            "volumes": [
-                                {
-                                    "name": "kube-client-dir",
-                                    "source": {
-                                        "hostDir": {
-                                            "path": "/vagrant/openshift.local.certificates/kube-client"
-                                        }
-                                    }
                                 }
                             ]
                         }

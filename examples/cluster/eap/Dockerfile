@@ -1,4 +1,4 @@
-# JBoss EAP with openshift.KUBE_PING impl and examples.
+# JBoss EAP with openshift.DNS_PING impl and examples.
 # Name: 10.245.2.2:5000/dward/eap-openshift-examples:v1
 
 FROM 10.245.2.2:5000/dward/eap-openshift:v1

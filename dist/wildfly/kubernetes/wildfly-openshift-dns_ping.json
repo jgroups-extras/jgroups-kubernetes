@@ -2,8 +2,8 @@
     "kind": "Config",
     "id": "wildfly-config",
     "apiVersion": "v1beta1",
-    "name": "JBoss EAP OpenShift Config",
-    "description": "Creates a JBoss EAP OpenShift Cluster",
+    "name": "JBoss WildFly OpenShift Config",
+    "description": "Creates a JBoss WildFly OpenShift Cluster",
     "items": [
         {
             "kind": "Service",

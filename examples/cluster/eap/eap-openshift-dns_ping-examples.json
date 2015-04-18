@@ -1,0 +1,100 @@
+{
+    "kind": "Config",
+    "id": "eap-config",
+    "apiVersion": "v1beta1",
+    "name": "JBoss EAP OpenShift Config",
+    "description": "Creates a JBoss EAP OpenShift Cluster",
+    "items": [
+        {
+            "kind": "Service",
+            "id": "eap-http-service",
+            "apiVersion": "v1beta1",
+            "port": 80,
+            "containerPort": 8080,
+            "selector": {
+                "name": "eapPod"
+            }
+        },
+        {
+            "kind": "Service",
+            "id": "eap-https-service",
+            "apiVersion": "v1beta1",
+            "port": 443,
+            "containerPort": 8443,
+            "selector": {
+                "name": "eapPod"
+            }
+        },
+        {
+            "kind": "Service",
+            "id": "ping",
+            "apiVersion": "v1beta1",
+            "port": 8888,
+            "portalIP": "None",
+            "containerPort": 8888,
+            "selector": {
+                "name": "eapPod"
+            }
+        },
+        {
+            "kind": "ReplicationController",
+            "id": "eap-controller",
+            "apiVersion": "v1beta1",
+            "labels": {
+                "name": "eap-controller"
+            },
+            "desiredState": {
+                "replicas": 2,
+                "replicaSelector": {
+                    "name": "eapPod"
+                },
+                "podTemplate": {
+                    "desiredState": {
+                        "manifest": {
+                            "id": "eapPod",
+                            "version": "v1beta1",
+                            "containers": [
+                                {
+                                    "image": "10.245.2.2:5000/dward/eap-openshift-examples:v1",
+                                    "imagePullPolicy": "PullIfNotPresent",
+                                    "name": "eap-container",
+                                    "env": [
+                                        {
+                                            "name": "OPENSHIFT_PING_SERVICE",
+                                            "value": "ping" // this example is default value
+                                        },
+                                        {
+                                            "name": "OPENSHIFT_PING_NAMESPACE",
+                                            "value": "default" // this example is default value
+                                        },
+                                        {
+                                            "name": "OPENSHIFT_PING_DOMAIN",
+                                            "value": "local" // this example is default value
+                                        }
+                                    ],
+                                    "ports": [
+                                        {
+                                            "hostPort": 9080,
+                                            "containerPort": 8080
+                                        },
+                                        {
+                                            "hostPort": 9443,
+                                            "containerPort": 8443
+                                        },
+                                        {
+                                            "hostPort": 9888,
+                                            "name": "ping",
+                                            "containerPort": 8888
+                                        }
+                                }
+                            ]
+                        }
+                    },
+                    "labels": {
+                        "name": "eapPod"
+                    }
+                }
+            }
+        }
+    ]
+}

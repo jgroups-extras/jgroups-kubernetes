@@ -1,63 +1,52 @@
 {
     "kind": "Config",
-    "id": "eap-config",
+    "id": "wildfly-config",
     "apiVersion": "v1beta1",
-    "name": "JBoss EAP OpenShift Config",
-    "description": "Creates a JBoss EAP OpenShift Cluster",
+    "name": "JBoss WildFly OpenShift Config",
+    "description": "Creates a JBoss WildFly OpenShift Cluster",
     "items": [
         {
             "kind": "Service",
-            "id": "eap-http-service",
+            "id": "wildfly-http-service",
             "apiVersion": "v1beta1",
             "port": 80,
             "containerPort": 8080,
             "selector": {
-                "name": "eapPod"
+                "name": "wildflyPod"
             }
         },
         {
             "kind": "Service",
-            "id": "eap-https-service",
+            "id": "wildfly-https-service",
             "apiVersion": "v1beta1",
             "port": 443,
             "containerPort": 8443,
             "selector": {
-                "name": "eapPod"
-            }
-        },
-        {
-            "kind": "Service",
-            "id": "ping",
-            "apiVersion": "v1beta1",
-            "port": 8888,
-            "portalIP": "None",
-            "containerPort": 8888,
-            "selector": {
-                "name": "eapPod"
+                "name": "wildflyPod"
             }
         },
         {
             "kind": "ReplicationController",
-            "id": "eap-controller",
+            "id": "wildfly-controller",
             "apiVersion": "v1beta1",
             "labels": {
-                "name": "eap-controller"
+                "name": "wildfly-controller"
             },
             "desiredState": {
                 "replicas": 2,
                 "replicaSelector": {
-                    "name": "eapPod"
+                    "name": "wildflyPod"
                 },
                 "podTemplate": {
                     "desiredState": {
                         "manifest": {
-                            "id": "eapPod",
+                            "id": "wildflyPod",
                             "version": "v1beta1",
                             "containers": [
                                 {
-                                    "image": "10.245.2.2:5000/dward/eap-openshift-examples:v1",
+                                    "image": "10.245.2.2:5000/dward/wildfly-openshift-examples:v1",
                                     "imagePullPolicy": "PullIfNotPresent",
-                                    "name": "eap-container",
+                                    "name": "wildfly-container",
                                     "env": [
                                         {
                                             "name": "OPENSHIFT_MASTER_HOST",
@@ -77,11 +66,11 @@
                                         },
                                         {
                                             "name": "KUBERNETES_CLIENT_KEY_PASSWORD",
-                                            "value": ""
+                                            "value": "" // this example is default value
                                         },
                                         {
                                             "name": "KUBERNETES_CLIENT_KEY_ALGO",
-                                            "value": "RSA"
+                                            "value": "RSA" // this example is default value
                                         },
                                         {
                                             "name": "KUBERNETES_CA_CERTIFICATE_FILE",
@@ -126,7 +115,7 @@
                         }
                     },
                     "labels": {
-                        "name": "eapPod"
+                        "name": "wildflyPod"
                     }
                 }
             }
