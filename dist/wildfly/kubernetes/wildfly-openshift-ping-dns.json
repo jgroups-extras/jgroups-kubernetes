@@ -59,34 +59,6 @@
                                     "imagePullPolicy": "PullIfNotPresent",
                                     "name": "wildfly-container",
                                     "env": [
-                                        {
-                                            "name": "OPENSHIFT_MASTER_HOST",
-                                            "value": "10.245.2.2"
-                                        },
-                                        {
-                                            "name": "OPENSHIFT_MASTER_PORT",
-                                            "value": "8443"
-                                        },
-                                        {
-                                            "name": "KUBERNETES_CLIENT_CERTIFICATE_FILE",
-                                            "value": "/vagrant/openshift.local.certificates/kube-client/cert.crt"
-                                        },
-                                        {
-                                            "name": "KUBERNETES_CLIENT_KEY_FILE",
-                                            "value": "/vagrant/openshift.local.certificates/kube-client/key.key"
-                                        },
-                                        {
-                                            "name": "KUBERNETES_CLIENT_KEY_PASSWORD",
-                                            "value": ""
-                                        },
-                                        {
-                                            "name": "KUBERNETES_CLIENT_KEY_ALGO",
-                                            "value": "RSA"
-                                        },
-                                        {
-                                            "name": "KUBERNETES_CA_CERTIFICATE_FILE",
-                                            "value": "/vagrant/openshift.local.certificates/kube-client/root.crt"
-                                        }
                                     ],
                                     "ports": [
                                         {
@@ -102,25 +74,7 @@
                                             "name": "ping",
                                             "containerPort": 8888
                                         }
-                                    ],
-                                    "privileged": true,
-                                    "volumeMounts": [
-                                        {
-                                            "mountPath": "/vagrant/openshift.local.certificates/kube-client",
-                                            "name": "kube-client-dir",
-                                            "readOnly": true
-                                        }
                                     ]
-                                }
-                            ],
-                            "volumes": [
-                                {
-                                    "name": "kube-client-dir",
-                                    "source": {
-                                        "hostDir": {
-                                            "path": "/vagrant/openshift.local.certificates/kube-client"
-                                        }
-                                    }
                                 }
                             ]
                         }

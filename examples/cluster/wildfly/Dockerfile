@@ -5,8 +5,6 @@ FROM 10.245.2.2:5000/dward/wildfly-openshift:v1
 
 #USER root
 
-#RUN chmod 644 /vagrant/openshift.local.certificates/kube-client/key.key
-
 #ADD standalone-openshif.xml /opt/jboss/wildfly/standalone/configuration/standalone-openshif.xml
 #RUN chown jboss:jboss /opt/jboss/wildfly/standalone/configuration/standalone-openshif.xml
 

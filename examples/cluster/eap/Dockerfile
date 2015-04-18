@@ -5,8 +5,6 @@ FROM 10.245.2.2:5000/dward/eap-openshift:v1
 
 USER root
 
-#RUN chmod 644 /vagrant/openshift.local.certificates/kube-client/key.key
-
 ADD standalone-openshift.xml /opt/jboss/eap/standalone/configuration/standalone-openshift.xml
 RUN chown jboss:jboss /opt/jboss/eap/standalone/configuration/standalone-openshift.xml
 
