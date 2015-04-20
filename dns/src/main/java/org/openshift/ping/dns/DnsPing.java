@@ -164,9 +164,15 @@ public class DnsPing extends FILE_PING {
         String serviceName = getServiceName();
         Set<String> hostAddresses = getServiceHosts(serviceName);
         int servicePort = getServicePort(serviceName);
+        if (log.isDebugEnabled()) {
+            log.debug(String.format("Using service hosts [%s] on service port [%]", hostAddresses, servicePort));
+        }
         for (String hostAddress : hostAddresses) {
             try {
                 PingData pingData = getPingData(hostAddress, servicePort, clusterName);
+                if (log.isDebugEnabled()) {
+                    log.debug(String.format("Adding PingData [%s]", pingData));
+                }
                 retval.add(pingData);
             } catch (Exception e) {
                 log.error(String.format("Problem getting ping data for cluster [%s], service [%s], hostAddress [%s], servicePort [%s]; encountered [%s: %s]",
@@ -177,11 +183,11 @@ public class DnsPing extends FILE_PING {
     }
 
     private Set<String> getServiceHosts(String serviceName) {
-        return execute(new GetServiceHosts(serviceName), 100, 500);
+        return execute(new GetServiceHosts(serviceName), 60, 1000);
     }
 
     private int getServicePort(String serviceName) {
-        Integer value = execute(new GetServicePort(serviceName), 100, 500);
+        Integer value = execute(new GetServicePort(serviceName), 60, 1000);
         if (value == null) {
             log.warn(String.format("No matching DNS SRV record found for service [%s]; defaulting to service port [%s]",
                     serviceName, getServerPort()));
@@ -198,6 +204,10 @@ public class DnsPing extends FILE_PING {
             tries--;
             try {
                value = operation.call();
+               if (value != null) {
+                   lastFail = null;
+                   break;
+               }
             } catch (Throwable fail) {
                 lastFail = fail;
             }
@@ -209,7 +219,7 @@ public class DnsPing extends FILE_PING {
             }
         }
         if (lastFail != null) {
-            String emsg = String.format("%s attempt(s) to execute DNS operation [%s] failed. Last failure was [%s: %s].",
+            String emsg = String.format("%s attempt(s) to execute DNS operation [%s] failed. Last failure was [%s: %s]",
                     attempts, operation.getClass().getSimpleName(),
                     (lastFail != null ? lastFail.getClass().getName() : "null"),
                     (lastFail != null ? lastFail.getMessage() : ""));

@@ -14,9 +14,12 @@ public class GetServiceHosts implements DnsOperation<Set<String>> {
 
     @Override
     public Set<String> call() throws Exception {
-        Set<String> serviceHosts = new LinkedHashSet<String>();
+        Set<String> serviceHosts = null;
         InetAddress[] inetAddresses = InetAddress.getAllByName(serviceName);
         for (InetAddress inetAddress : inetAddresses) {
+            if (serviceHosts == null) {
+                serviceHosts = new LinkedHashSet<String>();
+            }
             serviceHosts.add(inetAddress.getHostAddress());
         }
         return serviceHosts;
