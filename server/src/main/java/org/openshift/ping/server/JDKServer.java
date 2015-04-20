@@ -36,28 +36,47 @@ import com.sun.net.httpserver.HttpServer;
 public class JDKServer extends AbstractServer {
     private HttpServer server;
 
-    public JDKServer(int port, Channel channel) {
-        super(port, channel);
+    public JDKServer(int port) {
+        super(port);
     }
 
-    public void start() throws Exception {
-        InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
-        server = HttpServer.create(address, 0);
-        server.setExecutor(Executors.newCachedThreadPool());
-        server.createContext("/", new Handler());
-        server.start();
+    public synchronized void start(Channel channel) throws Exception {
+        if (server == null) {
+            try {
+                InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
+                server = HttpServer.create(address, 0);
+                server.setExecutor(Executors.newCachedThreadPool());
+                server.createContext("/", new Handler(this));
+                server.start();
+            } catch (Exception e) {
+                server = null;
+                throw e;
+            }
+        }
+        addChannel(channel);
     }
 
-    public void stop() {
-        if (server != null) {
-            server.stop(0);
+    public synchronized void stop(Channel channel) {
+        removeChannel(channel);
+        if (server != null && !hasChannels()) {
+            try {
+                server.stop(0);
+            } finally {
+                server = null;
+            }
         }
     }
 
     private class Handler implements HttpHandler {
+        private final Server server;
+        private Handler(Server server) {
+            this.server = server;
+        }
         public void handle(HttpExchange exchange) throws IOException {
             exchange.sendResponseHeaders(200, 0);
             try {
+                String clusterName = exchange.getRequestHeaders().getFirst(CLUSTER_NAME);
+                Channel channel = server.getChannel(clusterName);
                 PingData data = Utils.createPingData(channel);
                 try (OutputStream outputStream = exchange.getResponseBody()) {
                     data.writeTo(new DataOutputStream(outputStream));

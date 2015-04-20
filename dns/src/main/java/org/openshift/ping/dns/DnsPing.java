@@ -18,18 +18,11 @@ package org.openshift.ping.dns;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
-
-import javax.naming.NamingEnumeration;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
 
 import org.jgroups.Address;
 import org.jgroups.annotations.MBean;
@@ -139,13 +132,13 @@ public class DnsPing extends FILE_PING {
     @Override
     public void start() throws Exception {
         if (factory != null) {
-            server = factory.create(getServerPort(), stack.getChannel());
+            server = factory.getServer(getServerPort());
         } else {
-            server = Utils.createServer(getServerPort(), stack.getChannel());
+            server = Utils.getServer(getServerPort());
         }
         final String serverName = server.getClass().getSimpleName();
         log.info(String.format("Starting server: %s, daemon port: %s, channel address: %s", serverName, getServerPort(), stack.getChannel().getAddress()));
-        server.start();
+        server.start(stack.getChannel());
         log.info(String.format("%s started.", serverName));
     }
 
@@ -154,7 +147,7 @@ public class DnsPing extends FILE_PING {
         try {
             final String serverName = server.getClass().getSimpleName();
             log.info(String.format("Stopping server: %s", serverName));
-            server.stop();
+            server.stop(stack.getChannel());
             log.info(String.format("%s stopped.", serverName));
         } finally {
             super.stop();
@@ -169,11 +162,11 @@ public class DnsPing extends FILE_PING {
     protected synchronized List<PingData> readAll(String clusterName) {
         List<PingData> retval = new ArrayList<>();
         String serviceName = getServiceName();
-        int servicePort = getServicePort(serviceName);
         Set<String> hostAddresses = getServiceHosts(serviceName);
+        int servicePort = getServicePort(serviceName);
         for (String hostAddress : hostAddresses) {
             try {
-                PingData pingData = getPingData(hostAddress, servicePort);
+                PingData pingData = getPingData(hostAddress, servicePort, clusterName);
                 retval.add(pingData);
             } catch (Exception e) {
                 log.error(String.format("Problem getting ping data for cluster [%s], service [%s], hostAddress [%s], servicePort [%s]; encountered [%s: %s]",
@@ -184,55 +177,52 @@ public class DnsPing extends FILE_PING {
     }
 
     private Set<String> getServiceHosts(String serviceName) {
-        Set<String> serviceHosts = new LinkedHashSet<String>();
-        try {
-            InetAddress[] inetAddresses = InetAddress.getAllByName(serviceName);
-            for (InetAddress inetAddress : inetAddresses) {
-               serviceHosts.add(inetAddress.getHostAddress());
-            }
-        } catch (Exception e) {
-            log.error(String.format("Problem getting service hosts by name [%s]; encountered [%s: %s]",
-                    serviceName, e.getClass().getName(), e.getMessage()), e);
-        }
-        return serviceHosts;
+        return execute(new GetServiceHosts(serviceName), 100, 500);
     }
 
     private int getServicePort(String serviceName) {
-        Set<DnsRecord> dnsRecords = getDnsRecords(serviceName);
-        for (DnsRecord dnsRecord : dnsRecords) {
-            if (serviceName.equals(dnsRecord.getHost())) {
-                return dnsRecord.getPort();
-            }
+        Integer value = execute(new GetServicePort(serviceName), 100, 500);
+        if (value == null) {
+            log.warn(String.format("No matching DNS SRV record found for service [%s]; defaulting to service port [%s]",
+                    serviceName, getServerPort()));
+            value = Integer.valueOf(getServerPort());
         }
-        log.warn(String.format("No matching DNS SRV record found for service [%s]; defaulting to service port [%s]",
-                serviceName, getServerPort()));
-        return getServerPort();
+        return value.intValue();
     }
 
-    private Set<DnsRecord> getDnsRecords(String serviceName) {
-        Set<DnsRecord> dnsRecords = new TreeSet<DnsRecord>();
-        try {
-            Hashtable<String, String> env = new Hashtable<String, String>();
-            env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
-            env.put("java.naming.provider.url", "dns:");
-            DirContext ctx = new InitialDirContext(env);
-            Attributes attrs = ctx.getAttributes(serviceName, new String[]{"SRV"});
-            NamingEnumeration<?> servers = attrs.get("SRV").getAll();
-            while (servers.hasMore()) {
-                DnsRecord record = DnsRecord.fromString((String)servers.next());
-                dnsRecords.add(record);
+    private <V> V execute(DnsOperation<V> operation, int tries, long sleep) {
+        V value = null;
+        final int attempts = tries;
+        Throwable lastFail = null;
+        while (tries > 0) {
+            tries--;
+            try {
+               value = operation.call();
+            } catch (Throwable fail) {
+                lastFail = fail;
             }
-        } catch (Exception e) {
-            log.error(String.format("Problem getting DNS SRV records for service [%s]; encountered [%s: %s]",
-                    serviceName, e.getClass().getName(), e.getMessage()), e);
+            try {
+                Thread.sleep(sleep);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
         }
-        return dnsRecords;
+        if (lastFail != null) {
+            String emsg = String.format("%s attempt(s) to execute DNS operation [%s] failed. Last failure was [%s: %s].",
+                    attempts, operation.getClass().getSimpleName(),
+                    (lastFail != null ? lastFail.getClass().getName() : "null"),
+                    (lastFail != null ? lastFail.getMessage() : ""));
+            log.error(emsg, lastFail);
+        }
+        return value;
     }
 
-    private PingData getPingData(String host, int port) throws Exception {
+    private PingData getPingData(String host, int port, String clusterName) throws Exception {
         String url = String.format("http://%s:%s", host, port);
         PingData data = new PingData();
-        try (InputStream is = Utils.openStream(url, 100, 500)) {
+        Map<String, String> headers = Collections.singletonMap(Server.CLUSTER_NAME, clusterName);
+        try (InputStream is = Utils.openStream(url, headers, 100, 500)) {
             data.readFrom(new DataInputStream(is));
         }
         return data;

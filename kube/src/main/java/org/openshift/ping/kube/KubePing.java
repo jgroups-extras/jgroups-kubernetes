@@ -156,13 +156,13 @@ public class KubePing extends FILE_PING {
         log.info(client.info());
 
         if (factory != null) {
-            server = factory.create(getServerPort(), stack.getChannel());
+            server = factory.getServer(getServerPort());
         } else {
-            server = Utils.createServer(getServerPort(), stack.getChannel());
+            server = Utils.getServer(getServerPort());
         }
         final String serverName = server.getClass().getSimpleName();
         log.info(String.format("Starting server: %s, daemon port: %s, channel address: %s", serverName, getServerPort(), stack.getChannel().getAddress()));
-        server.start();
+        server.start(stack.getChannel());
         log.info(String.format("%s started.", serverName));
     }
 
@@ -171,7 +171,7 @@ public class KubePing extends FILE_PING {
         try {
             final String serverName = server.getClass().getSimpleName();
             log.info(String.format("Stopping server: %s", serverName));
-            server.stop();
+            server.stop(stack.getChannel());
             log.info(String.format("%s stopped.", serverName));
         } finally {
             super.stop();
@@ -192,7 +192,8 @@ public class KubePing extends FILE_PING {
                 for (Container container : containers) {
                     Context context = new Context(container, getPingPortName());
                     if (client.accept(context)) {
-                        retval.add(client.getPingData(container.getPodIP(), container.getPort(getPingPortName()).getContainerPort()));
+                        int port = container.getPort(getPingPortName()).getContainerPort();
+                        retval.add(client.getPingData(container.getPodIP(), port, clusterName));
                     }
                 }
             }

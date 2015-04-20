@@ -10,7 +10,6 @@
     </parent>
 
     <artifactId>openshift-ping-server</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>OpenShift PING - Server</name>

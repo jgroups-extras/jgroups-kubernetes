@@ -16,17 +16,71 @@
 
 package org.openshift.ping.server;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.jgroups.Channel;
+import org.jgroups.JChannel;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public abstract class AbstractServer implements Server {
-    protected final int port;
-    protected final Channel channel;
 
-    protected AbstractServer(int port, Channel channel) {
+    protected final int port;
+    protected final Map<String, Channel> CHANNELS = new HashMap<String, Channel>();
+
+    protected AbstractServer(int port) {
         this.port = port;
-        this.channel = channel;
     }
+
+    public final Channel getChannel(String clusterName) {
+        if (clusterName != null) {
+            synchronized (CHANNELS) {
+                return CHANNELS.get(clusterName);
+            }
+        }
+        return null;
+    }
+
+    protected final void addChannel(Channel channel) {
+        String clusterName = getClusterName(channel);
+        if (clusterName != null) {
+            synchronized (CHANNELS) {
+                CHANNELS.put(clusterName, channel);
+            }
+        }
+    }
+
+    protected final void removeChannel(Channel channel) {
+        String clusterName = getClusterName(channel);
+        if (clusterName != null) {
+            synchronized (CHANNELS) {
+                CHANNELS.remove(clusterName);
+            }
+        }
+    }
+
+    protected final boolean hasChannels() {
+        synchronized (CHANNELS) {
+            return CHANNELS.isEmpty();
+        }
+    }
+
+    private String getClusterName(final Channel channel) {
+        if (channel != null) {
+            String clusterName = channel.getClusterName();
+            // clusterName will be null if the Channel is not yet connected, but we still need it!
+            if (clusterName == null && channel instanceof JChannel) {
+                try {
+                    Field field = JChannel.class.getDeclaredField("cluster_name");
+                    field.setAccessible(true);
+                    return (String)field.get(channel);
+                } catch (Throwable t) {}
+            }
+        }
+        return null;
+    }
+
 }

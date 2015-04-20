@@ -18,9 +18,11 @@ package org.openshift.ping.server;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,13 +54,13 @@ public class Utils {
      * @param channel the channel
      * @return server instance
      */
-    public static Server createServer(int port, Channel channel) {
+    public static Server getServer(int port) {
         for (ServerFactory factory : factories) {
             if (factory.isAvailable()) {
                 if (log.isLoggable(Level.FINE)) {
                     log.fine(factory.getClass().getSimpleName() + " is available.");
                 }
-                return factory.create(port, channel);
+                return factory.getServer(port);
             } else {
                 if (log.isLoggable(Level.FINE)) {
                     log.fine(factory.getClass().getSimpleName() + " is not available.");
@@ -79,25 +81,31 @@ public class Utils {
         View view = channel.getView();
         boolean is_server = false;
         String logical_name = channel.getName();
-        PhysicalAddress paddr = (PhysicalAddress) channel.down(new Event(Event.GET_PHYSICAL_ADDRESS, address));
+        PhysicalAddress paddr = (PhysicalAddress)channel.down(new Event(Event.GET_PHYSICAL_ADDRESS, address));
         return new PingData(address, view, is_server, logical_name, Collections.singleton(paddr));
     }
 
-    public static InputStream openStream(String url, int tries, long sleep) {
-        return openStream(url, tries, sleep, null);
+    public static InputStream openStream(String url, Map<String, String> headers, int tries, long sleep) {
+        return openStream(url, headers, tries, sleep, null);
     }
 
-    public static InputStream openStream(String url, int tries, long sleep, Certs certs) {
+    public static InputStream openStream(String url, Map<String, String> headers, int tries, long sleep, Certs certs) {
         final int attempts = tries;
         Throwable lastFail = null;
         while (tries > 0) {
             tries--;
             try {
                 if (certs != null) {
-                    return certs.openStream(url);
+                    return certs.openStream(url, headers);
                 } else {
                     URL xurl = new URL(url);
-                    return xurl.openStream();
+                    URLConnection connection = xurl.openConnection();
+                    if (headers != null) {
+                        for (Map.Entry<String, String> entry : headers.entrySet()) {
+                            connection.addRequestProperty(entry.getKey(), entry.getValue());
+                        }
+                    }
+                    return connection.getInputStream();
                 }
             } catch (Throwable fail) {
                 lastFail = fail;

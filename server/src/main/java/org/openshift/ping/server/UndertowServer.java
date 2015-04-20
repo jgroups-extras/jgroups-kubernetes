@@ -29,27 +29,48 @@ import org.jgroups.protocols.PingData;
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public class UndertowServer extends AbstractServer {
-    private Undertow undertow;
+    private Undertow server;
 
-    public UndertowServer(int port, Channel channel) {
-        super(port, channel);
+    public UndertowServer(int port) {
+        super(port);
     }
 
-    public void start() throws Exception {
-        Undertow.Builder builder = Undertow.builder();
-        builder.addHttpListener(port, "0.0.0.0"); // bind to all
-        builder.setHandler(new Handler());
-        undertow = builder.build();
-        undertow.start();
+    public synchronized void start(Channel channel) throws Exception {
+        if (server == null) {
+            try {
+                Undertow.Builder builder = Undertow.builder();
+                builder.addHttpListener(port, "0.0.0.0");
+                builder.setHandler(new Handler(this));
+                server = builder.build();
+                server.start();
+            } catch (Exception e) {
+                server = null;
+                throw e;
+            }
+        }
+        addChannel(channel);
     }
 
-    public void stop() {
-        undertow.stop();
+    public synchronized void stop(Channel channel) {
+        removeChannel(channel);
+        if (server != null && !hasChannels()) {
+            try {
+                server.stop();
+            } finally {
+                server = null;
+            }
+        }
     }
 
     private class Handler implements HttpHandler {
+        private final Server server;
+        private Handler(Server server) {
+            this.server = server;
+        }
         public void handleRequest(HttpServerExchange exchange) throws Exception {
             exchange.startBlocking();
+            String clusterName = exchange.getRequestHeaders().getFirst(CLUSTER_NAME);
+            Channel channel = server.getChannel(clusterName);
             PingData data = Utils.createPingData(channel);
             data.writeTo(new DataOutputStream(exchange.getOutputStream()));
         }

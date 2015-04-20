@@ -28,6 +28,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.RSAPrivateCrtKeySpec;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -64,6 +65,10 @@ public class Certs {
     }
 
     public InputStream openStream(String url) throws Exception {
+        return openStream(url, null);
+    }
+
+    public InputStream openStream(String url, Map<String, String> headers) throws Exception {
         URL requestedUrl = new URL(url);
         URLConnection connection = requestedUrl.openConnection();
         if (connection instanceof HttpsURLConnection) {
@@ -74,6 +79,11 @@ public class Certs {
         } else {
             if (log.isLoggable(Level.FINE)) {
                 log.fine(String.format("Using URLConnection for url [%s].", url));
+            }
+        }
+        if (headers != null) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                connection.addRequestProperty(entry.getKey(), entry.getValue());
             }
         }
         return connection.getInputStream();

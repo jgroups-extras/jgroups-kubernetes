@@ -22,11 +22,14 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.dmr.ModelNode;
 import org.jgroups.protocols.PingData;
 import org.openshift.ping.server.Certs;
+import org.openshift.ping.server.Server;
 import org.openshift.ping.server.Utils;
 
 /**
@@ -63,7 +66,7 @@ public class Client {
         if (namespace != null && namespace.length() > 0) {
             url += (queryNotEmpty?"&":"?") + "namespace=" +  URLEncoder.encode(namespace, "UTF-8");
         }
-        try (InputStream stream = Utils.openStream(url, 60, 1000, certs)) {
+        try (InputStream stream = Utils.openStream(url, null, 60, 1000, certs)) {
             return ModelNode.fromJSONStream(stream);
         }
     }
@@ -131,10 +134,11 @@ public class Client {
         return false;
     }
 
-    public PingData getPingData(String host, int port) throws Exception {
+    public PingData getPingData(String host, int port, String clusterName) throws Exception {
         String url = String.format("http://%s:%s", host, port);
         PingData data = new PingData();
-        try (InputStream is = Utils.openStream(url, 100, 500)) {
+        Map<String, String> headers = Collections.singletonMap(Server.CLUSTER_NAME, clusterName);
+        try (InputStream is = Utils.openStream(url, headers, 100, 500)) {
             data.readFrom(new DataInputStream(is));
         }
         return data;

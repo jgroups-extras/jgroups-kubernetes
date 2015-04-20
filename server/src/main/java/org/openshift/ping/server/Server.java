@@ -16,10 +16,14 @@
 
 package org.openshift.ping.server;
 
+import org.jgroups.Channel;
+
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public interface Server {
-    void start() throws Exception;
-    void stop();
+    public static final String CLUSTER_NAME = "CLUSTER_NAME";
+    public void start(Channel channel) throws Exception;
+    public void stop(Channel channel);
+    public Channel getChannel(String clusterName);
 }

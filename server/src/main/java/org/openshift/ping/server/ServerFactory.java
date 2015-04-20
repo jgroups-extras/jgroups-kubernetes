@@ -16,12 +16,10 @@
 
 package org.openshift.ping.server;
 
-import org.jgroups.Channel;
-
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public interface ServerFactory {
-    boolean isAvailable();
-    Server create(int port, Channel channel);
+    public boolean isAvailable();
+    public Server getServer(int port);
 }

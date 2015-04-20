@@ -19,6 +19,7 @@ package org.openshift.ping.kube.test;
 import java.io.DataInputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 
 import org.jgroups.conf.ClassConfigurator;
 import org.jgroups.protocols.PingData;
@@ -28,6 +29,7 @@ import org.junit.Test;
 import org.openshift.ping.kube.Client;
 import org.openshift.ping.kube.KubePing;
 import org.openshift.ping.kube.test.support.TestServerClient;
+import org.openshift.ping.server.Server;
 import org.openshift.ping.server.Utils;
 
 /**
@@ -52,11 +54,12 @@ public abstract class ServerTestBase extends TestBase {
     @Test
     public void testResponse() throws Exception {
         URL url = new URL("http://localhost:8888");
-        try (InputStream stream = url.openStream()) {
-            PingData data = new PingData();
-            data.readFrom(new DataInputStream(stream));
-            Assert.assertEquals(data, Utils.createPingData(channels[0]));
-        }
+        URLConnection conn = url.openConnection();
+        conn.addRequestProperty(Server.CLUSTER_NAME, TestBase.CLUSTER_NAME);
+        InputStream stream = conn.getInputStream();
+        PingData data = new PingData();
+        data.readFrom(new DataInputStream(stream));
+        Assert.assertEquals(data, Utils.createPingData(channels[0]));
     }
 
     private static final class TestKubePing extends KubePing {
