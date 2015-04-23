@@ -64,6 +64,10 @@
             <maven-resource group="org.jboss.as" artifact="jboss-as-clustering-jgroups"/>
         </module-def>
 
+        <module-def name="org.jboss.as.ee">
+            <maven-resource group="org.jboss.as" artifact="jboss-as-ee"/>
+        </module-def>
+
     </target>
 
     <target name="clean-target">

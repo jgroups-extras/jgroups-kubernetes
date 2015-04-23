@@ -2,6 +2,9 @@
 #shortcut to boot JBoss WildFly with openshift.DNS_PING configuration
 set -ue
 
+DIRNAME=`dirname "$0"`
+REALPATH=`cd "${DIRNAME}/.."; pwd`
+
 # Set HA args
 JBOSS_HA_ARGS=""
 if [ -n "${EAP_NODE_NAME+_}" ]; then
@@ -15,4 +18,4 @@ if [ -n "${JBOSS_NODE_NAME+_}" ]; then
     JBOSS_HA_ARGS="-b ${JBOSS_NODE_NAME} -Djboss.node.name=${JBOSS_NODE_NAME}"
 fi
 
-exec $JBOSS_HOME/bin/standalone.sh -c standalone-openshift.xml $JBOSS_HA_ARGS
+exec ${REALPATH}/bin/standalone.sh -c standalone-openshift.xml ${JBOSS_HA_ARGS}

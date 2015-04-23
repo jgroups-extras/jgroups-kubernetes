@@ -64,6 +64,10 @@
             <maven-resource group="org.wildfly" artifact="wildfly-clustering-jgroups"/>
         </module-def>
 
+        <module-def name="org.jboss.as.ee">
+            <maven-resource group="org.wildfly" artifact="wildfly-ee"/>
+        </module-def>
+
     </target>
 
     <target name="clean-target">

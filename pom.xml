@@ -156,6 +156,11 @@
                         <artifactId>wildfly-clustering-jgroups</artifactId>
                         <version>${version.org.wildfly}</version>
                     </dependency>
+                    <dependency>
+                        <groupId>org.wildfly</groupId>
+                        <artifactId>wildfly-ee</artifactId>
+                        <version>${version.org.wildfly}</version>
+                    </dependency>
                 </dependencies>
             </dependencyManagement>
         </profile>
@@ -167,23 +172,28 @@
             <properties>
                 <!-- Impl -->
                 <version.jgroups>3.2.13.Final-redhat-1</version.jgroups>
-                <version.dmr>1.2.1.Final-redhat-1</version.dmr>
+                <version.dmr>1.2.2.Final-redhat-1</version.dmr>
                 <!-- Build -->
-                <version.org.jboss.as.clustering>7.5.0.Final-redhat-17</version.org.jboss.as.clustering>
-                <version.org.jboss.eap>6.4.0.Beta</version.org.jboss.eap>
-                <version.org.jboss.eap.urlpath>JBEAP-6/6.4.0-Beta</version.org.jboss.eap.urlpath>
+                <version.org.jboss.as>7.5.0.Final-redhat-21</version.org.jboss.as>
+                <version.org.jboss.eap>6.4.0</version.org.jboss.eap>
+                <version.org.jboss.eap.urlpath>JBEAP-6/6.4.0</version.org.jboss.eap.urlpath>
             </properties>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
                         <groupId>org.jboss.as</groupId>
                         <artifactId>jboss-as-clustering-common</artifactId>
-                        <version>${version.org.jboss.as.clustering}</version>
+                        <version>${version.org.jboss.as}</version>
                     </dependency>
                     <dependency>
                         <groupId>org.jboss.as</groupId>
                         <artifactId>jboss-as-clustering-jgroups</artifactId>
-                        <version>${version.org.jboss.as.clustering}</version>
+                        <version>${version.org.jboss.as}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.jboss.as</groupId>
+                        <artifactId>jboss-as-ee</artifactId>
+                        <version>${version.org.jboss.as}</version>
                     </dependency>
                 </dependencies>
             </dependencyManagement>
