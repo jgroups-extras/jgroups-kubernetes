@@ -21,9 +21,13 @@ public class GetServicePort implements DnsOperation<Integer> {
     public Integer call() throws Exception {
         Set<DnsRecord> dnsRecords = getDnsRecords(serviceName);
         for (DnsRecord dnsRecord : dnsRecords) {
+            /*
             if (serviceName.equals(dnsRecord.getHost())) {
                 return dnsRecord.getPort();
             }
+            */
+            // they should all match, even if individual names are different
+            return dnsRecord.getPort();
         }
         return null;
     }

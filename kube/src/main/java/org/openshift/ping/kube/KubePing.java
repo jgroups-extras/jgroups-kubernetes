@@ -138,10 +138,14 @@ public class KubePing extends FILE_PING {
 
     protected Certs createCerts() throws Exception {
         if (getCertFile() != null) {
-            log.info(String.format("Using certificate: %s", getCertFile()));
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("Using certificate: %s", getCertFile()));
+            }
             return new Certs(getCertFile(), getKeyFile(), getKeyPassword(), getKeyAlgo(), getCaFile());
         } else {
-            log.info("No certificate configured.");
+            if (log.isDebugEnabled()) {
+                log.debug("No certificate configured.");
+            }
             return null;
         }
     }
@@ -153,33 +157,42 @@ public class KubePing extends FILE_PING {
     @Override
     public void start() throws Exception {
         client = createClient();
-        log.info(client.info());
-
+        if (log.isDebugEnabled()) {
+            log.debug(client.info());
+        }
         if (factory != null) {
             server = factory.getServer(getServerPort());
         } else {
             server = Utils.getServer(getServerPort());
         }
         final String serverName = server.getClass().getSimpleName();
-        log.info(String.format("Starting server: %s, daemon port: %s, channel address: %s", serverName, getServerPort(), stack.getChannel().getAddress()));
+        if (log.isInfoEnabled()) {
+            log.info(String.format("Starting %s on port %s for channel address: %s", serverName, getServerPort(), stack.getChannel().getAddress()));
+        }
         server.start(stack.getChannel());
-        log.info(String.format("%s started.", serverName));
+        if (log.isInfoEnabled()) {
+            log.info(String.format("%s started.", serverName));
+        }
     }
 
     @Override
     public void stop() {
         try {
             final String serverName = server.getClass().getSimpleName();
-            log.info(String.format("Stopping server: %s", serverName));
+            if (log.isInfoEnabled()) {
+                log.info(String.format("Stopping %s", serverName));
+            }
             server.stop(stack.getChannel());
-            log.info(String.format("%s stopped.", serverName));
+            if (log.isInfoEnabled()) {
+                log.info(String.format("%s stopped.", serverName));
+            }
         } finally {
             super.stop();
         }
     }
 
     /**
-     * Reads all information from the given directory under clustername
+     * Reads all information from the given directory under clusterName.
      *
      * @return all data
      */
@@ -198,7 +211,9 @@ public class KubePing extends FILE_PING {
                 }
             }
         } catch (Exception e) {
-            log.warn(String.format("Failed to read ping data from Kubernetes [%s] for cluster: %s", client.info(), clusterName), e);
+            if (log.isWarnEnabled()) {
+                log.warn(String.format("Failed to read ping data from Kubernetes [%s] for cluster [%s]", client.info(), clusterName), e);
+            }
         }
         return retval;
     }

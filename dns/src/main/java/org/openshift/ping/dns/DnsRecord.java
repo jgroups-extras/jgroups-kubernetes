@@ -15,7 +15,12 @@
  */
 package org.openshift.ping.dns;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class DnsRecord implements Comparable<DnsRecord> {
+    private static final Logger log = Logger.getLogger(DnsRecord.class.getName());
+
     private final int priority;
     private final int weight;
     private final int port;
@@ -26,6 +31,9 @@ public class DnsRecord implements Comparable<DnsRecord> {
         this.weight = weight;
         this.port = port;
         this.host = host.replaceAll("\\.$", "");
+        if (log.isLoggable(Level.FINE)) {
+            log.fine(String.format("Created %s", this));
+        }
     }
 
     public int getPriority() {
@@ -45,6 +53,9 @@ public class DnsRecord implements Comparable<DnsRecord> {
     }
 
     public static DnsRecord fromString(String input) {
+        if (log.isLoggable(Level.FINE)) {
+            log.fine(String.format("Creating DnsRecord from [%s]", input));
+        }
         String[] splitted = input.split(" ");
         return new DnsRecord(
             Integer.parseInt(splitted[0]),

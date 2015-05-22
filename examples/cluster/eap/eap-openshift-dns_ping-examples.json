@@ -60,16 +60,12 @@
                                     "name": "eap-container",
                                     "env": [
                                         {
-                                            "name": "OPENSHIFT_PING_SERVICE",
-                                            "value": "ping"
+                                            "name": "OPENSHIFT_DNS_PING_SERVICE_NAME",
+                                            "value": "ping.default.svc.cluster.local"
                                         },
                                         {
-                                            "name": "OPENSHIFT_PING_NAMESPACE",
-                                            "value": "default"
-                                        },
-                                        {
-                                            "name": "OPENSHIFT_PING_DOMAIN",
-                                            "value": "local"
+                                            "name": "OPENSHIFT_DNS_PING_SERVICE_PORT",
+                                            "value": "8888"
                                         }
                                     ],
                                     "ports": [

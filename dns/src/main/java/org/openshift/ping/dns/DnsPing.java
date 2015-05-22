@@ -44,16 +44,10 @@ public class DnsPing extends FILE_PING {
     }
 
     @Property
-    private String service;
+    private String serviceName;
 
     @Property
-    private String namespace;
-
-    @Property
-    private String domain;
-
-    @Property
-    private int serverPort;
+    private int servicePort;
 
     private ServerFactory factory;
     private Server server;
@@ -62,138 +56,118 @@ public class DnsPing extends FILE_PING {
         this.factory = factory;
     }
 
-    private String getService() {
-        if (service != null) {
-            return service;
-        } else {
-            String env = trimToNull(System.getenv("OPENSHIFT_PING_SERVICE"));
-            if (env != null) {
-                return env;
-            } else {
-                return "ping";
-            }
-        }
-    }
-
-    public void setService(String service) {
-        this.service = service;
-    }
-
-    private String getNamespace() {
-        if (namespace != null) {
-            return namespace;
-        } else {
-            String env = trimToNull(System.getenv("OPENSHIFT_PING_NAMESPACE"));
-            if (env != null) {
-                return env;
-            } else {
-                return "default";
-            }
-        }
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    private String getDomain() {
-        if (domain != null) {
-            return domain;
-        } else {
-            String env = trimToNull(System.getenv("OPENSHIFT_PING_DOMAIN"));
-            if (env != null) {
-                return env;
-            } else {
-                return "local";
-            }
-        }
-    }
-
-    public void setDomain(String domain) {
-        this.domain = domain;
-    }
-
-    private String getServiceName() {
-        return new StringBuilder()
-            .append(getService()).append('.')
-            .append(getNamespace()).append('.')
-            .append(getDomain())
-        .toString();
-    }
-
-    private int getServerPort() {
-        if (serverPort > 0) {
-            return serverPort;
-        } else {
-            return 8888;
-        }
-    }
-
     @Override
     public void start() throws Exception {
+        int svcPort = getServicePort(getServiceName());
         if (factory != null) {
-            server = factory.getServer(getServerPort());
+            server = factory.getServer(svcPort);
         } else {
-            server = Utils.getServer(getServerPort());
+            server = Utils.getServer(svcPort);
         }
         final String serverName = server.getClass().getSimpleName();
-        log.info(String.format("Starting server: %s, daemon port: %s, channel address: %s", serverName, getServerPort(), stack.getChannel().getAddress()));
+        if (log.isInfoEnabled()) {
+            log.info(String.format("Starting %s on port %s for channel address: %s", serverName, svcPort, stack.getChannel().getAddress()));
+        }
         server.start(stack.getChannel());
-        log.info(String.format("%s started.", serverName));
+        if (log.isInfoEnabled()) {
+            log.info(String.format("%s started.", serverName));
+        }
     }
 
     @Override
     public void stop() {
         try {
             final String serverName = server.getClass().getSimpleName();
-            log.info(String.format("Stopping server: %s", serverName));
+            if (log.isInfoEnabled()) {
+                log.info(String.format("Stopping server: %s", serverName));
+            }
             server.stop(stack.getChannel());
-            log.info(String.format("%s stopped.", serverName));
+            if (log.isInfoEnabled()) {
+                log.info(String.format("%s stopped.", serverName));
+            }
         } finally {
             super.stop();
         }
     }
 
     /**
-     * Reads all information from the given directory under clustername
+     * Reads all information from the given directory under clusterName.
      *
      * @return all data
      */
     protected synchronized List<PingData> readAll(String clusterName) {
         List<PingData> retval = new ArrayList<>();
-        String serviceName = getServiceName();
-        Set<String> hostAddresses = getServiceHosts(serviceName);
-        int servicePort = getServicePort(serviceName);
+        String svcName = getServiceName();
+        Set<String> svcHosts = getServiceHosts(svcName);
+        int svcPort = getServicePort(svcName);
         if (log.isDebugEnabled()) {
-            log.debug(String.format("Using service hosts [%s] on service port [%]", hostAddresses, servicePort));
+            log.debug(String.format("Reading service hosts %s on port [%s]", svcHosts, svcPort));
         }
-        for (String hostAddress : hostAddresses) {
+        for (String svcHost : svcHosts) {
             try {
-                PingData pingData = getPingData(hostAddress, servicePort, clusterName);
+                PingData pingData = getPingData(svcHost, svcPort, clusterName);
                 if (log.isDebugEnabled()) {
                     log.debug(String.format("Adding PingData [%s]", pingData));
                 }
                 retval.add(pingData);
             } catch (Exception e) {
-                log.error(String.format("Problem getting ping data for cluster [%s], service [%s], hostAddress [%s], servicePort [%s]; encountered [%s: %s]",
-                        clusterName, serviceName, hostAddress, servicePort, e.getClass().getName(), e.getMessage()), e);
+                if (log.isWarnEnabled()) {
+                    log.warn(String.format("Problem getting PingData for cluster [%s], service [%s], host [%s], port [%s]; encountered [%s: %s]",
+                            clusterName, svcName, svcHost, svcPort, e.getClass().getName(), e.getMessage()));
+                }
             }
         }
         return retval;
     }
 
-    private Set<String> getServiceHosts(String serviceName) {
-        return execute(new GetServiceHosts(serviceName), 60, 1000);
+    private String getServiceName() {
+        String svcName = trimToNull(this.serviceName);
+        if (svcName == null) {
+            svcName = trimToNull(System.getenv("OPENSHIFT_DNS_PING_SERVICE_NAME"));
+            if (svcName == null) {
+                svcName = "ping";
+            }
+        }
+        return svcName;
     }
 
-    private int getServicePort(String serviceName) {
-        Integer value = execute(new GetServicePort(serviceName), 60, 1000);
-        if (value == null) {
-            log.warn(String.format("No matching DNS SRV record found for service [%s]; defaulting to service port [%s]",
-                    serviceName, getServerPort()));
-            value = Integer.valueOf(getServerPort());
+    private int getServicePort(String svcName) {
+        int svcPort = this.servicePort;
+        if (svcPort < 1) {
+            String env = trimToNull(System.getenv("OPENSHIFT_DNS_PING_SERVICE_PORT"));
+            if (env != null) {
+                try {
+                    svcPort = Integer.parseInt(env);
+                } catch (NumberFormatException nfe) {
+                    if (log.isErrorEnabled()) {
+                        log.error(String.format("OPENSHIFT_DNS_PING_SERVICE_PORT [%s] is not an integer: %s", env, nfe.getMessage()));
+                    }
+                }
+            }
+            if (svcPort < 1) {
+                Integer dnsPort = execute(new GetServicePort(svcName), 3, 1000);
+                if (dnsPort != null) {
+                    svcPort = dnsPort.intValue();
+                } else if (log.isWarnEnabled()) {
+                    log.warn(String.format("No DNS SRV record found for service [%s]", svcName));
+                }
+                if (svcPort < 1) {
+                    svcPort = 8888;
+                }
+            }
         }
-        return value.intValue();
+        return svcPort;
+    }
+
+    private Set<String> getServiceHosts(String svcName) {
+        Set<String> svcHosts = execute(new GetServiceHosts(svcName), 3, 1000);
+        if (svcHosts == null) {
+            svcHosts = Collections.emptySet();
+            if (log.isWarnEnabled()) {
+                log.warn(String.format("No matching hosts found for service [%s]; continuing...", svcName));
+            }
+        }
+        return svcHosts;
     }
 
     private <V> V execute(DnsOperation<V> operation, int tries, long sleep) {
@@ -218,12 +192,12 @@ public class DnsPing extends FILE_PING {
                 throw new RuntimeException(e);
             }
         }
-        if (lastFail != null) {
-            String emsg = String.format("%s attempt(s) to execute DNS operation [%s] failed. Last failure was [%s: %s]",
-                    attempts, operation.getClass().getSimpleName(),
+        if (lastFail != null && log.isDebugEnabled()) {
+            String emsg = String.format("%s attempt(s) with a %sms sleep to execute DNS operation [%s] failed. Last failure was [%s: %s]",
+                    attempts, sleep, operation.getClass().getSimpleName(),
                     (lastFail != null ? lastFail.getClass().getName() : "null"),
                     (lastFail != null ? lastFail.getMessage() : ""));
-            log.error(emsg, lastFail);
+            log.debug(emsg);
         }
         return value;
     }
