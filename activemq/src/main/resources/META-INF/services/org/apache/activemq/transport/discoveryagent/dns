@@ -1,0 +1,1 @@
+class=org.openshift.activemq.discoveryagent.dns.DNSDiscoveryAgentFactory
