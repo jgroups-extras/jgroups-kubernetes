@@ -19,7 +19,7 @@ package org.openshift.ping.kube.test;
 import java.io.InputStream;
 
 import org.junit.Test;
-import org.openshift.ping.server.Certs;
+import org.openshift.ping.kube.Certs;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>

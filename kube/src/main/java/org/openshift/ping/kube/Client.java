@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.jboss.dmr.ModelNode;
 import org.jgroups.protocols.PingData;
-import org.openshift.ping.server.Certs;
 import org.openshift.ping.server.Server;
 import org.openshift.ping.server.Utils;
 

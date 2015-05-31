@@ -25,7 +25,6 @@ import org.jgroups.annotations.Property;
 import org.jgroups.conf.ClassConfigurator;
 import org.jgroups.protocols.FILE_PING;
 import org.jgroups.protocols.PingData;
-import org.openshift.ping.server.Certs;
 import org.openshift.ping.server.Server;
 import org.openshift.ping.server.ServerFactory;
 import org.openshift.ping.server.Utils;

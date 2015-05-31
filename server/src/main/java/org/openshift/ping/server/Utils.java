@@ -89,14 +89,14 @@ public class Utils {
         return openStream(url, headers, tries, sleep, null);
     }
 
-    public static InputStream openStream(String url, Map<String, String> headers, int tries, long sleep, Certs certs) {
+    public static InputStream openStream(String url, Map<String, String> headers, int tries, long sleep, StreamProvider streamProvider) {
         final int attempts = tries;
         Throwable lastFail = null;
         while (tries > 0) {
             tries--;
             try {
-                if (certs != null) {
-                    return certs.openStream(url, headers);
+                if (streamProvider != null) {
+                    return streamProvider.openStream(url, headers);
                 } else {
                     URL xurl = new URL(url);
                     URLConnection connection = xurl.openConnection();

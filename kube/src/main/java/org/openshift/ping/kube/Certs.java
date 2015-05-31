@@ -14,7 +14,7 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.server;
+package org.openshift.ping.kube;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -40,6 +40,8 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
+import org.openshift.ping.server.StreamProvider;
+
 import net.oauth.signature.pem.PEMReader;
 import net.oauth.signature.pem.PKCS1EncodedKeySpec;
 
@@ -47,7 +49,7 @@ import net.oauth.signature.pem.PKCS1EncodedKeySpec;
  * @author From Fabric8
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class Certs {
+public class Certs implements StreamProvider {
     private static final Logger log = Logger.getLogger(Certs.class.getName());
 
     private final SSLSocketFactory factory;
