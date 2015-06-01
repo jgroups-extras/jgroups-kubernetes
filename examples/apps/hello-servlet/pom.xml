@@ -2,14 +2,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    <modelVersion>4.0.0</modelVersion>
    <parent>
-	   <groupId>org.openshift.ping.examples</groupId>
-	   <artifactId>openshift-ping-examples-apps</artifactId>
-       <version>1.0.0.Alpha3</version>
+       <groupId>org.openshift.ping.examples</groupId>
+       <artifactId>openshift-ping-examples-apps</artifactId>
+       <version>1.0.0-SNAPSHOT</version>
        <relativePath>../pom.xml</relativePath>
    </parent>
 
    <artifactId>hello-servlet</artifactId>
-   <version>1.0.0.Alpha3</version>
+   <version>1.0.0-SNAPSHOT</version>
    <packaging>war</packaging>
 
    <name>OpenShift PING - Examples - Apps - Hello Servlet</name>
