@@ -219,6 +219,11 @@ public class DnsPing extends FILE_PING {
 
     @Override
     protected void writeToFile(PingData data, String clustername) {
+        // prevent writing to file in jgroups 3.2.x
+    }
+
+    protected void write(List<PingData> list, String clustername) {
+        // prevent writing to file in jgroups 3.6.x
     }
 
     @Override
