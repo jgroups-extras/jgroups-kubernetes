@@ -1,5 +1,5 @@
 # JBoss WildFly with openshift.DNS_PING impl.
-# Name: 10.245.2.2:5000/dward/wildfly-openshift:v1
+# Name: 10.245.2.2:5000/dward/wildfly-openshift:latest
 
 # Use latest jboss/base-jdk:7 image as the base
 FROM jboss/base-jdk:7

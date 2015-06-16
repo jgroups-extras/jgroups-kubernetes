@@ -1,94 +1,109 @@
 {
-    "kind": "Config",
-    "id": "eap-config",
-    "apiVersion": "v1beta1",
-    "name": "JBoss EAP OpenShift Config",
-    "description": "Creates a JBoss EAP OpenShift Cluster",
+    "kind": "List",
+    "apiVersion": "v1beta3",
+    "metadata": {},
     "items": [
         {
+            "apiVersion": "v1",
             "kind": "Service",
-            "id": "eap-http-service",
-            "apiVersion": "v1beta1",
-            "port": 80,
-            "containerPort": 8080,
-            "selector": {
-                "name": "eapPod"
-            }
-        },
-        {
-            "kind": "Service",
-            "id": "eap-https-service",
-            "apiVersion": "v1beta1",
-            "port": 443,
-            "containerPort": 8443,
-            "selector": {
-                "name": "eapPod"
-            }
-        },
-        {
-            "kind": "Service",
-            "id": "ping",
-            "apiVersion": "v1beta1",
-            "port": 8888,
-            "portalIP": "None",
-            "containerPort": 8888,
-            "selector": {
-                "name": "eapPod"
-            }
-        },
-        {
-            "kind": "ReplicationController",
-            "id": "eap-controller",
-            "apiVersion": "v1beta1",
-            "labels": {
-                "name": "eap-controller"
-            },
-            "desiredState": {
-                "replicas": 2,
-                "replicaSelector": {
-                    "name": "eapPod"
+            "metadata": {
+                "annotations": {
+                    "description": "The web server's http port."
                 },
-                "podTemplate": {
-                    "desiredState": {
-                        "manifest": {
-                            "id": "eapPod",
-                            "version": "v1beta1",
-                            "containers": [
-                                {
-                                    "image": "10.245.2.2:5000/dward/eap-openshift-examples:v1",
-                                    "imagePullPolicy": "PullIfNotPresent",
-                                    "name": "eap-container",
-                                    "env": [
-                                        {
-                                            "name": "OPENSHIFT_DNS_PING_SERVICE_NAME",
-                                            "value": "ping.default.svc.cluster.local"
-                                        },
-                                        {
-                                            "name": "OPENSHIFT_DNS_PING_SERVICE_PORT",
-                                            "value": "8888"
-                                        }
-                                    ],
-                                    "ports": [
-                                        {
-                                            "hostPort": 9080,
-                                            "containerPort": 8080
-                                        },
-                                        {
-                                            "hostPort": 9443,
-                                            "containerPort": 8443
-                                        },
-                                        {
-                                            "hostPort": 9888,
-                                            "name": "ping",
-                                            "containerPort": 8888
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
+                "labels": {
+                    "application": "eap-app"
+                },
+                "name": "eap-app-http-service"
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "port": 8080,
+                        "targetPort": 8080
+                    }
+                ],
+                "selector": {
+                    "deploymentConfig": "eap-app"
+                }
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "description": "Ping service for clustered applications."
+                },
+                "labels": {
+                    "application": "eap-app"
+                },
+                "name": "eap-app-ping"
+            },
+            "spec": {
+                "portalIP": "None",
+                "ports": [
+                    {
+                        "port": 8888,
+                        "targetPort": 8888
+                    }
+                ],
+                "selector": {
+                    "deploymentConfig": "eap-app"
+                }
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "ReplicationController",
+            "metadata": {
+                "labels": {
+                    "application": "eap-app"
+                },
+                "name": "eap-app"
+            },
+            "spec": {
+                "replicas": 2,
+                "selector": {
+                    "deploymentConfig": "eap-app"
+                },
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "application": "eap-app",
+                            "deploymentConfig": "eap-app"
+                        },
+                        "name": "eap-app"
                     },
-                    "labels": {
-                        "name": "eapPod"
+                    "spec": {
+                        "containers": [
+                            {
+                                "env": [
+                                    {
+                                        "name": "OPENSHIFT_DNS_PING_SERVICE_NAME",
+                                        "value": "eap-app-ping"
+                                    },
+                                    {
+                                        "name": "OPENSHIFT_DNS_PING_SERVICE_PORT",
+                                        "value": "8888"
+                                    }
+                                ],
+                                "image": "10.245.2.2:5000/dward/eap-openshift-examples:latest",
+                                "imagePullPolicy": "Always",
+                                "name": "eap-app",
+                                "ports": [
+                                    {
+                                        "containerPort": 8080,
+                                        "name": "eap-app-tcp-8080",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 8888,
+                                        "name": "eap-app-ping-8888",
+                                        "protocol": "TCP"
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 }
             }

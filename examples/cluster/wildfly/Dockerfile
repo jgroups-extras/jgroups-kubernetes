@@ -1,7 +1,7 @@
 # JBoss WildFly with openshift.DNS_PING impl and examples.
-# Name: 10.245.2.2:5000/dward/wildfly-openshift-examples:v1
+# Name: 10.245.2.2:5000/dward/wildfly-openshift-examples:latest
 
-FROM 10.245.2.2:5000/dward/wildfly-openshift:v1
+FROM 10.245.2.2:5000/dward/wildfly-openshift:latest
 
 USER root
 
