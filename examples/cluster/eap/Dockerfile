@@ -1,7 +1,7 @@
 # JBoss EAP with openshift.DNS_PING impl and examples.
-# Name: 10.245.2.2:5000/dward/eap-openshift-examples:v1
+# Name: 10.245.2.2:5000/dward/eap-openshift-examples:latest
 
-FROM 10.245.2.2:5000/dward/eap-openshift:v1
+FROM 10.245.2.2:5000/dward/eap-openshift:latest
 
 USER root
 

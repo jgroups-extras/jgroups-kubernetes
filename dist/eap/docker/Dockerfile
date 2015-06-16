@@ -1,5 +1,5 @@
 # JBoss EAP with openshift.DNS_PING impl.
-# Name: 10.245.2.2:5000/dward/eap-openshift:v1
+# Name: 10.245.2.2:5000/dward/eap-openshift:latest
 
 # Use latest jboss/base-jdk:7 image as the base
 FROM jboss/base-jdk:7
