@@ -103,12 +103,11 @@ public class DnsPing extends FILE_PING {
         if (log.isDebugEnabled()) {
             log.debug(String.format("Reading service hosts %s on port [%s]", svcHosts, svcPort));
         }
+        boolean localAddrPresent = false;
         for (String svcHost : svcHosts) {
             try {
                 PingData pingData = getPingData(svcHost, svcPort, clusterName);
-                if (log.isDebugEnabled()) {
-                    log.debug(String.format("Adding PingData [%s]", pingData));
-                }
+                localAddrPresent = localAddrPresent || pingData.getAddress().equals(local_addr);
                 retval.add(pingData);
             } catch (Exception e) {
                 if (log.isWarnEnabled()) {
@@ -117,7 +116,19 @@ public class DnsPing extends FILE_PING {
                 }
             }
         }
-        return retval;
+        if (localAddrPresent) {
+            if (log.isDebugEnabled()) {
+                for(PingData pingData: retval) {
+                    log.debug(String.format("Returning PingData [%s]", pingData));
+                }
+            }
+            return retval;
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug("Local address not discovered, returning empty list");
+            }
+            return Collections.emptyList();
+        }
     }
 
     private String getServiceName() {
