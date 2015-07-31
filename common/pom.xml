@@ -9,11 +9,11 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>openshift-ping-server</artifactId>
+    <artifactId>openshift-ping-common</artifactId>
     <packaging>jar</packaging>
 
-    <name>OpenShift PING - Server</name>
-    <description>Openshift PING - Server</description>
+    <name>OpenShift PING - Common</name>
+    <description>Openshift PING - Common</description>
 
     <dependencies>
 

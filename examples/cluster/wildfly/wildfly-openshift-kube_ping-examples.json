@@ -29,31 +29,6 @@
         },
         {
             "apiVersion": "v1",
-            "kind": "Service",
-            "metadata": {
-                "annotations": {
-                    "description": "Ping service for clustered applications."
-                },
-                "labels": {
-                    "application": "wildfly-app"
-                },
-                "name": "wildfly-app-ping"
-            },
-            "spec": {
-                "portalIP": "None",
-                "ports": [
-                    {
-                        "port": 8888,
-                        "targetPort": 8888
-                    }
-                ],
-                "selector": {
-                    "deploymentConfig": "wildfly-app"
-                }
-            }
-        },
-        {
-            "apiVersion": "v1",
             "kind": "ReplicationController",
             "metadata": {
                 "labels": {
@@ -79,11 +54,11 @@
                             {
                                 "env": [
                                     {
-                                        "name": "OPENSHIFT_MASTER_HOST",
+                                        "name": "OPENSHIFT_KUBE_PING_MASTER_HOST",
                                         "value": "10.245.2.2"
                                     },
                                     {
-                                        "name": "OPENSHIFT_MASTER_PORT",
+                                        "name": "OPENSHIFT_KUBE_PING_MASTER_PORT",
                                         "value": "8443"
                                     },
                                     {
@@ -113,12 +88,12 @@
                                 "ports": [
                                     {
                                         "containerPort": 8080,
-                                        "name": "wildfly-app-tcp-8080",
+                                        "name": "http",
                                         "protocol": "TCP"
                                     },
                                     {
                                         "containerPort": 8888,
-                                        "name": "wildfly-app-ping-8888",
+                                        "name": "ping",
                                         "protocol": "TCP"
                                     }
                                 ],

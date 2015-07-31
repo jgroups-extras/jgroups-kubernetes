@@ -14,16 +14,23 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.server;
-
-import org.jgroups.Channel;
+package org.openshift.ping.common.server;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public interface Server {
-    public static final String CLUSTER_NAME = "CLUSTER_NAME";
-    public void start(Channel channel) throws Exception;
-    public void stop(Channel channel);
-    public Channel getChannel(String clusterName);
+public class JDKServerFactory extends AbstractServerFactory {
+
+    public boolean isAvailable() {
+        try {
+            return JDKServerFactory.class.getClassLoader().loadClass("com.sun.net.httpserver.HttpServer") != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Server createServer(int port) {
+        return new JDKServer(port);
+    }
+
 }

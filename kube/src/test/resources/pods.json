@@ -1,0 +1,82 @@
+{
+  "kind": "PodList",
+  "apiVersion": "v1",
+  "items": [
+    {
+      "metadata": {
+        "name": "eap-app-1-43wra",
+        "namespace": "dward"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "eap-app",
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "name": "ping",
+                "containerPort": 8888,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ],
+        "serviceAccount": "default",
+        "host": "localhost"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True"
+          }
+        ],
+        "hostIP": "127.0.0.1",
+        "podIP": "127.0.0.1"
+      }
+    },
+    {
+      "metadata": {
+        "name": "eap-app-1-dctpw",
+        "namespace": "dward"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "eap-app",
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "name": "ping",
+                "containerPort": 8888,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ],
+        "serviceAccount": "default",
+        "host": "localhost"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True"
+          }
+        ],
+        "hostIP": "127.0.0.1",
+        "podIP": "127.0.0.1"
+      }
+    }
+  ]
+}

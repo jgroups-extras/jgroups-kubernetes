@@ -19,9 +19,9 @@ package org.openshift.ping.kube;
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class Context {
-    private Container container;
-    private String pingPortName;
+public final class Context {
+    private final Container container;
+    private final String pingPortName;
 
     public Context(Container container, String pingPortName) {
         this.container = container;
@@ -34,5 +34,9 @@ public class Context {
 
     public String getPingPortName() {
         return pingPortName;
+    }
+
+    public String toString() {
+        return String.format("%s[container=%s, pingPortName=%s]", getClass().getSimpleName(), container, pingPortName);
     }
 }

@@ -16,14 +16,14 @@
 
 package org.openshift.ping.kube.test;
 
+import org.openshift.ping.common.server.JDKServerFactory;
 import org.openshift.ping.kube.KubePing;
-import org.openshift.ping.server.JDKServerFactory;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public class JDKServerTest extends ServerTestBase {
     protected void applyConfig(KubePing ping) {
-        ping.setFactory(new JDKServerFactory());
+        ping.setServerFactory(new JDKServerFactory());
     }
 }

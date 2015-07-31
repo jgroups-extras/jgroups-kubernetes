@@ -16,105 +16,152 @@
 
 package org.openshift.ping.kube;
 
-import java.io.DataInputStream;
-import java.io.IOException;
+import static org.openshift.ping.common.Utils.openStream;
+import static org.openshift.ping.common.Utils.urlencode;
+
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jboss.dmr.ModelNode;
-import org.jgroups.protocols.PingData;
-import org.openshift.ping.server.Server;
-import org.openshift.ping.server.Utils;
+import org.openshift.ping.common.stream.StreamProvider;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public class Client {
-    private String rootURL;
-    private Certs certs;
+    private static final Logger log = Logger.getLogger(Client.class.getName());
 
-    protected Client() {
-    }
+    private final String masterUrl;
+    private final Map<String, String> headers;
+    private final int connectTimeout;
+    private final int readTimeout;
+    private final int operationAttempts;
+    private final long operationSleep;
+    private final StreamProvider streamProvider;
+    private final String info;
 
-    public Client(String host, String port, String version, Certs certs) throws MalformedURLException {
-        final String protocol = (certs != null) ? "https" : "http";
-        this.rootURL = String.format("%s://%s:%s/api/%s", protocol, host, port, version);
-        this.certs = certs;
-    }
-
-    public String info() {
-        return "Kubernetes master URL: " + rootURL;
-    }
-
-    protected ModelNode getNode(String op) throws IOException {
-        return getNode(op, null, null);
-    }
-
-    protected ModelNode getNode(String op, String namespace, String labelsQuery) throws IOException {
-        String url = rootURL + "/" + op;
-        boolean queryNotEmpty = false;
-        if (labelsQuery != null && labelsQuery.length() > 0) {
-            url += "?labels=" + URLEncoder.encode(labelsQuery, "UTF-8");
-            queryNotEmpty = true;
+    public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts, long operationSleep, StreamProvider streamProvider) {
+        this.masterUrl = masterUrl;
+        this.headers = headers;
+        this.connectTimeout = connectTimeout;
+        this.readTimeout = readTimeout;
+        this.operationAttempts = operationAttempts;
+        this.operationSleep = operationSleep;
+        this.streamProvider = streamProvider;
+        Map<String, String> maskedHeaders = new TreeMap<String, String>();
+        if (headers != null) {
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                String key = header.getKey();
+                String value = header.getValue();
+                if ("Authorization".equalsIgnoreCase(key) && value != null) {
+                    value = "#MASKED:" + value.length() + "#";
+                }
+                maskedHeaders.put(key, value);
+            }
         }
+        this.info = String.format("%s[masterUrl=%s, headers=%s, connectTimeout=%s, readTimeout=%s, operationAttempts=%s, operationSleep=%s, streamProvider=%s]",
+                getClass().getSimpleName(), masterUrl, maskedHeaders, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider);
+    }
+
+    public final String info() {
+        return info;
+    }
+
+    protected ModelNode getNode(String op, String namespace, String labels) throws Exception {
+        String url = masterUrl;
         if (namespace != null && namespace.length() > 0) {
-            url += (queryNotEmpty?"&":"?") + "namespace=" +  URLEncoder.encode(namespace, "UTF-8");
+            url = url + "/namespaces/" + urlencode(namespace);
         }
-        try (InputStream stream = Utils.openStream(url, null, 60, 1000, certs)) {
+        url = url + "/" + op;
+        if (labels != null && labels.length() > 0) {
+            url = url + "?labels=" + urlencode(labels);
+        }
+        try (InputStream stream = openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider)) {
             return ModelNode.fromJSONStream(stream);
         }
     }
 
-    public List<Pod> getPods() throws IOException {
-        return getPods(null, null);
-    }
-
-    public List<Pod> getPods(String namespace, String labelsQuery) throws IOException {
-        ModelNode root = getNode("pods", namespace, labelsQuery);
-        List<Pod> pods = new ArrayList<>();
-        List<ModelNode> items = root.get("items").asList();
-        for (ModelNode item : items) {
-            Pod pod = new Pod();
-
-            ModelNode currentState = item.get("currentState");
-            ModelNode host = currentState.get("host");
-            pod.setHost(host.asString());
-            ModelNode podIP = currentState.get("podIP");
-            pod.setPodIP(podIP.asString());
-
-            ModelNode desiredState = item.get("desiredState");
-            ModelNode manifest = desiredState.get("manifest");
-
-            ModelNode ctns = manifest.get("containers");
-            if (ctns.isDefined() == false) continue;
-
-            List<ModelNode> containers = ctns.asList();
-            for (ModelNode c : containers) {
-                Container container = new Container(pod.getHost(), pod.getPodIP());
-                String cname = c.get("name").asString();
-                container.setName(cname);
-
-                ModelNode pts = c.get("ports");
-                if (pts.isDefined() == false) continue;
-
-                List<ModelNode> ports = pts.asList();
-                for (ModelNode p : ports) {
-                    String pname = p.get("name").asString();
-                    Port port = new Port(pname,
-                            p.get("hostPort").isDefined() ? p.get("hostPort").asInt() : null,
-                            p.get("containerPort").isDefined() ? p.get("containerPort").asInt() : null);
+    public final List<Pod> getPods(String namespace, String labels) throws Exception {
+        ModelNode root = getNode("pods", namespace, labels);
+        List<Pod> pods = new ArrayList<Pod>();
+        List<ModelNode> itemNodes = root.get("items").asList();
+        for (ModelNode itemNode : itemNodes) {
+            //ModelNode metadataNode = itemNode.get("metadata");
+            //String podName = metadataNode.get("name").asString(); // eap-app-1-43wra
+            //String podNamespace = metadataNode.get("namespace").asString(); // dward
+            ModelNode specNode = itemNode.get("spec");
+            //String serviceAccount = specNode.get("serviceAccount").asString(); // default
+            //String host = specNode.get("host").asString(); // ce-openshift-rhel-minion-1.lab.eng.brq.redhat.com
+            ModelNode statusNode = itemNode.get("status");
+            ModelNode phaseNode = statusNode.get("phase");
+            if (!phaseNode.isDefined() || !"Running".equals(phaseNode.asString())) {
+                continue;
+            }
+            /* We don't want to filter on the following as that could result in MERGEs instead of JOINs.
+            ModelNode conditionsNode = statusNode.get("conditions");
+            if (!conditionsNode.isDefined()) {
+                continue;
+            }
+            boolean ready = false;
+            List<ModelNode> conditions = conditionsNode.asList();
+            for (ModelNode condition : conditions) {
+                ModelNode conditionTypeNode = condition.get("type");
+                ModelNode conditionStatusNode = condition.get("status");
+                if (conditionTypeNode.isDefined() && "Ready".equals(conditionTypeNode.asString()) &&
+                        conditionStatusNode.isDefined() && "True".equals(conditionStatusNode.asString())) {
+                    ready = true;
+                    break;
+                }
+            }
+            if (!ready) {
+                continue;
+            }
+            */
+            //String hostIP = statusNode.get("hostIP").asString(); // 10.34.75.250
+            ModelNode podIPNode = statusNode.get("podIP");
+            if (!podIPNode.isDefined()) {
+                continue;
+            }
+            String podIP = podIPNode.asString(); // 10.1.0.169
+            Pod pod = new Pod(podIP);
+            ModelNode containersNode = specNode.get("containers");
+            if (!containersNode.isDefined()) {
+                continue;
+            }
+            List<ModelNode> containerNodes = containersNode.asList();
+            for (ModelNode containerNode : containerNodes) {
+                ModelNode portsNode = containerNode.get("ports");
+                if (!portsNode.isDefined()) {
+                    continue;
+                }
+                //String containerName = containerNode.get("name").asString(); // eap-app
+                Container container = new Container();
+                List<ModelNode> portNodes = portsNode.asList();
+                for (ModelNode portNode : portNodes) {
+                    ModelNode portNameNode = portNode.get("name");
+                    if (!portNameNode.isDefined()) {
+                        continue;
+                    }
+                    String portName = portNameNode.asString(); // ping
+                    ModelNode containerPortNode = portNode.get("containerPort");
+                    if (!containerPortNode.isDefined()) {
+                        continue;
+                    }
+                    int containerPort = containerPortNode.asInt(); // 8888
+                    Port port = new Port(portName, containerPort);
                     container.addPort(port);
                 }
-
                 pod.addContainer(container);
             }
-
             pods.add(pod);
+        }
+        if (log.isLoggable(Level.FINE)) {
+            log.log(Level.FINE, String.format("getPods(%s, %s) = %s", namespace, labels, pods));
         }
         return pods;
     }
@@ -133,13 +180,4 @@ public class Client {
         return false;
     }
 
-    public PingData getPingData(String host, int port, String clusterName) throws Exception {
-        String url = String.format("http://%s:%s", host, port);
-        PingData data = new PingData();
-        Map<String, String> headers = Collections.singletonMap(Server.CLUSTER_NAME, clusterName);
-        try (InputStream is = Utils.openStream(url, headers, 100, 500)) {
-            data.readFrom(new DataInputStream(is));
-        }
-        return data;
-    }
 }

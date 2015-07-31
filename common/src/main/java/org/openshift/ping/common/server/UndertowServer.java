@@ -14,7 +14,7 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.server;
+package org.openshift.ping.common.server;
 
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
@@ -35,7 +35,8 @@ public class UndertowServer extends AbstractServer {
         super(port);
     }
 
-    public synchronized void start(Channel channel) throws Exception {
+    public synchronized boolean start(Channel channel) throws Exception {
+        boolean started = false;
         if (server == null) {
             try {
                 Undertow.Builder builder = Undertow.builder();
@@ -43,23 +44,28 @@ public class UndertowServer extends AbstractServer {
                 builder.setHandler(new Handler(this));
                 server = builder.build();
                 server.start();
+                started = true;
             } catch (Exception e) {
                 server = null;
                 throw e;
             }
         }
         addChannel(channel);
+        return started;
     }
 
-    public synchronized void stop(Channel channel) {
+    public synchronized boolean stop(Channel channel) {
+        boolean stopped = false;
         removeChannel(channel);
         if (server != null && !hasChannels()) {
             try {
                 server.stop();
+                stopped = true;
             } finally {
                 server = null;
             }
         }
+        return stopped;
     }
 
     private class Handler implements HttpHandler {
@@ -71,7 +77,7 @@ public class UndertowServer extends AbstractServer {
             exchange.startBlocking();
             String clusterName = exchange.getRequestHeaders().getFirst(CLUSTER_NAME);
             Channel channel = server.getChannel(clusterName);
-            PingData data = Utils.createPingData(channel);
+            PingData data = createPingData(channel);
             data.writeTo(new DataOutputStream(exchange.getOutputStream()));
         }
     }

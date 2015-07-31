@@ -16,151 +16,71 @@
 
 package org.openshift.ping.dns;
 
-import java.io.DataInputStream;
-import java.io.InputStream;
+import static org.openshift.ping.common.Utils.execute;
+import static org.openshift.ping.common.Utils.getSystemEnv;
+import static org.openshift.ping.common.Utils.getSystemEnvInt;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import org.jgroups.Address;
 import org.jgroups.annotations.MBean;
 import org.jgroups.annotations.Property;
 import org.jgroups.conf.ClassConfigurator;
-import org.jgroups.protocols.FILE_PING;
 import org.jgroups.protocols.PingData;
-import org.openshift.ping.server.Server;
-import org.openshift.ping.server.ServerFactory;
-import org.openshift.ping.server.Utils;
+import org.openshift.ping.common.OpenshiftPing;
 
 @MBean(description = "DNS based discovery protocol")
-public class DnsPing extends FILE_PING {
+public class DnsPing extends OpenshiftPing {
 
-    public static final short OPENSHIFT_DNS_PING_ID = 2003;
-    public static final short JGROUPS_DNS_PING_ID = 2004;
+    public static final short OPENSHIFT_DNS_PING_ID = 2020;
+    public static final short JGROUPS_DNS_PING_ID = 2021;
     static {
         ClassConfigurator.addProtocol(OPENSHIFT_DNS_PING_ID, DnsPing.class);
     }
 
     @Property
-    private String serviceName;
+    private String serviceName = "ping";
+    private String _serviceName;
 
     @Property
     private int servicePort;
+    private int _servicePort;
 
-    private ServerFactory factory;
-    private Server server;
-
-    public void setFactory(ServerFactory factory) {
-        this.factory = factory;
+    public DnsPing() {
+        super("OPENSHIFT_DNS_PING_");
     }
 
     @Override
-    public void start() throws Exception {
-        int svcPort = getServicePort(getServiceName());
-        if (factory != null) {
-            server = factory.getServer(svcPort);
-        } else {
-            server = Utils.getServer(svcPort);
-        }
-        final String serverName = server.getClass().getSimpleName();
-        if (log.isInfoEnabled()) {
-            log.info(String.format("Starting %s on port %s for channel address: %s", serverName, svcPort, stack.getChannel().getAddress()));
-        }
-        server.start(stack.getChannel());
-        if (log.isInfoEnabled()) {
-            log.info(String.format("%s started.", serverName));
-        }
+    public int getServerPort() {
+        return _servicePort;
     }
 
     @Override
-    public void stop() {
-        try {
-            final String serverName = server.getClass().getSimpleName();
-            if (log.isInfoEnabled()) {
-                log.info(String.format("Stopping server: %s", serverName));
-            }
-            server.stop(stack.getChannel());
-            if (log.isInfoEnabled()) {
-                log.info(String.format("%s stopped.", serverName));
-            }
-        } finally {
-            super.stop();
-        }
+    public void init() throws Exception {
+        super.init();
+        _serviceName = getSystemEnv(getSystemEnvName("SERVICE_NAME"), serviceName, true);
+        _servicePort = getServicePort();
     }
 
-    /**
-     * Reads all information from the given directory under clusterName.
-     *
-     * @return all data
-     */
-    protected synchronized List<PingData> readAll(String clusterName) {
-        List<PingData> retval = new ArrayList<>();
-        String svcName = getServiceName();
-        Set<String> svcHosts = getServiceHosts(svcName);
-        int svcPort = getServicePort(svcName);
-        if (log.isDebugEnabled()) {
-            log.debug(String.format("Reading service hosts %s on port [%s]", svcHosts, svcPort));
-        }
-        boolean localAddrPresent = false;
-        for (String svcHost : svcHosts) {
-            try {
-                PingData pingData = getPingData(svcHost, svcPort, clusterName);
-                localAddrPresent = localAddrPresent || pingData.getAddress().equals(local_addr);
-                retval.add(pingData);
-            } catch (Exception e) {
-                if (log.isWarnEnabled()) {
-                    log.warn(String.format("Problem getting PingData for cluster [%s], service [%s], host [%s], port [%s]; encountered [%s: %s]",
-                            clusterName, svcName, svcHost, svcPort, e.getClass().getName(), e.getMessage()));
-                }
-            }
-        }
-        if (localAddrPresent) {
-            if (log.isDebugEnabled()) {
-                for(PingData pingData: retval) {
-                    log.debug(String.format("Returning PingData [%s]", pingData));
-                }
-            }
-            return retval;
-        } else {
-            if (log.isDebugEnabled()) {
-                log.debug("Local address not discovered, returning empty list");
-            }
-            return Collections.emptyList();
-        }
+    @Override
+    public void destroy() {
+        _serviceName = null;
+        _servicePort = 0;
+        super.destroy();
     }
 
-    private String getServiceName() {
-        String svcName = trimToNull(this.serviceName);
-        if (svcName == null) {
-            svcName = trimToNull(System.getenv("OPENSHIFT_DNS_PING_SERVICE_NAME"));
-            if (svcName == null) {
-                svcName = "ping";
-            }
-        }
-        return svcName;
-    }
-
-    private int getServicePort(String svcName) {
-        int svcPort = this.servicePort;
+    private int getServicePort() {
+        int svcPort = getSystemEnvInt(getSystemEnvName("SERVICE_PORT"));
         if (svcPort < 1) {
-            String env = trimToNull(System.getenv("OPENSHIFT_DNS_PING_SERVICE_PORT"));
-            if (env != null) {
-                try {
-                    svcPort = Integer.parseInt(env);
-                } catch (NumberFormatException nfe) {
-                    if (log.isErrorEnabled()) {
-                        log.error(String.format("OPENSHIFT_DNS_PING_SERVICE_PORT [%s] is not an integer: %s", env, nfe.getMessage()));
-                    }
-                }
-            }
+            svcPort = servicePort;
             if (svcPort < 1) {
-                Integer dnsPort = execute(new GetServicePort(svcName), 3, 1000);
+                Integer dnsPort = execute(new GetServicePort(_serviceName), getOperationAttempts(), getOperationSleep());
                 if (dnsPort != null) {
                     svcPort = dnsPort.intValue();
                 } else if (log.isWarnEnabled()) {
-                    log.warn(String.format("No DNS SRV record found for service [%s]", svcName));
+                    log.warn(String.format("No DNS SRV record found for service [%s]", _serviceName));
                 }
                 if (svcPort < 1) {
                     svcPort = 8888;
@@ -170,84 +90,54 @@ public class DnsPing extends FILE_PING {
         return svcPort;
     }
 
-    private Set<String> getServiceHosts(String svcName) {
-        Set<String> svcHosts = execute(new GetServiceHosts(svcName), 3, 1000);
+    private Set<String> getServiceHosts() {
+        Set<String> svcHosts = execute(new GetServiceHosts(_serviceName), getOperationAttempts(), getOperationSleep());
         if (svcHosts == null) {
             svcHosts = Collections.emptySet();
             if (log.isWarnEnabled()) {
-                log.warn(String.format("No matching hosts found for service [%s]; continuing...", svcName));
+                log.warn(String.format("No matching hosts found for service [%s]; continuing...", _serviceName));
             }
         }
         return svcHosts;
     }
 
-    private <V> V execute(DnsOperation<V> operation, int tries, long sleep) {
-        V value = null;
-        final int attempts = tries;
-        Throwable lastFail = null;
-        while (tries > 0) {
-            tries--;
+    /**
+     * Reads all information from the given directory under clusterName.
+     *
+     * @return all data
+     */
+    protected synchronized List<PingData> readAll(String clusterName) {
+        Set<String> serviceHosts = getServiceHosts();
+        if (log.isDebugEnabled()) {
+            log.debug(String.format("Reading service hosts %s on port [%s]", serviceHosts, _servicePort));
+        }
+        List<PingData> retval = new ArrayList<>();
+        boolean localAddrPresent = false;
+        for (String serviceHost : serviceHosts) {
             try {
-               value = operation.call();
-               if (value != null) {
-                   lastFail = null;
-                   break;
-               }
-            } catch (Throwable fail) {
-                lastFail = fail;
-            }
-            try {
-                Thread.sleep(sleep);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException(e);
+                PingData pingData = getPingData(serviceHost, _servicePort, clusterName);
+                localAddrPresent = localAddrPresent || pingData.getAddress().equals(local_addr);
+                retval.add(pingData);
+            } catch (Exception e) {
+                if (log.isInfoEnabled()) {
+                    log.info(String.format("PingData not available for cluster [%s], service [%s], host [%s], port [%s]; encountered [%s: %s]",
+                            clusterName, _serviceName, serviceHost, _servicePort, e.getClass().getName(), e.getMessage()));
+                }
             }
         }
-        if (lastFail != null && log.isDebugEnabled()) {
-            String emsg = String.format("%s attempt(s) with a %sms sleep to execute DNS operation [%s] failed. Last failure was [%s: %s]",
-                    attempts, sleep, operation.getClass().getSimpleName(),
-                    (lastFail != null ? lastFail.getClass().getName() : "null"),
-                    (lastFail != null ? lastFail.getMessage() : ""));
-            log.debug(emsg);
-        }
-        return value;
-    }
-
-    private PingData getPingData(String host, int port, String clusterName) throws Exception {
-        String url = String.format("http://%s:%s", host, port);
-        PingData data = new PingData();
-        Map<String, String> headers = Collections.singletonMap(Server.CLUSTER_NAME, clusterName);
-        try (InputStream is = Utils.openStream(url, headers, 100, 500)) {
-            data.readFrom(new DataInputStream(is));
-        }
-        return data;
-    }
-
-    @Override
-    protected void createRootDir() {
-        // empty on purpose to prevent dir from being created in the local file system
-    }
-
-    @Override
-    protected void writeToFile(PingData data, String clustername) {
-        // prevent writing to file in jgroups 3.2.x
-    }
-
-    protected void write(List<PingData> list, String clustername) {
-        // prevent writing to file in jgroups 3.6.x
-    }
-
-    @Override
-    protected void remove(String clustername, Address addr) {
-    }
-
-    private String trimToNull(String s) {
-        if (s != null) {
-            s = s.trim();
-            if (s.length() == 0) {
-                s = null;
+        if (localAddrPresent) {
+            if (log.isDebugEnabled()) {
+                for (PingData pingData: retval) {
+                    log.debug(String.format("Returning PingData [%s]", pingData));
+                }
             }
+            return retval;
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug("Local address not discovered, returning empty list");
+            }
+            return Collections.<PingData>emptyList();
         }
-        return s;
     }
+
 }

@@ -1,5 +1,5 @@
 /**
- *  Copyright 2014 Red Hat, Inc.
+ *  Copyright 2015 Red Hat, Inc.
  *
  *  Red Hat licenses this file to you under the Apache License, version
  *  2.0 (the "License"); you may not use this file except in compliance
@@ -14,23 +14,18 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.server;
+package org.openshift.ping.common.stream;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+
 
 /**
- * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
+ * @author <a href="mailto:kconner@redhat.com">Kevin Conner</a>
  */
-public class JBossServerFactory extends AbstractServerFactory {
+public interface StreamProvider {
 
-    public boolean isAvailable() {
-        try {
-            return JBossServerFactory.class.getClassLoader().loadClass("org.jboss.com.sun.net.httpserver.HttpServer") != null;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public Server createServer(int port) {
-        return new JBossServer(port);
-    }
+    public InputStream openStream(String url, Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException;
 
 }
