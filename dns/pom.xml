@@ -19,7 +19,7 @@
 
         <dependency>
             <groupId>org.openshift.ping</groupId>
-            <artifactId>openshift-ping-server</artifactId>
+            <artifactId>openshift-ping-common</artifactId>
         </dependency>
 
         <dependency>

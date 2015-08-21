@@ -14,23 +14,23 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.server;
+package org.openshift.ping.common.server;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class JDKServerFactory extends AbstractServerFactory {
+public class JBossServerFactory extends AbstractServerFactory {
 
     public boolean isAvailable() {
         try {
-            return JDKServerFactory.class.getClassLoader().loadClass("com.sun.net.httpserver.HttpServer") != null;
+            return JBossServerFactory.class.getClassLoader().loadClass("org.jboss.com.sun.net.httpserver.HttpServer") != null;
         } catch (Exception e) {
             return false;
         }
     }
 
     public Server createServer(int port) {
-        return new JDKServer(port);
+        return new JBossServer(port);
     }
 
 }

@@ -19,18 +19,12 @@ package org.openshift.ping.kube;
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class Port {
-    private String name;
-    private Integer hostPort;
-    private Integer containerPort;
+public final class Port {
+    private final String name;
+    private final int containerPort;
 
-    public Port(String name, Integer containerPort) {
-        this(name, null, containerPort);
-    }
-
-    public Port(String name, Integer hostPort, Integer containerPort) {
+    public Port(String name, int containerPort) {
         this.name = name;
-        this.hostPort = hostPort;
         this.containerPort = containerPort;
     }
 
@@ -38,11 +32,11 @@ public class Port {
         return name;
     }
 
-    public Integer getHostPort() {
-        return hostPort;
+    public int getContainerPort() {
+        return containerPort;
     }
 
-    public Integer getContainerPort() {
-        return containerPort;
+    public String toString() {
+        return String.format("%s[name=%s, containerPort=%s]", getClass().getSimpleName(), name, containerPort);
     }
 }

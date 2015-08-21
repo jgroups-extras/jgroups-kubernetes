@@ -14,12 +14,12 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.kube;
+package org.openshift.ping.common.stream;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import static org.openshift.ping.common.Utils.openFile;
+
+import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.net.URLConnection;
 import java.security.KeyFactory;
 import java.security.KeyStore;
@@ -40,8 +40,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.openshift.ping.server.StreamProvider;
-
 import net.oauth.signature.pem.PEMReader;
 import net.oauth.signature.pem.PKCS1EncodedKeySpec;
 
@@ -49,12 +47,12 @@ import net.oauth.signature.pem.PKCS1EncodedKeySpec;
  * @author From Fabric8
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class Certs implements StreamProvider {
-    private static final Logger log = Logger.getLogger(Certs.class.getName());
+public class CertificateStreamProvider extends BaseStreamProvider {
+    private static final Logger log = Logger.getLogger(CertificateStreamProvider.class.getName());
 
     private final SSLSocketFactory factory;
 
-    public Certs(String clientCertFile, String clientKeyFile, String clientKeyPassword, String clientKeyAlgo, String caCertFile) throws Exception {
+    public CertificateStreamProvider(String clientCertFile, String clientKeyFile, String clientKeyPassword, String clientKeyAlgo, String caCertFile) throws Exception {
         // defaults - RSA and empty password
         char[] password = (clientKeyPassword != null) ? clientKeyPassword.toCharArray() : new char[0];
         String algorithm = (clientKeyAlgo != null) ? clientKeyAlgo : "RSA";
@@ -66,15 +64,12 @@ public class Certs implements StreamProvider {
         factory = context.getSocketFactory();
     }
 
-    public InputStream openStream(String url) throws Exception {
-        return openStream(url, null);
-    }
-
-    public InputStream openStream(String url, Map<String, String> headers) throws Exception {
-        URL requestedUrl = new URL(url);
-        URLConnection connection = requestedUrl.openConnection();
+    public InputStream openStream(String url, Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException {
+        URLConnection connection = openConnection(url, headers, connectTimeout, readTimeout);
         if (connection instanceof HttpsURLConnection) {
-            HttpsURLConnection.class.cast(connection).setSSLSocketFactory(factory);
+            HttpsURLConnection httpsConnection = HttpsURLConnection.class.cast(connection);
+            //httpsConnection.setHostnameVerifier(InsecureStreamProvider.INSECURE_HOSTNAME_VERIFIER);
+            httpsConnection.setSSLSocketFactory(factory);
             if (log.isLoggable(Level.FINE)) {
                 log.fine(String.format("Using HttpsURLConnection with SSLSocketFactory [%s] for url [%s].", factory, url));
             }
@@ -83,32 +78,20 @@ public class Certs implements StreamProvider {
                 log.fine(String.format("Using URLConnection for url [%s].", url));
             }
         }
-        if (headers != null) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                connection.addRequestProperty(entry.getKey(), entry.getValue());
-            }
-        }
         return connection.getInputStream();
-    }
-
-    private InputStream getInputStreamFromFile(String file) throws FileNotFoundException {
-        if (file != null) {
-            return new FileInputStream(file);
-        }
-        return null;
     }
 
     private KeyManager[] configureClientCert(String clientCertFile, String clientKeyFile, char[] clientKeyPassword, String clientKeyAlgo) throws Exception {
         try {
-            InputStream certInputStream = getInputStreamFromFile(clientCertFile);
+            InputStream certInputStream = openFile(clientCertFile);
             CertificateFactory certFactory = CertificateFactory.getInstance("X509");
-            X509Certificate cert = (X509Certificate) certFactory.generateCertificate(certInputStream);
+            X509Certificate cert = (X509Certificate)certFactory.generateCertificate(certInputStream);
 
-            InputStream keyInputStream = getInputStreamFromFile(clientKeyFile);
+            InputStream keyInputStream = openFile(clientKeyFile);
             PEMReader reader = new PEMReader(keyInputStream);
             RSAPrivateCrtKeySpec keySpec = new PKCS1EncodedKeySpec(reader.getDerBytes()).getKeySpec();
             KeyFactory kf = KeyFactory.getInstance(clientKeyAlgo);
-            RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(keySpec);
+            RSAPrivateKey privKey = (RSAPrivateKey)kf.generatePrivate(keySpec);
 
             KeyStore keyStore = KeyStore.getInstance("JKS");
             keyStore.load(null);
@@ -127,24 +110,31 @@ public class Certs implements StreamProvider {
     }
 
     private TrustManager[] configureCaCert(String caCertFile) throws Exception {
-        try {
-            InputStream pemInputStream = getInputStreamFromFile(caCertFile);
-            CertificateFactory certFactory = CertificateFactory.getInstance("X509");
-            X509Certificate cert = (X509Certificate) certFactory.generateCertificate(pemInputStream);
-
-            KeyStore trustStore = KeyStore.getInstance("JKS");
-            trustStore.load(null);
-
-            String alias = cert.getSubjectX500Principal().getName();
-            trustStore.setCertificateEntry(alias, cert);
-
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManagerFactory.init(trustStore);
-
-            return trustManagerFactory.getTrustManagers();
-        } catch (Exception e) {
-            log.log(Level.SEVERE, "Could not create trust manager for " + caCertFile, e);
-            throw e;
+        if (caCertFile != null) {
+            try {
+                InputStream pemInputStream = openFile(caCertFile);
+                CertificateFactory certFactory = CertificateFactory.getInstance("X509");
+                X509Certificate cert = (X509Certificate)certFactory.generateCertificate(pemInputStream);
+    
+                KeyStore trustStore = KeyStore.getInstance("JKS");
+                trustStore.load(null);
+    
+                String alias = cert.getSubjectX500Principal().getName();
+                trustStore.setCertificateEntry(alias, cert);
+    
+                TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                trustManagerFactory.init(trustStore);
+    
+                return trustManagerFactory.getTrustManagers();
+            } catch (Exception e) {
+                log.log(Level.SEVERE, "Could not create trust manager for " + caCertFile, e);
+                throw e;
+            }
+        } else {
+            if (log.isLoggable(Level.WARNING)) {
+                log.log(Level.WARNING, "ca cert file undefined");
+            }
+            return InsecureStreamProvider.INSECURE_TRUST_MANAGERS;
         }
     }
 

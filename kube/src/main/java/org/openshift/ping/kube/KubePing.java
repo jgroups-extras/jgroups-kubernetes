@@ -16,178 +16,160 @@
 
 package org.openshift.ping.kube;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.openshift.ping.common.Utils.getSystemEnv;
+import static org.openshift.ping.common.Utils.getSystemEnvInt;
+import static org.openshift.ping.common.Utils.readFileToString;
 
-import org.jgroups.Address;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.jgroups.annotations.MBean;
 import org.jgroups.annotations.Property;
 import org.jgroups.conf.ClassConfigurator;
-import org.jgroups.protocols.FILE_PING;
 import org.jgroups.protocols.PingData;
-import org.openshift.ping.server.Server;
-import org.openshift.ping.server.ServerFactory;
-import org.openshift.ping.server.Utils;
+import org.openshift.ping.common.OpenshiftPing;
+import org.openshift.ping.common.stream.CertificateStreamProvider;
+import org.openshift.ping.common.stream.InsecureStreamProvider;
+import org.openshift.ping.common.stream.StreamProvider;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 @MBean(description = "Kubernetes based discovery protocol")
-public class KubePing extends FILE_PING {
+public class KubePing extends OpenshiftPing {
 
-    public static final short OPENSHIFT_KUBE_PING_ID = 2001;
-    public static final short JGROUPS_KUBE_PING_ID = 2002;
+    public static final short OPENSHIFT_KUBE_PING_ID = 2010;
+    public static final short JGROUPS_KUBE_PING_ID = 2011;
     static {
         ClassConfigurator.addProtocol(OPENSHIFT_KUBE_PING_ID, KubePing.class);
     }
 
     @Property
-    private String host;
+    private String masterProtocol;
 
     @Property
-    private String port;
+    private String masterHost;
 
     @Property
-    private String version;
+    private int masterPort;
 
     @Property
-    private int serverPort;
+    private String apiVersion = "v1";
 
     @Property
-    private String labelsQuery;
-    
+    private String namespace = "default";
+    private String _namespace;
+
     @Property
-    private String namespace;
+    private String labels;
+    private String _labels;
+
+    @Property
+    private int serverPort = 8888;
+    private int _serverPort;
 
     @Property
     private String pingPortName = "ping";
+    private String _pingPortName;
 
     @Property
-    private String certFile;
+    private String clientCertFile;
 
     @Property
-    private String keyFile;
+    private String clientKeyFile;
 
     @Property
-    private String keyPassword;
+    private String clientKeyPassword;
 
     @Property
-    private String keyAlgo;
+    private String clientKeyAlgo = "RSA";
 
     @Property
-    private String caFile;
+    private String caCertFile;
 
-    private ServerFactory factory;
-    private Server server;
-    private Client client;
+    @Property
+    private String saTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
 
-    public void setFactory(ServerFactory factory) {
-        this.factory = factory;
+    private Client _client;
+
+    public KubePing() {
+        super("OPENSHIFT_KUBE_PING_");
     }
 
-    private String getHost() {
-        if (host != null) {
-            return host;
-        } else {
-            String omh = trimToNull(System.getenv("OPENSHIFT_MASTER_HOST"));
-            if (omh != null) {
-                return omh;
-            } else {
-                return System.getenv("KUBERNETES_RO_SERVICE_HOST");
-            }
-        }
+    public void setMasterProtocol(String masterProtocol) {
+        this.masterProtocol = masterProtocol;
     }
 
-    public void setHost(String host) {
-        this.host = host;
+    public void setMasterHost(String masterMost) {
+        this.masterHost = masterMost;
     }
 
-    private String getPort() {
-        if (port != null) {
-            return port;
-        } else {
-            String omp = trimToNull(System.getenv("OPENSHIFT_MASTER_PORT"));
-            if (omp != null) {
-                return omp;
-            } else {
-                return System.getenv("KUBERNETES_RO_SERVICE_PORT");
-            }
-        }
-    }
-
-    public void setPort(String port) {
-        this.port = port;
-    }
-
-    private String getVersion() {
-        if (version != null) {
-            return version;
-        } else {
-            return "v1beta1";
-        }
-    }
-
-    private int getServerPort() {
-        if (serverPort > 0) {
-            return serverPort;
-        } else {
-            return 8888;
-        }
-    }
-
-    protected Certs createCerts() throws Exception {
-        if (getCertFile() != null) {
-            if (log.isDebugEnabled()) {
-                log.debug(String.format("Using certificate: %s", getCertFile()));
-            }
-            return new Certs(getCertFile(), getKeyFile(), getKeyPassword(), getKeyAlgo(), getCaFile());
-        } else {
-            if (log.isDebugEnabled()) {
-                log.debug("No certificate configured.");
-            }
-            return null;
-        }
-    }
-
-    protected Client createClient() throws Exception {
-        return new Client(getHost(), getPort(), getVersion(), createCerts());
+    public void setMasterPort(int masterPort) {
+        this.masterPort = masterPort;
     }
 
     @Override
-    public void start() throws Exception {
-        client = createClient();
-        if (log.isDebugEnabled()) {
-            log.debug(client.info());
-        }
-        if (factory != null) {
-            server = factory.getServer(getServerPort());
+    public int getServerPort() {
+        return _serverPort;
+    }
+
+    protected Client getClient() {
+        return _client;
+    }
+
+    public void init() throws Exception {
+        super.init();
+        String mProtocol = getSystemEnv(getSystemEnvName("MASTER_PROTOCOL"), masterProtocol, true);
+        String mHost;
+        int mPort;
+        Map<String, String> headers = new HashMap<String, String>();
+        StreamProvider streamProvider;
+        String cCertFile = getSystemEnv(new String[]{getSystemEnvName("CLIENT_CERT_FILE"), "KUBERNETES_CLIENT_CERTIFICATE_FILE"}, clientCertFile, true);
+        if (cCertFile != null) {
+            if (mProtocol == null) {
+                mProtocol = "http";
+            }
+            mHost = getSystemEnv(new String[]{getSystemEnvName("MASTER_HOST"), "KUBERNETES_RO_SERVICE_HOST"}, masterHost, true);
+            mPort = getSystemEnvInt(new String[]{getSystemEnvName("MASTER_PORT"), "KUBERNETES_RO_SERVICE_PORT"}, masterPort);
+            String cKeyFile = getSystemEnv(new String[]{getSystemEnvName("CLIENT_KEY_FILE"), "KUBERNETES_CLIENT_KEY_FILE"}, clientKeyFile, true);
+            String cKeyPassword = getSystemEnv(new String[]{getSystemEnvName("CLIENT_KEY_PASSWORD"), "KUBERNETES_CLIENT_KEY_PASSWORD"}, clientKeyPassword, false);
+            String cKeyAlgo = getSystemEnv(new String[]{getSystemEnvName("CLIENT_KEY_ALGO"), "KUBERNETES_CLIENT_KEY_ALGO"}, clientKeyAlgo, true);
+            String lCaCertFile = getSystemEnv(new String[]{getSystemEnvName("CA_CERT_FILE"), "KUBERNETES_CA_CERTIFICATE_FILE"}, caCertFile, true);
+            streamProvider = new CertificateStreamProvider(cCertFile, cKeyFile, cKeyPassword, cKeyAlgo, lCaCertFile);
         } else {
-            server = Utils.getServer(getServerPort());
+            if (mProtocol == null) {
+                mProtocol = "https";
+            }
+            mHost = getSystemEnv(new String[]{getSystemEnvName("MASTER_HOST"), "KUBERNETES_SERVICE_HOST"}, masterHost, true);
+            mPort = getSystemEnvInt(new String[]{getSystemEnvName("MASTER_PORT"), "KUBERNETES_SERVICE_PORT"}, masterPort);
+            String saToken = readFileToString(getSystemEnv(getSystemEnvName("SA_TOKEN_FILE"), saTokenFile, true));
+            if (saToken != null) {
+                // curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+                // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labels=application%3Deap-app
+                headers.put("Authorization", "Bearer " + saToken);
+            }
+            streamProvider = new InsecureStreamProvider();
         }
-        final String serverName = server.getClass().getSimpleName();
-        if (log.isInfoEnabled()) {
-            log.info(String.format("Starting %s on port %s for channel address: %s", serverName, getServerPort(), stack.getChannel().getAddress()));
-        }
-        server.start(stack.getChannel());
-        if (log.isInfoEnabled()) {
-            log.info(String.format("%s started.", serverName));
-        }
+        String ver = getSystemEnv(getSystemEnvName("API_VERSION"), apiVersion, true);
+        String url = String.format("%s://%s:%s/api/%s", mProtocol, mHost, mPort, ver);
+        _namespace = getSystemEnv(new String[]{getSystemEnvName("NAMESPACE"), "OPENSHIFT_BUILD_NAMESPACE"}, namespace, true);
+        _labels = getSystemEnv(getSystemEnvName("LABELS"), labels, true);
+        _pingPortName = getSystemEnv(getSystemEnvName("PORT_NAME"), pingPortName, true);
+        _serverPort = getSystemEnvInt(getSystemEnvName("SERVER_PORT"), serverPort);
+        _client = new Client(url, headers, getConnectTimeout(), getReadTimeout(), getOperationAttempts(), getOperationSleep(), streamProvider);
     }
 
     @Override
-    public void stop() {
-        try {
-            final String serverName = server.getClass().getSimpleName();
-            if (log.isInfoEnabled()) {
-                log.info(String.format("Stopping %s", serverName));
-            }
-            server.stop(stack.getChannel());
-            if (log.isInfoEnabled()) {
-                log.info(String.format("%s stopped.", serverName));
-            }
-        } finally {
-            super.stop();
-        }
+    public void destroy() {
+        _namespace = null;
+        _labels = null;
+        _serverPort = 0;
+        _pingPortName = null;
+        _client = null;
+        super.destroy();
     }
 
     /**
@@ -196,131 +178,52 @@ public class KubePing extends FILE_PING {
      * @return all data
      */
     protected synchronized List<PingData> readAll(String clusterName) {
-        List<PingData> retval = new ArrayList<>();
+        Client client = getClient();
+        List<Pod> pods;
         try {
-            List<Pod> pods = client.getPods(getNamespace(), getLabelsQuery());
-            for (Pod pod : pods) {
-                List<Container> containers = pod.getContainers();
-                for (Container container : containers) {
-                    Context context = new Context(container, getPingPortName());
-                    if (client.accept(context)) {
-                        int port = container.getPort(getPingPortName()).getContainerPort();
-                        retval.add(client.getPingData(container.getPodIP(), port, clusterName));
+            pods = client.getPods(_namespace, _labels);
+        } catch (Exception e) {
+            if (log.isWarnEnabled()) {
+                log.warn(String.format("Problem getting Pod json from Kubernetes %s for cluster [%s], namespace [%s], labels [%s]; encountered [%s: %s]",
+                        client.info(), clusterName, _namespace, _labels, e.getClass().getName(), e.getMessage()));
+            }
+            pods = Collections.<Pod>emptyList();
+        }
+        List<PingData> retval = new ArrayList<>();
+        boolean localAddrPresent = false;
+        for (Pod pod : pods) {
+            List<Container> containers = pod.getContainers();
+            for (Container container : containers) {
+                Context context = new Context(container, _pingPortName);
+                if (client.accept(context)) {
+                    String podIP = pod.getPodIP();
+                    int containerPort = container.getPort(_pingPortName).getContainerPort();
+                    try {
+                        PingData pingData = getPingData(podIP, containerPort, clusterName);
+                        localAddrPresent = localAddrPresent || pingData.getAddress().equals(local_addr);
+                        retval.add(pingData);
+                    } catch (Exception e) {
+                        if (log.isInfoEnabled()) {
+                            log.info(String.format("PingData not available for cluster [%s], podIP [%s], containerPort [%s]; encountered [%s: %s]",
+                                    clusterName, podIP, containerPort, e.getClass().getName(), e.getMessage()));
+                        }
                     }
                 }
             }
-        } catch (Exception e) {
-            if (log.isWarnEnabled()) {
-                log.warn(String.format("Failed to read ping data from Kubernetes [%s] for cluster [%s]", client.info(), clusterName), e);
+        }
+        if (localAddrPresent) {
+            if (log.isDebugEnabled()) {
+                for (PingData pingData: retval) {
+                    log.debug(String.format("Returning PingData [%s]", pingData));
+                }
             }
-        }
-        return retval;
-    }
-
-    @Override
-    protected void createRootDir() {
-        // empty on purpose to prevent dir from being created in the local file system
-    }
-
-    @Override
-    protected void writeToFile(PingData data, String clustername) {
-    }
-
-    @Override
-    protected void remove(String clustername, Address addr) {
-    }
-
-    public String getLabelsQuery() {
-        return labelsQuery;
-    }
-
-    public void setLabelsQuery(String labelsQuery) {
-        this.labelsQuery = labelsQuery;
-    }
-    
-    public String getNamespace() {
-        return namespace;
-    }
-    
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    public String getPingPortName() {
-        return pingPortName;
-    }
-
-    public void setPingPortName(String pingPortName) {
-        this.pingPortName = pingPortName;
-    }
-
-    public String getCertFile() {
-        if (certFile != null) {
-            return certFile;
+            return retval;
         } else {
-            return System.getenv("KUBERNETES_CLIENT_CERTIFICATE_FILE");
-        }
-    }
-
-    public void setCertFile(String certFile) {
-        this.certFile = certFile;
-    }
-
-    public String getKeyFile() {
-        if (keyFile != null) {
-            return keyFile;
-        } else {
-            return System.getenv("KUBERNETES_CLIENT_KEY_FILE");
-        }
-    }
-
-    public void setKeyFile(String keyFile) {
-        this.keyFile = keyFile;
-    }
-
-    public String getKeyPassword() {
-        if (keyPassword != null) {
-            return keyPassword;
-        } else {
-            return System.getenv("KUBERNETES_CLIENT_KEY_PASSWORD");
-        }
-    }
-
-    public void setKeyPassword(String keyPassword) {
-        this.keyPassword = keyPassword;
-    }
-
-    public String getKeyAlgo() {
-        if (keyAlgo != null) {
-            return keyAlgo;
-        } else {
-            return System.getenv("KUBERNETES_CLIENT_KEY_ALGO");
-        }
-    }
-
-    public void setKeyAlgo(String keyAlgo) {
-        this.keyAlgo = keyAlgo;
-    }
-
-    public String getCaFile() {
-        if (caFile != null) {
-            return caFile;
-        } else {
-            return System.getenv("KUBERNETES_CA_CERTIFICATE_FILE");
-        }
-    }
-
-    public void setCaFile(String caFile) {
-        this.caFile = caFile;
-    }
-
-    private String trimToNull(String s) {
-        if (s != null) {
-            s = s.trim();
-            if (s.length() == 0) {
-                s = null;
+            if (log.isDebugEnabled()) {
+                log.debug("Local address not discovered, returning empty list");
             }
+            return Collections.<PingData>emptyList();
         }
-        return s;
     }
+
 }

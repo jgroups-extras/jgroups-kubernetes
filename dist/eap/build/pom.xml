@@ -169,17 +169,17 @@
 
         <dependency>
             <groupId>org.openshift.ping</groupId>
+            <artifactId>openshift-ping-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openshift.ping</groupId>
             <artifactId>openshift-ping-dns</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.openshift.ping</groupId>
             <artifactId>openshift-ping-kube</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.openshift.ping</groupId>
-            <artifactId>openshift-ping-server</artifactId>
         </dependency>
 
         <dependency>

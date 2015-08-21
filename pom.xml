@@ -60,7 +60,7 @@
     </properties>
 
     <modules>
-        <module>server</module>
+        <module>common</module>
         <module>dns</module>
         <module>kube</module>
         <module>activemq</module>
@@ -72,6 +72,12 @@
         <dependencies>
             <dependency>
                 <groupId>org.openshift.ping</groupId>
+                <artifactId>openshift-ping-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.openshift.ping</groupId>
                 <artifactId>openshift-ping-dns</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -79,12 +85,6 @@
             <dependency>
                 <groupId>org.openshift.ping</groupId>
                 <artifactId>openshift-ping-kube</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.openshift.ping</groupId>
-                <artifactId>openshift-ping-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

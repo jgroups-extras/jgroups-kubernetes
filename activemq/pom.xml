@@ -12,7 +12,7 @@
     <artifactId>openshift-activemq-plugin</artifactId>
     <packaging>jar</packaging>
 
-    <name>OpenShift plugin for ActiveMQ</name>
+    <name>OpenShift PING - ActiveMQ Plugin</name>
     <description>Provides a discovery agent that integrates with OpenShift DNS capabilities for resolving other brokers in mesh by OpenShift service name.</description>
 
     <dependencies>

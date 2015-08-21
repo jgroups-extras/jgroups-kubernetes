@@ -16,10 +16,13 @@
 
 package org.openshift.ping.kube.test;
 
+import static org.openshift.ping.common.Utils.getSystemEnv;
+import static org.openshift.ping.common.Utils.getSystemProperty;
+
 import java.io.InputStream;
 
 import org.junit.Test;
-import org.openshift.ping.kube.Certs;
+import org.openshift.ping.common.stream.CertificateStreamProvider;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -31,8 +34,8 @@ public class CertsTest {
     }
 
     private static String getValue(String name, String defaultValue) {
-        String value = System.getenv(name);
-        return value != null ? value : System.getProperty(name, defaultValue);
+        String value = getSystemEnv(name);
+        return value != null ? value : getSystemProperty(name, defaultValue);
     }
 
     @Test
@@ -47,13 +50,14 @@ public class CertsTest {
             return;
         }
 
-        Certs certs = new Certs(clientCertFile, clientKeyFile, clientKeyPassword, clientKeyAlgo, caCertFile);
+        CertificateStreamProvider certStreamProvider =
+                new CertificateStreamProvider(clientCertFile, clientKeyFile, clientKeyPassword, clientKeyAlgo, caCertFile);
 
         String k8s_master = getValue("KUBERNETES_MASTER");
         String apiVersion = getValue("API_VERSION", "v1beta1");
         String op = getValue("OP", "pods");
 
-        try (InputStream is = certs.openStream(String.format("%s/api/%s/%s", k8s_master, apiVersion, op))) {
+        try (InputStream is = certStreamProvider.openStream(String.format("%s/api/%s/%s", k8s_master, apiVersion, op), null, 0, 0)) {
             int x;
             while ((x = is.read()) != -1) {
                 System.out.print((char) x);

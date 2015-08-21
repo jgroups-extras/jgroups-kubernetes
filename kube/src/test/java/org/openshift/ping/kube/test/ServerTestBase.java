@@ -26,11 +26,10 @@ import org.jgroups.protocols.PingData;
 import org.jgroups.stack.Protocol;
 import org.junit.Assert;
 import org.junit.Test;
+import org.openshift.ping.common.server.AbstractServer;
+import org.openshift.ping.common.server.Server;
 import org.openshift.ping.kube.Client;
 import org.openshift.ping.kube.KubePing;
-import org.openshift.ping.kube.test.support.TestServerClient;
-import org.openshift.ping.server.Server;
-import org.openshift.ping.server.Utils;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -43,8 +42,9 @@ public abstract class ServerTestBase extends TestBase {
 
     protected Protocol createPing() {
         KubePing ping = new TestKubePing();
-        ping.setHost("localhost");
-        ping.setPort("1234");
+        ping.setMasterProtocol("http");
+        ping.setMasterHost("localhost");
+        ping.setMasterPort(8080);
         applyConfig(ping);
         return ping;
     }
@@ -59,7 +59,7 @@ public abstract class ServerTestBase extends TestBase {
         InputStream stream = conn.getInputStream();
         PingData data = new PingData();
         data.readFrom(new DataInputStream(stream));
-        Assert.assertEquals(data, Utils.createPingData(channels[0]));
+        Assert.assertEquals(data, AbstractServer.createPingData(channels[0]));
     }
 
     private static final class TestKubePing extends KubePing {
@@ -68,8 +68,8 @@ public abstract class ServerTestBase extends TestBase {
         }
 
         @Override
-        protected Client createClient() throws Exception {
-            return new TestServerClient();
+        protected Client getClient() {
+            return new TestClient();
         }
     }
 }

@@ -1,5 +1,5 @@
 /**
- *  Copyright 2015 Red Hat, Inc.
+ *  Copyright 2014 Red Hat, Inc.
  *
  *  Red Hat licenses this file to you under the Apache License, version
  *  2.0 (the "License"); you may not use this file except in compliance
@@ -14,16 +14,12 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.server;
-
-import java.io.InputStream;
-import java.util.Map;
-
+package org.openshift.ping.common.server;
 
 /**
- * @author <a href="mailto:kconner@redhat.com">Kevin Conner</a>
+ * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public interface StreamProvider {
-
-	public InputStream openStream(String url, Map<String, String> headers) throws Exception ;
+public interface ServerFactory {
+    public boolean isAvailable();
+    public Server getServer(int port);
 }

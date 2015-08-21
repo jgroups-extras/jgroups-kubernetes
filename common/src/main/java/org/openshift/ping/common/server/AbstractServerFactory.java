@@ -1,4 +1,4 @@
-package org.openshift.ping.server;
+package org.openshift.ping.common.server;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -17,48 +17,23 @@
 package org.openshift.ping.kube;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class Container {
-    private String name;
-    private String host;
-    private String podIP;
-    private List<Port> ports = new ArrayList<>();
+public final class Container {
+    private final List<Port> ports = new ArrayList<Port>();
 
-    public Container(String host, String podIP) {
-        this.host = host;
-        this.podIP = podIP;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    public Container() {}
 
     void addPort(Port port) {
         ports.add(port);
     }
 
-    public String getHost() {
-        return host;
-    }
-
     public List<Port> getPorts() {
-        return ports;
-    }
-
-    public String getPodIP() {
-        return podIP;
-    }
-
-    public void setPodIP(String podIP) {
-        this.podIP = podIP;
+        return Collections.unmodifiableList(ports);
     }
 
     public Port getPort(String name) {
@@ -67,6 +42,11 @@ public class Container {
                 return port;
             }
         }
+        //return null;
         throw new IllegalArgumentException("No such port: " + name);
+    }
+
+    public String toString() {
+        return String.format("%s[ports=%s]", getClass().getSimpleName(), ports);
     }
 }

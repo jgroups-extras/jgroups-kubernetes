@@ -14,23 +14,16 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.server;
+package org.openshift.ping.common.server;
+
+import org.jgroups.Channel;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class UndertowServerFactory extends AbstractServerFactory {
-
-    public boolean isAvailable() {
-        try {
-            return UndertowServerFactory.class.getClassLoader().loadClass("io.undertow.Undertow") != null;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public Server createServer(int port) {
-        return new UndertowServer(port);
-    }
-
+public interface Server {
+    public static final String CLUSTER_NAME = "CLUSTER_NAME";
+    public boolean start(Channel channel) throws Exception;
+    public boolean stop(Channel channel);
+    public Channel getChannel(String clusterName);
 }

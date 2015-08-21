@@ -17,30 +17,22 @@
 package org.openshift.ping.kube;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class Pod {
-    private String host;
-    private String podIP;
-    private List<Container> containers = new ArrayList<>();
+public final class Pod {
+    private final String podIP;
+    private final List<Container> containers = new ArrayList<Container>();
 
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public String getHost() {
-        return host;
+    public Pod(String podIP) {
+        this.podIP = podIP;
     }
 
     public String getPodIP() {
         return podIP;
-    }
-
-    public void setPodIP(String podIP) {
-        this.podIP = podIP;
     }
 
     void addContainer(Container container) {
@@ -48,6 +40,10 @@ public class Pod {
     }
 
     public List<Container> getContainers() {
-        return containers;
+        return Collections.unmodifiableList(containers);
+    }
+
+    public String toString() {
+        return String.format("%s[podIP=%s, containers=%s]", getClass().getSimpleName(), podIP, containers);
     }
 }

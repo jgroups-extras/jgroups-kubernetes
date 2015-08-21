@@ -14,12 +14,23 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.server;
+package org.openshift.ping.common.server;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public interface ServerFactory {
-    public boolean isAvailable();
-    public Server getServer(int port);
+public class UndertowServerFactory extends AbstractServerFactory {
+
+    public boolean isAvailable() {
+        try {
+            return UndertowServerFactory.class.getClassLoader().loadClass("io.undertow.Undertow") != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Server createServer(int port) {
+        return new UndertowServer(port);
+    }
+
 }

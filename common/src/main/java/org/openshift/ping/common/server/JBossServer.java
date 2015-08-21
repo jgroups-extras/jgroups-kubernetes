@@ -14,7 +14,7 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.server;
+package org.openshift.ping.common.server;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -22,25 +22,24 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
+import org.jboss.com.sun.net.httpserver.HttpExchange;
+import org.jboss.com.sun.net.httpserver.HttpHandler;
+import org.jboss.com.sun.net.httpserver.HttpServer;
 import org.jgroups.Channel;
 import org.jgroups.protocols.PingData;
-
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-@SuppressWarnings("restriction")
-public class JDKServer extends AbstractServer {
+public class JBossServer extends AbstractServer {
     private HttpServer server;
 
-    public JDKServer(int port) {
+    public JBossServer(int port) {
         super(port);
     }
 
-    public synchronized void start(Channel channel) throws Exception {
+    public synchronized boolean start(Channel channel) throws Exception {
+        boolean started = false;
         if (server == null) {
             try {
                 InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
@@ -48,23 +47,28 @@ public class JDKServer extends AbstractServer {
                 server.setExecutor(Executors.newCachedThreadPool());
                 server.createContext("/", new Handler(this));
                 server.start();
+                started = true;
             } catch (Exception e) {
                 server = null;
                 throw e;
             }
         }
         addChannel(channel);
+        return started;
     }
 
-    public synchronized void stop(Channel channel) {
+    public synchronized boolean stop(Channel channel) {
+        boolean stopped = false;
         removeChannel(channel);
         if (server != null && !hasChannels()) {
             try {
                 server.stop(0);
+                stopped = true;
             } finally {
                 server = null;
             }
         }
+        return stopped;
     }
 
     private class Handler implements HttpHandler {
@@ -77,7 +81,7 @@ public class JDKServer extends AbstractServer {
             try {
                 String clusterName = exchange.getRequestHeaders().getFirst(CLUSTER_NAME);
                 Channel channel = server.getChannel(clusterName);
-                PingData data = Utils.createPingData(channel);
+                PingData data = createPingData(channel);
                 try (OutputStream outputStream = exchange.getResponseBody()) {
                     data.writeTo(new DataOutputStream(outputStream));
                 }
