@@ -81,6 +81,9 @@ public abstract class TestBase {
 
     @After
     public void tearDown() throws Exception {
+        for (JChannel channel: channels) {
+            channel.disconnect();
+        }
         Util.close(channels);
     }
 

@@ -144,7 +144,7 @@
                 <version.jgroups>3.4.5.Final</version.jgroups>
                 <version.dmr>1.2.0.Final</version.dmr>
                 <!-- Build -->
-                <version.org.wildfly>8.2.0.Final</version.org.wildfly>
+                <version.org.wildfly>8.2.1.Final</version.org.wildfly>
             </properties>
             <dependencyManagement>
                 <dependencies>
@@ -179,12 +179,12 @@
             </activation>
             <properties>
                 <!-- Impl -->
-                <version.jgroups>3.2.13.Final-redhat-1</version.jgroups>
+                <version.jgroups>3.2.14.Final-redhat-1</version.jgroups>
                 <version.dmr>1.2.2.Final-redhat-1</version.dmr>
                 <!-- Build -->
-                <version.org.jboss.as>7.5.1.Final-redhat-3</version.org.jboss.as>
-                <version.org.jboss.eap>6.4.1</version.org.jboss.eap>
-                <version.org.jboss.eap.urlpath>JBEAP-6/6.4.1</version.org.jboss.eap.urlpath>
+                <version.org.jboss.as>7.5.3.Final-redhat-2</version.org.jboss.as>
+                <version.org.jboss.eap>6.4.3</version.org.jboss.eap>
+                <version.org.jboss.eap.urlpath>JBEAP-6/6.4.3</version.org.jboss.eap.urlpath>
             </properties>
             <dependencyManagement>
                 <dependencies>
