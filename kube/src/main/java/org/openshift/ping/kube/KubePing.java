@@ -60,7 +60,7 @@ public class KubePing extends OpenshiftPing {
     private String apiVersion = "v1";
 
     @Property
-    private String namespace = "default";
+    private String namespace; // DO NOT HARDCODE A DEFAULT (i.e.: "default") - SEE isClusteringEnabled() and init() METHODS BELOW!
     private String _namespace;
 
     @Property
@@ -111,8 +111,17 @@ public class KubePing extends OpenshiftPing {
         this.masterPort = masterPort;
     }
 
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
     @Override
-    public int getServerPort() {
+    protected boolean isClusteringEnabled() {
+        return _namespace != null;
+    }
+
+    @Override
+    protected int getServerPort() {
         return _serverPort;
     }
 
@@ -122,6 +131,17 @@ public class KubePing extends OpenshiftPing {
 
     public void init() throws Exception {
         super.init();
+        _namespace = getSystemEnv(getSystemEnvName("NAMESPACE"), namespace, true);
+        if (_namespace == null) {
+            if (log.isInfoEnabled()) {
+                log.info(String.format("namespace not set; clustering disabled"));
+            }
+            // no further initialization necessary
+            return;
+        }
+        if (log.isInfoEnabled()) {
+            log.info(String.format("namespace [%s] set; clustering enabled", _namespace));
+        }
         String mProtocol = getSystemEnv(getSystemEnvName("MASTER_PROTOCOL"), masterProtocol, true);
         String mHost;
         int mPort;
@@ -155,7 +175,6 @@ public class KubePing extends OpenshiftPing {
         }
         String ver = getSystemEnv(getSystemEnvName("API_VERSION"), apiVersion, true);
         String url = String.format("%s://%s:%s/api/%s", mProtocol, mHost, mPort, ver);
-        _namespace = getSystemEnv(new String[]{getSystemEnvName("NAMESPACE"), "OPENSHIFT_BUILD_NAMESPACE"}, namespace, true);
         _labels = getSystemEnv(getSystemEnvName("LABELS"), labels, true);
         _pingPortName = getSystemEnv(getSystemEnvName("PORT_NAME"), pingPortName, true);
         _serverPort = getSystemEnvInt(getSystemEnvName("SERVER_PORT"), serverPort);
@@ -172,12 +191,8 @@ public class KubePing extends OpenshiftPing {
         super.destroy();
     }
 
-    /**
-     * Reads all information from the given directory under clusterName.
-     *
-     * @return all data
-     */
-    protected synchronized List<PingData> readAll(String clusterName) {
+    @Override
+    protected synchronized List<PingData> doReadAll(String clusterName) {
         Client client = getClient();
         List<Pod> pods;
         try {

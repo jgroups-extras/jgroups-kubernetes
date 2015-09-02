@@ -41,7 +41,7 @@ public class DnsPing extends OpenshiftPing {
     }
 
     @Property
-    private String serviceName = "ping";
+    private String serviceName; // DO NOT HARDCODE A DEFAULT (i.e.: "ping") - SEE isClusteringEnabled() and init() METHODS BELOW!
     private String _serviceName;
 
     @Property
@@ -53,7 +53,12 @@ public class DnsPing extends OpenshiftPing {
     }
 
     @Override
-    public int getServerPort() {
+    protected boolean isClusteringEnabled() {
+        return _serviceName != null;
+    }
+
+    @Override
+    protected int getServerPort() {
         return _servicePort;
     }
 
@@ -61,6 +66,16 @@ public class DnsPing extends OpenshiftPing {
     public void init() throws Exception {
         super.init();
         _serviceName = getSystemEnv(getSystemEnvName("SERVICE_NAME"), serviceName, true);
+        if (_serviceName == null) {
+            if (log.isInfoEnabled()) {
+                log.info(String.format("serviceName not set; clustering disabled"));
+            }
+            // no further initialization necessary
+            return;
+        }
+        if (log.isInfoEnabled()) {
+            log.info(String.format("serviceName [%s] set; clustering enabled", _serviceName));
+        }
         _servicePort = getServicePort();
     }
 
@@ -101,12 +116,8 @@ public class DnsPing extends OpenshiftPing {
         return svcHosts;
     }
 
-    /**
-     * Reads all information from the given directory under clusterName.
-     *
-     * @return all data
-     */
-    protected synchronized List<PingData> readAll(String clusterName) {
+    @Override
+    protected synchronized List<PingData> doReadAll(String clusterName) {
         Set<String> serviceHosts = getServiceHosts();
         if (log.isDebugEnabled()) {
             log.debug(String.format("Reading service hosts %s on port [%s]", serviceHosts, _servicePort));

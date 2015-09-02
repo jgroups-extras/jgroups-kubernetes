@@ -30,6 +30,7 @@ import org.jgroups.Address;
 import org.jgroups.annotations.Property;
 import org.jgroups.protocols.FILE_PING;
 import org.jgroups.protocols.PingData;
+import org.openshift.ping.common.server.AbstractServer;
 import org.openshift.ping.common.server.Server;
 import org.openshift.ping.common.server.ServerFactory;
 import org.openshift.ping.common.server.Servers;
@@ -91,6 +92,8 @@ public abstract class OpenshiftPing extends FILE_PING {
         return _operationSleep;
     }
 
+    protected abstract boolean isClusteringEnabled();
+
     protected abstract int getServerPort();
 
     public final void setServerFactory(ServerFactory serverFactory) {
@@ -117,19 +120,21 @@ public abstract class OpenshiftPing extends FILE_PING {
 
     @Override
     public void start() throws Exception {
-        int serverPort = getServerPort();
-        if (_serverFactory != null) {
-            _server = _serverFactory.getServer(serverPort);
-        } else {
-            _server = Servers.getServer(serverPort);
-        }
-        _serverName = _server.getClass().getSimpleName();
-        if (log.isInfoEnabled()) {
-            log.info(String.format("Starting %s on port %s for channel address: %s", _serverName, serverPort, stack.getChannel().getAddress()));
-        }
-        boolean started = _server.start(stack.getChannel());
-        if (log.isInfoEnabled()) {
-            log.info(String.format("%s %s.", _serverName, started ? "started" : "reused (pre-existing)"));
+        if (isClusteringEnabled()) {
+            int serverPort = getServerPort();
+            if (_serverFactory != null) {
+                _server = _serverFactory.getServer(serverPort);
+            } else {
+                _server = Servers.getServer(serverPort);
+            }
+            _serverName = _server.getClass().getSimpleName();
+            if (log.isInfoEnabled()) {
+                log.info(String.format("Starting %s on port %s for channel address: %s", _serverName, serverPort, stack.getChannel().getAddress()));
+            }
+            boolean started = _server.start(stack.getChannel());
+            if (log.isInfoEnabled()) {
+                log.info(String.format("%s %s.", _serverName, started ? "started" : "reused (pre-existing)"));
+            }
         }
     }
 
@@ -149,6 +154,18 @@ public abstract class OpenshiftPing extends FILE_PING {
             super.stop();
         }
     }
+
+    @Override
+    protected final List<PingData> readAll(String clusterName) {
+        if (isClusteringEnabled()) {
+            return doReadAll(clusterName);
+        } else {
+            PingData pingData = AbstractServer.createPingData(stack.getChannel());
+            return Collections.<PingData>singletonList(pingData);
+        }
+    }
+
+    protected abstract List<PingData> doReadAll(String clusterName);
 
     protected final PingData getPingData(String targetHost, int targetPort, String clusterName) throws Exception {
         String pingUrl = String.format("http://%s:%s", targetHost, targetPort);

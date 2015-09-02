@@ -45,6 +45,7 @@ public abstract class ServerTestBase extends TestBase {
         ping.setMasterProtocol("http");
         ping.setMasterHost("localhost");
         ping.setMasterPort(8080);
+        ping.setNamespace("default");
         applyConfig(ping);
         return ping;
     }
