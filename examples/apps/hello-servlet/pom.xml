@@ -4,12 +4,12 @@
    <parent>
        <groupId>org.openshift.ping.examples</groupId>
        <artifactId>openshift-ping-examples-apps</artifactId>
-       <version>1.0.0.Beta3</version>
+       <version>1.0.0-SNAPSHOT</version>
        <relativePath>../pom.xml</relativePath>
    </parent>
 
    <artifactId>hello-servlet</artifactId>
-   <version>1.0.0.Beta3</version>
+   <version>1.0.0-SNAPSHOT</version>
    <packaging>war</packaging>
 
    <name>OpenShift PING - Examples - Apps - Hello Servlet</name>
