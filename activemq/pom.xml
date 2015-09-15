@@ -13,13 +13,18 @@
     <packaging>jar</packaging>
 
     <name>OpenShift PING - ActiveMQ Plugin</name>
-    <description>Provides a discovery agent that integrates with OpenShift DNS capabilities for resolving other brokers in mesh by OpenShift service name.</description>
+    <description>Provides a discovery agent that integrates with OpenShift capabilities for resolving other brokers in mesh by OpenShift service name.</description>
 
     <dependencies>
 
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-dmr</artifactId>
         </dependency>
 
         <dependency>

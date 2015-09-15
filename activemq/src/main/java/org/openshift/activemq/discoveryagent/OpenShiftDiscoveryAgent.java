@@ -13,7 +13,7 @@
  *  implied.  See the License for the specific language governing
  *  permissions and limitations under the License.
  */
-package org.openshift.activemq.discoveryagent.dns;
+package org.openshift.activemq.discoveryagent;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -33,75 +33,65 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * DNSDiscoveryAgent
+ * OpenshiftDiscoveryAgent
  * <p/>
- * Provides support for a discovery agent that queries DNS for services
- * implemented using an openwire (tcp) transport. The URI takes the form:
+ * Provides support for a discovery agent that queries for services implemented
+ * using an openwire (tcp) transport. The URI takes the form:
  * 
  * <pre>
- * dns://<serviceName>:<servicePort>/?queryInterval=30&transportType=tcp
+ * (dns|kube)://<serviceName>:<servicePort>/?queryInterval=30&transportType=tcp
  * </pre>
  * 
- * <code>serviceName</code> is required and is the DNS name of the service. For
- * OpenShift, this may be the simple name of the service, as OpenShift
- * configures the pod with search suffixes (e.g. project.svc.cluster.local).
+ * <code>serviceName</code> is required and is the name of the service.
  * <code>servicePort</code> is optional. If not specified, the agent will query
- * DNS for SRV records to determine the port on which the services are running.
- * <code>queryInterval</code> is the period, in seconds, at which DNS is polled
- * for records; the default is 30s. <code>transportType</code> is the type of
+ * to determine the port on which the services are running.
+ * <code>queryInterval</code> is the period, in seconds, at which polling is
+ * conducted; the default is 30s. <code>transportType</code> is the type of
  * transport; the default is <code>tcp</code>.
  */
-public class DNSDiscoveryAgent implements DiscoveryAgent {
+public class OpenShiftDiscoveryAgent implements DiscoveryAgent {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(DNSDiscoveryAgent.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(OpenShiftDiscoveryAgent.class);
 
     /** The query interval in seconds. */
     private long queryInterval = 30;
-    /** The name of the service providing an openwire (tcp) transport. */
-    private String serviceName;
-    /** The port on which the service(s) are running. */
-    private int servicePort;
     /** The transportType, e.g. tcp, amqp, etc., defaults to tcp. */
+    private PeerAddressResolver resolver;
     private String transportType = "tcp";
     private long minConnectTime = 1000;
     private long initialReconnectDelay = minConnectTime;
     private long maxReconnectDelay = 16000;
     private int maxReconnectAttempts = 4;
-    /** The periodic poller of DNS information for the service. */
-    private Scheduler dnsPoller;
-    private ConcurrentMap<String, DNSDiscoveryEvent> services = new ConcurrentHashMap<String, DNSDiscoveryAgent.DNSDiscoveryEvent>();
+    /** The periodic poller of OpenShift information for the service. */
+    private Scheduler openshiftPoller;
+    private ConcurrentMap<String, OpenShiftDiscoveryEvent> services = new ConcurrentHashMap<String, OpenShiftDiscoveryAgent.OpenShiftDiscoveryEvent>();
     private DiscoveryListener listener;
 
     /**
-     * Create a new DNSDiscoveryAgent.
+     * Create a new OpenshiftDiscoveryAgent.
      * 
-     * @param host the service host name
-     * @param port the service port
+     * @param resolver the service endpoint resolver
      */
-    public DNSDiscoveryAgent(String host, int port) throws IOException {
-        if (host == null || host.length() == 0) {
-            throw new IOException("Invalid host name: " + host);
-        }
-        serviceName = host;
-        servicePort = port;
+    public OpenShiftDiscoveryAgent(PeerAddressResolver resolver) {
+        this.resolver = resolver;
     }
 
     @Override
     public synchronized void start() throws Exception {
-        LOGGER.info("Starting DNS discovery agent for service {} on port {} for transport type {}", serviceName,
-                servicePort, transportType);
-        dnsPoller = new Scheduler("DNS discovery agent Scheduler: " + serviceName);
-        dnsPoller.start();
-        dnsPoller.executePeriodically(new DNSQueryTask(), TimeUnit.SECONDS.toMillis(queryInterval));
+        LOGGER.info("Starting OpenShift discovery agent for service {} transport type {}", resolver.getServiceName(),
+                transportType);
+        openshiftPoller = new Scheduler("OpenShift discovery agent Scheduler: " + resolver.getServiceName());
+        openshiftPoller.start();
+        openshiftPoller.executePeriodically(new OpenShiftQueryTask(), TimeUnit.SECONDS.toMillis(queryInterval));
     }
 
     @Override
     public synchronized void stop() throws Exception {
-        LOGGER.info("Stopping DNS discovery agent for service {} on port {} for transport type {}", serviceName,
-                servicePort, transportType);
-        if (dnsPoller != null) {
-            dnsPoller.stop();
-            dnsPoller = null;
+        LOGGER.info("Stopping OpenShift discovery agent for service {} transport type {}", resolver.getServiceName(),
+                transportType);
+        if (openshiftPoller != null) {
+            openshiftPoller.stop();
+            openshiftPoller = null;
         }
     }
 
@@ -116,7 +106,7 @@ public class DNSDiscoveryAgent implements DiscoveryAgent {
 
     @Override
     public void serviceFailed(DiscoveryEvent event) throws IOException {
-        final DNSDiscoveryEvent dnsEvent = (DNSDiscoveryEvent) event;
+        final OpenShiftDiscoveryEvent dnsEvent = (OpenShiftDiscoveryEvent) event;
         dnsEvent.fail();
     }
 
@@ -156,14 +146,14 @@ public class DNSDiscoveryAgent implements DiscoveryAgent {
         this.transportType = transportType;
     }
 
-    private final class DNSDiscoveryEvent extends DiscoveryEvent {
+    private final class OpenShiftDiscoveryEvent extends DiscoveryEvent {
 
         private int connectFailures;
         private long reconnectDelay = 1000;
         private long connectTime = System.currentTimeMillis();
         private boolean failed;
 
-        public DNSDiscoveryEvent(String transportType, String ip, int port) {
+        public OpenShiftDiscoveryEvent(String transportType, String ip, int port) {
             super(String.format("%s://%s:%d", transportType, ip, port));
         }
 
@@ -206,7 +196,7 @@ public class DNSDiscoveryAgent implements DiscoveryAgent {
                 return;
             }
 
-            dnsPoller.executeAfterDelay(new Runnable() {
+            openshiftPoller.executeAfterDelay(new Runnable() {
                 @Override
                 public void run() {
                     reconnect();
@@ -233,64 +223,33 @@ public class DNSDiscoveryAgent implements DiscoveryAgent {
     }
 
     /**
-     * DNSQueryTask
+     * OpenShiftQueryTask
      */
-    private class DNSQueryTask implements Runnable {
-
-        private String endpointName;
-        private DNSUtil dns = new DNSUtil();
+    private class OpenShiftQueryTask implements Runnable {
 
         /**
-         * Create a new DNSQueryTask.
+         * Create a new OpenShiftQueryTask.
          */
-        public DNSQueryTask() {
+        public OpenShiftQueryTask() {
         }
 
         @Override
         public void run() {
             try {
-                if (endpointName == null) {
-                    endpointName = dns.getEndpointNameForService(serviceName);
-                    LOGGER.info("Calculated endpoint name {} for service {}", endpointName, serviceName);
-                }
-                if (endpointName == null) {
-                    // no endpoints
-                    LOGGER.warn("Could not get endpoint for service: {}.", serviceName);
-                    // unregister services
-                    Set<DNSDiscoveryEvent> events;
-                    synchronized (services) {
-                        events = new HashSet<DNSDiscoveryEvent>(services.values());
-                        services.clear();
-                    }
-                    for (DNSDiscoveryEvent event : events) {
-                        if (event != null) {
-                            LOGGER.info("Removing service: {}", event);
-                            listener.onServiceRemove(event);
-                        }
-                    }
-                }
-                if (servicePort < 1) {
-                    try {
-                        servicePort = Integer.valueOf(dns.getPortForService(endpointName));
-                    } catch (Exception e) {
-                        LOGGER.warn("Error retrieving service port.  61616 will be used.", e);
-                        // default to 61616
-                        servicePort = 61616;
-                    }
-                }
                 synchronized (services) {
-                    final Set<String> endpoints = new HashSet<String>(Arrays.asList(dns.lookupIPs(endpointName)));
+                    final Set<String> endpoints = new HashSet<String>(Arrays.asList(resolver.getPeerIPs()));
+                    final int servicePort = resolver.getServicePort();
                     final Set<String> removed = new HashSet<String>(services.keySet());
                     final Set<String> added = new HashSet<String>(endpoints);
                     removed.removeAll(endpoints);
                     for (String service : removed) {
-                        final DNSDiscoveryEvent event = services.remove(service);
+                        final OpenShiftDiscoveryEvent event = services.remove(service);
                         if (event != null) {
                             LOGGER.info("Removing service: {}", event);
                             listener.onServiceRemove(event);
                         }
                     }
-                    for (Map.Entry<String, DNSDiscoveryEvent> entry : services.entrySet()) {
+                    for (Map.Entry<String, OpenShiftDiscoveryEvent> entry : services.entrySet()) {
                         added.remove(entry.getKey());
                         entry.getValue().present();
                     }
@@ -299,14 +258,14 @@ public class DNSDiscoveryAgent implements DiscoveryAgent {
                             // skip ourself
                             continue;
                         }
-                        final DNSDiscoveryEvent event = new DNSDiscoveryEvent(transportType, service, servicePort);
+                        final OpenShiftDiscoveryEvent event = new OpenShiftDiscoveryEvent(transportType, service, servicePort);
                         services.put(service, event);
                         LOGGER.info("Adding service: {}", event);
                         listener.onServiceAdd(event);
                     }
                 }
             } catch (Exception e) {
-                LOGGER.error("Error polling DNS", e);
+                LOGGER.error("Error polling OpenShift", e);
             }
         }
 

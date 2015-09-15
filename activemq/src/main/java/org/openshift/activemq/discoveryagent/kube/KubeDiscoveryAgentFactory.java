@@ -1,5 +1,5 @@
 /**
- *  Copyright 2014 Red Hat, Inc.
+ *  Copyright 2015 Red Hat, Inc.
  *
  *  Red Hat licenses this file to you under the Apache License, version
  *  2.0 (the "License"); you may not use this file except in compliance
@@ -13,7 +13,7 @@
  *  implied.  See the License for the specific language governing
  *  permissions and limitations under the License.
  */
-package org.openshift.activemq.discoveryagent.dns;
+package org.openshift.activemq.discoveryagent.kube;
 
 import java.io.IOException;
 import java.net.URI;
@@ -29,19 +29,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * DNSDiscoveryAgentFactory
+ * KubeDiscoveryAgentFactory
  */
-public class DNSDiscoveryAgentFactory extends DiscoveryAgentFactory {
+public class KubeDiscoveryAgentFactory extends DiscoveryAgentFactory {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(DNSDiscoveryAgentFactory.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(KubeDiscoveryAgentFactory.class);
 
     @Override
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {
         try {
-            LOGGER.info("Creating DNS discovery agent for {}.", uri.toString());
+            LOGGER.info("Creating Kubernetes discovery agent for {}.", uri.toString());
             final Map<String, String> options = URISupport.parseParameters(uri);
             uri = URISupport.removeQuery(uri);
-            final OpenShiftDiscoveryAgent agent = new OpenShiftDiscoveryAgent(new DNSPeerResolver(uri.getHost(), uri.getPort()));
+            final OpenShiftDiscoveryAgent agent = new OpenShiftDiscoveryAgent(new KubePeerAddressResolver(
+                    uri.getHost(), uri.getPort()));
             IntrospectionSupport.setProperties(agent, options);
             return agent;
         } catch (Throwable e) {
