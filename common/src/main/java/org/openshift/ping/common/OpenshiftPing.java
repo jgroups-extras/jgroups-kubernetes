@@ -17,25 +17,29 @@
 package org.openshift.ping.common;
 
 import static org.openshift.ping.common.Utils.getSystemEnvInt;
-import static org.openshift.ping.common.Utils.openStream;
 import static org.openshift.ping.common.Utils.trimToNull;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import org.jgroups.Address;
+import org.jgroups.Event;
+import org.jgroups.Message;
 import org.jgroups.annotations.Property;
-import org.jgroups.protocols.FILE_PING;
-import org.jgroups.protocols.PingData;
-import org.openshift.ping.common.server.AbstractServer;
+import org.jgroups.protocols.PING;
 import org.openshift.ping.common.server.Server;
 import org.openshift.ping.common.server.ServerFactory;
 import org.openshift.ping.common.server.Servers;
 
-public abstract class OpenshiftPing extends FILE_PING {
+public abstract class OpenshiftPing extends PING {
+
+    private String clusterName;
 
     private final String _systemEnvPrefix;
 
@@ -106,7 +110,7 @@ public abstract class OpenshiftPing extends FILE_PING {
         _connectTimeout = getSystemEnvInt(getSystemEnvName("CONNECT_TIMEOUT"), connectTimeout);
         _readTimeout = getSystemEnvInt(getSystemEnvName("READ_TIMEOUT"), readTimeout);
         _operationAttempts = getSystemEnvInt(getSystemEnvName("OPERATION_ATTEMPTS"), operationAttempts);
-        _operationSleep = (long)getSystemEnvInt(getSystemEnvName("OPERATION_SLEEP"), (int)operationSleep);
+        _operationSleep = (long) getSystemEnvInt(getSystemEnvName("OPERATION_SLEEP"), (int) operationSleep);
     }
 
     @Override
@@ -129,13 +133,15 @@ public abstract class OpenshiftPing extends FILE_PING {
             }
             _serverName = _server.getClass().getSimpleName();
             if (log.isInfoEnabled()) {
-                log.info(String.format("Starting %s on port %s for channel address: %s", _serverName, serverPort, stack.getChannel().getAddress()));
+                log.info(String.format("Starting %s on port %s for channel address: %s", _serverName, serverPort, stack
+                        .getChannel().getAddress()));
             }
             boolean started = _server.start(stack.getChannel());
             if (log.isInfoEnabled()) {
                 log.info(String.format("%s %s.", _serverName, started ? "started" : "reused (pre-existing)"));
             }
         }
+        super.start();
     }
 
     @Override
@@ -155,45 +161,106 @@ public abstract class OpenshiftPing extends FILE_PING {
         }
     }
 
+    public Object down(Event evt) {
+        switch (evt.getType()) {
+        case Event.CONNECT:
+        case Event.CONNECT_WITH_STATE_TRANSFER:
+        case Event.CONNECT_USE_FLUSH:
+        case Event.CONNECT_WITH_STATE_TRANSFER_USE_FLUSH:
+            clusterName = (String) evt.getArg();
+            break;
+        }
+        return super.down(evt);
+    }
+
     @Override
-    protected final List<PingData> readAll(String clusterName) {
+    protected void sendMcastDiscoveryRequest(Message msg) {
+        List<InetSocketAddress> nodes = readAll();
+        if (nodes == null) {
+            return;
+        }
+        for (InetSocketAddress node : nodes) {
+            // forward the request to each node
+            timer.execute(new SendDiscoveryRequest(node, msg));
+        }
+    }
+
+    public void handlePingRequest(InputStream stream) throws Exception {
+        DataInputStream dataInput = new DataInputStream(stream);
+        Message msg = new Message();
+        msg.readFrom(dataInput);
+        try {
+            up(new Event(Event.MSG, msg));
+        } catch (Exception e) {
+            log.error("Error processing GET_MBRS_REQ.", e);
+        }
+    }
+
+    private List<InetSocketAddress> readAll() {
         if (isClusteringEnabled()) {
             return doReadAll(clusterName);
         } else {
-            PingData pingData = AbstractServer.createPingData(stack.getChannel());
-            return Collections.<PingData>singletonList(pingData);
+            return Collections.emptyList();
         }
     }
 
-    protected abstract List<PingData> doReadAll(String clusterName);
+    protected abstract List<InetSocketAddress> doReadAll(String clusterName);
 
-    protected final PingData getPingData(String targetHost, int targetPort, String clusterName) throws Exception {
-        String pingUrl = String.format("http://%s:%s", targetHost, targetPort);
-        PingData pingData = new PingData();
-        Map<String, String> pingHeaders = Collections.singletonMap(Server.CLUSTER_NAME, clusterName);
-        try (InputStream pingStream = openStream(pingUrl, pingHeaders, _connectTimeout, _readTimeout, _operationAttempts, _operationSleep)) {
-            pingData.readFrom(new DataInputStream(pingStream));
+    private final class SendDiscoveryRequest implements Runnable {
+        private final InetSocketAddress node;
+        private final Message msg;
+        private int attempts;
+
+        private SendDiscoveryRequest(InetSocketAddress node, Message msg) {
+            this.node = node;
+            this.msg = msg;
         }
-        return pingData;
-    }
 
-    @Override
-    protected final void createRootDir() {
-        // empty on purpose to prevent dir from being created in the local file system
-    }
+        @Override
+        public void run() {
+            ++attempts;
+            final String url = String.format("http://%s:%s", node.getHostString(), node.getPort());
+            if (log.isTraceEnabled()) {
+                log.trace(String.format(
+                        "%s opening connection: url [%s], clusterName [%s], connectTimeout [%s], readTimeout [%s]",
+                        getClass().getSimpleName(), url, clusterName, _connectTimeout, _readTimeout));
+            }
+            HttpURLConnection connection = null;
+            try {
+                connection = (HttpURLConnection) new URL(url).openConnection();
+                connection.addRequestProperty(Server.CLUSTER_NAME, clusterName);
+                if (_connectTimeout < 0 || _readTimeout < 0) {
+                    throw new IllegalArgumentException(String.format(
+                            "Neither connectTimeout [%s] nor readTimeout [%s] can be less than 0 for URLConnection.",
+                            _connectTimeout, _readTimeout));
+                }
+                connection.setConnectTimeout(_connectTimeout);
+                connection.setReadTimeout(_readTimeout);
+                connection.setDoOutput(true);
+                connection.setRequestMethod("POST");
+                DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+                msg.writeTo(out);
+                out.flush();
+                String responseMessage = connection.getResponseMessage();
+                if (log.isTraceEnabled()) {
+                    log.trace(String.format(
+                            "%s received response from server: url [%s], clusterName [%s], response [%s]", getClass()
+                                    .getSimpleName(), url, clusterName, responseMessage));
+                }
+            } catch (Exception e) {
+                log.warn(String.format("Error sending ping request: url [%s], clusterName [%s], attempts[%d]: %s", url,
+                        clusterName, attempts, e.getLocalizedMessage()));
+                if (attempts < _operationAttempts) {
+                    timer.schedule(this, _operationSleep, TimeUnit.MILLISECONDS);
+                }
+            } finally {
+                try {
+                    connection.disconnect();
+                } catch (Exception e) {
+                }
+            }
+        }
 
-    @Override
-    protected final void writeToFile(PingData data, String clustername) {
-        // prevent writing to file in jgroups 3.2.x
-    }
-
-    protected final void write(List<PingData> list, String clustername) {
-        // prevent writing to file in jgroups 3.6.x
-    }
-
-    @Override
-    protected final void remove(String clustername, Address addr) {
-        // empty on purpose
     }
 
 }

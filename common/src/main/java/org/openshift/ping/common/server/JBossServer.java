@@ -16,9 +16,8 @@
 
 package org.openshift.ping.common.server;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
@@ -26,7 +25,6 @@ import org.jboss.com.sun.net.httpserver.HttpExchange;
 import org.jboss.com.sun.net.httpserver.HttpHandler;
 import org.jboss.com.sun.net.httpserver.HttpServer;
 import org.jgroups.Channel;
-import org.jgroups.protocols.PingData;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -73,17 +71,18 @@ public class JBossServer extends AbstractServer {
 
     private class Handler implements HttpHandler {
         private final Server server;
+
         private Handler(Server server) {
             this.server = server;
         }
+
         public void handle(HttpExchange exchange) throws IOException {
             exchange.sendResponseHeaders(200, 0);
             try {
                 String clusterName = exchange.getRequestHeaders().getFirst(CLUSTER_NAME);
                 Channel channel = server.getChannel(clusterName);
-                PingData data = createPingData(channel);
-                try (OutputStream outputStream = exchange.getResponseBody()) {
-                    data.writeTo(new DataOutputStream(outputStream));
+                try (InputStream stream = exchange.getRequestBody()) {
+                    handlePingRequest(channel, stream);
                 }
             } catch (Exception e) {
                 throw new IOException(e);

@@ -20,10 +20,9 @@ import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 
-import java.io.DataOutputStream;
+import java.io.InputStream;
 
 import org.jgroups.Channel;
-import org.jgroups.protocols.PingData;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -70,15 +69,18 @@ public class UndertowServer extends AbstractServer {
 
     private class Handler implements HttpHandler {
         private final Server server;
+
         private Handler(Server server) {
             this.server = server;
         }
+
         public void handleRequest(HttpServerExchange exchange) throws Exception {
             exchange.startBlocking();
             String clusterName = exchange.getRequestHeaders().getFirst(CLUSTER_NAME);
             Channel channel = server.getChannel(clusterName);
-            PingData data = createPingData(channel);
-            data.writeTo(new DataOutputStream(exchange.getOutputStream()));
+            try (InputStream stream = exchange.getInputStream()) {
+                handlePingRequest(channel, stream);
+            }
         }
     }
 }
