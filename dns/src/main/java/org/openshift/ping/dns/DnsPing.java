@@ -20,6 +20,7 @@ import static org.openshift.ping.common.Utils.execute;
 import static org.openshift.ping.common.Utils.getSystemEnv;
 import static org.openshift.ping.common.Utils.getSystemEnvInt;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +29,6 @@ import java.util.Set;
 import org.jgroups.annotations.MBean;
 import org.jgroups.annotations.Property;
 import org.jgroups.conf.ClassConfigurator;
-import org.jgroups.protocols.PingData;
 import org.openshift.ping.common.OpenshiftPing;
 
 @MBean(description = "DNS based discovery protocol")
@@ -117,38 +117,16 @@ public class DnsPing extends OpenshiftPing {
     }
 
     @Override
-    protected synchronized List<PingData> doReadAll(String clusterName) {
+    protected synchronized List<InetSocketAddress> doReadAll(String clusterName) {
         Set<String> serviceHosts = getServiceHosts();
         if (log.isDebugEnabled()) {
             log.debug(String.format("Reading service hosts %s on port [%s]", serviceHosts, _servicePort));
         }
-        List<PingData> retval = new ArrayList<>();
-        boolean localAddrPresent = false;
+        List<InetSocketAddress> retval = new ArrayList<>();
         for (String serviceHost : serviceHosts) {
-            try {
-                PingData pingData = getPingData(serviceHost, _servicePort, clusterName);
-                localAddrPresent = localAddrPresent || pingData.getAddress().equals(local_addr);
-                retval.add(pingData);
-            } catch (Exception e) {
-                if (log.isInfoEnabled()) {
-                    log.info(String.format("PingData not available for cluster [%s], service [%s], host [%s], port [%s]; encountered [%s: %s]",
-                            clusterName, _serviceName, serviceHost, _servicePort, e.getClass().getName(), e.getMessage()));
-                }
-            }
+            retval.add(new InetSocketAddress(serviceHost, _servicePort));
         }
-        if (localAddrPresent) {
-            if (log.isDebugEnabled()) {
-                for (PingData pingData: retval) {
-                    log.debug(String.format("Returning PingData [%s]", pingData));
-                }
-            }
-            return retval;
-        } else {
-            if (log.isDebugEnabled()) {
-                log.debug("Local address not discovered, returning empty list");
-            }
-            return Collections.<PingData>emptyList();
-        }
+        return retval;
     }
 
 }
