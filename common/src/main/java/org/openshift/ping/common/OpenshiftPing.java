@@ -179,6 +179,9 @@ public abstract class OpenshiftPing extends PING {
         if (nodes == null) {
             return;
         }
+        if (msg.getSrc() == null) {
+            msg.setSrc(local_addr);
+        }
         for (InetSocketAddress node : nodes) {
             // forward the request to each node
             timer.execute(new SendDiscoveryRequest(node, msg));
