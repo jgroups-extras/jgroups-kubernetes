@@ -168,7 +168,7 @@ public class KubePing extends OpenshiftPing {
             String saToken = readFileToString(getSystemEnv(getSystemEnvName("SA_TOKEN_FILE"), saTokenFile, true));
             if (saToken != null) {
                 // curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
-                // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labels=application%3Deap-app
+                // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labelSelector=application%3Deap-app
                 headers.put("Authorization", "Bearer " + saToken);
             }
             streamProvider = new InsecureStreamProvider();

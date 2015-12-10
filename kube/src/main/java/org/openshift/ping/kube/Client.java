@@ -79,7 +79,7 @@ public class Client {
         }
         url = url + "/" + op;
         if (labels != null && labels.length() > 0) {
-            url = url + "?labels=" + urlencode(labels);
+            url = url + "?labelSelector=" + urlencode(labels);
         }
         try (InputStream stream = openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider)) {
             return ModelNode.fromJSONStream(stream);
