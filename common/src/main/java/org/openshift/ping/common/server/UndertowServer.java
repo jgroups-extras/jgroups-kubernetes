@@ -75,6 +75,11 @@ public class UndertowServer extends AbstractServer {
         }
 
         public void handleRequest(HttpServerExchange exchange) throws Exception {
+            if(exchange.isInIoThread()) {
+                exchange.dispatch(this);
+                return;
+            }
+
             exchange.startBlocking();
             String clusterName = exchange.getRequestHeaders().getFirst(CLUSTER_NAME);
             Channel channel = server.getChannel(clusterName);
