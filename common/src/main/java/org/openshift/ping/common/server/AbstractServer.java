@@ -86,7 +86,9 @@ public abstract class AbstractServer implements Server {
     }
 
     protected final void handlePingRequest(Channel channel, InputStream stream) throws Exception {
-        OpenshiftPing handler = (OpenshiftPing) channel.getProtocolStack().findProtocol(OpenshiftPing.class);
-        handler.handlePingRequest(stream);
+    	if (channel != null) {
+    		OpenshiftPing handler = (OpenshiftPing) channel.getProtocolStack().findProtocol(OpenshiftPing.class);
+            handler.handlePingRequest(stream);
+    	}
     }
 }
