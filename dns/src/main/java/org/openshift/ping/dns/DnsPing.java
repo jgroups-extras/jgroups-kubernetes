@@ -16,9 +16,9 @@
 
 package org.openshift.ping.dns;
 
-import static org.openshift.ping.common.Utils.execute;
-import static org.openshift.ping.common.Utils.getSystemEnv;
-import static org.openshift.ping.common.Utils.getSystemEnvInt;
+import static org.jgroups.ping.common.Utils.execute;
+import static org.jgroups.ping.common.Utils.getSystemEnv;
+import static org.jgroups.ping.common.Utils.getSystemEnvInt;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import java.util.Set;
 import org.jgroups.annotations.MBean;
 import org.jgroups.annotations.Property;
 import org.jgroups.conf.ClassConfigurator;
-import org.openshift.ping.common.OpenshiftPing;
+import org.jgroups.ping.common.OpenshiftPing;
 
 @MBean(description = "DNS based discovery protocol")
 public class DnsPing extends OpenshiftPing {

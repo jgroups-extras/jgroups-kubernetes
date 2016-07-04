@@ -3,17 +3,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.openshift.ping</groupId>
-        <artifactId>openshift-ping-parent</artifactId>
-        <version>1.0.0.Final</version>
-        <relativePath>../pom.xml</relativePath>
+        <groupId>org.jgroups.kubernetes</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.9.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>openshift-ping-common</artifactId>
+    <artifactId>common</artifactId>
     <packaging>jar</packaging>
 
-    <name>OpenShift PING - Common</name>
-    <description>Openshift PING - Common</description>
+    <name>Kubernetes PING - Common</name>
+    <description>Kubernetes PING - Common</description>
 
     <dependencies>
 
@@ -25,11 +24,6 @@
         <dependency>
             <groupId>net.oauth.core</groupId>
             <artifactId>oauth</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss.com.sun.httpserver</groupId>
-            <artifactId>httpserver</artifactId>
         </dependency>
 
         <dependency>
