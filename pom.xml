@@ -46,6 +46,11 @@
         </license>
     </licenses>
 
+    <issueManagement>
+        <system>jira</system>
+        <url>https://issues.jboss.org/browse/CLOUD</url>
+    </issueManagement>
+
     <properties>
         <version.jgroups>3.6.10.Final</version.jgroups>
         <version.oauth>20100527</version.oauth>
@@ -59,7 +64,6 @@
         <module>common</module>
         <module>dns</module>
         <module>kube</module>
-        <!-- <module>examples/apps</module> -->
     </modules>
 
     <dependencyManagement>
