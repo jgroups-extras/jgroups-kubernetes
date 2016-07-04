@@ -3,23 +3,23 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.openshift.ping</groupId>
-        <artifactId>openshift-ping-parent</artifactId>
-        <version>1.0.0.Final</version>
-        <relativePath>../pom.xml</relativePath>
+        <groupId>org.jgroups.kubernetes</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.9.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>openshift-ping-kube</artifactId>
+    <artifactId>kubernetes</artifactId>
     <packaging>jar</packaging>
 
-    <name>OpenShift PING - Kubernetes (openshift.KUBE_PING)</name>
-    <description>Openshift PING - Kubernetes (openshift.KUBE_PING)</description>
+    <name>Kubernetes PING - Kubernetes</name>
+    <description>Kubernetes PING - Kubernetes</description>
 
     <dependencies>
 
         <dependency>
-            <groupId>org.openshift.ping</groupId>
-            <artifactId>openshift-ping-common</artifactId>
+            <groupId>org.jgroups.kubernetes</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
