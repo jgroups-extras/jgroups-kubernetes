@@ -1,0 +1,29 @@
+= Contributing Kubernetes PING
+
+1. Fork this repository
+2. Import link:ide-settings/intellij/settings.jar[IntelliJ formatting settings]
+3. Create a branch in your forked repository following this scheme:
+
+.Branch naming
+----
+ JIRA_Ticket_id/Short description
+----
+
+4. Implement your feature
+5. Create a commit using the following scheme:
+
+.Commit message
+----
+ JIRA_Ticket_id/Short description
+
+ Long description
+----
+
+6. Commit changes to your fork
+7. Create pull request
+8. Make sure all tests pass (see link:http://ci.infinispan.org/viewType.html?buildTypeId=JGroupsExtras_PullRequestsJdk8[Infinispan TeamCity])
+JGroups PING protocols for OpenShift
+
+= Tickets/JIRA
+
+Use the following link:https://issues.jboss.org/projects/CLOUD[JIRA instance]
