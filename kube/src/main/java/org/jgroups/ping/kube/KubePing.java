@@ -185,7 +185,9 @@ public class KubePing extends OpenshiftPing {
         _serverPort = getSystemEnvInt(getSystemEnvName("SERVER_PORT"), serverPort);
         _client = new Client(url, headers, getConnectTimeout(), getReadTimeout(), getOperationAttempts(), getOperationSleep(), streamProvider, _allowEmptyPortName);
 
-
+        if(log.isDebugEnabled()) {
+            log.debug("KubePING configuration: " + toString());
+        }
     }
 
     @Override
