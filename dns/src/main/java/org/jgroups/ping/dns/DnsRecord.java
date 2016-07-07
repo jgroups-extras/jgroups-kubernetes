@@ -13,7 +13,7 @@
  *  implied.  See the License for the specific language governing
  *  permissions and limitations under the License.
  */
-package org.openshift.ping.dns;
+package org.jgroups.ping.dns;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
