@@ -28,7 +28,7 @@ public final class Container {
 
     public Container() {}
 
-    void addPort(Port port) {
+    public void addPort(Port port) {
         ports.add(port);
     }
 
