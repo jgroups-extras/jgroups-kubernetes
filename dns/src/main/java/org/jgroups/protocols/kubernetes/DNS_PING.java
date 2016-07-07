@@ -17,7 +17,7 @@
 package org.jgroups.protocols.kubernetes;
 
 import org.jgroups.conf.ClassConfigurator;
-import org.openshift.ping.dns.DnsPing;
+import org.jgroups.ping.dns.DnsPing;
 
 /**
  * A workaround "org.jgroups.protocols" prefix limitation.

@@ -1,4 +1,4 @@
-package org.openshift.ping.dns;
+package org.jgroups.ping.dns;
 
 import java.net.InetAddress;
 import java.util.LinkedHashSet;

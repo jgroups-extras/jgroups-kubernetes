@@ -14,7 +14,7 @@
  *  permissions and limitations under the License.
  */
 
-package org.openshift.ping.dns;
+package org.jgroups.ping.dns;
 
 import static org.jgroups.ping.common.Utils.execute;
 import static org.jgroups.ping.common.Utils.getSystemEnv;
