@@ -16,14 +16,17 @@
 
 package org.jgroups.ping.kube.test;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
 import org.jgroups.ping.kube.Client;
 import org.jgroups.ping.kube.Container;
 import org.jgroups.ping.kube.Pod;
 import org.jgroups.ping.kube.Port;
+import org.jgroups.ping.kube.test.util.ContextBuilder;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -35,15 +38,75 @@ public class ClientTest {
         Client client = new TestClient();
         List<Pod> pods = client.getPods(null, null);
         Assert.assertNotNull(pods);
-        Assert.assertEquals(2, pods.size());
+        assertEquals(2, pods.size());
         Pod pod = pods.get(0);
         Assert.assertNotNull(pod.getContainers());
-        Assert.assertEquals(1, pod.getContainers().size());
+        assertEquals(1, pod.getContainers().size());
         Container container = pod.getContainers().get(0);
         Assert.assertNotNull(container.getPorts());
-        Assert.assertEquals(2, container.getPorts().size());
+        assertEquals(2, container.getPorts().size());
         Port port = container.getPort("http");
-        Assert.assertEquals(8080, port.getContainerPort());
+        assertEquals(8080, port.getContainerPort());
+    }
+
+    @Test
+    public void testAllowEmptyPortNameWithNullPortName() throws Exception {
+        //given
+        Client client = new TestClient();
+
+        ContextBuilder context = ContextBuilder.newContext().withPingPortName("ping");
+        context.withContainer().withUnnamedPort(8888);
+
+        //when
+        boolean result = client.accept(context.build());
+
+        //then
+        assertEquals(true, result);
+    }
+
+    @Test
+    public void testAllowEmptyPortNameWithEmptyPortName() throws Exception {
+        //given
+        Client client = new TestClient();
+
+        ContextBuilder context = ContextBuilder.newContext().withPingPortName("ping");
+        context.withContainer().withNamedPort("", 8888);
+
+        //when
+        boolean result = client.accept(context.build());
+
+        //then
+        assertEquals(true, result);
+    }
+
+    @Test
+    public void testAllowEmptyPortNameWithWrongName() throws Exception {
+        //given
+        Client client = new TestClient();
+
+        ContextBuilder context = ContextBuilder.newContext().withPingPortName("ping");
+        context.withContainer().withNamedPort("wrongName", 8888);
+
+        //when
+        boolean result = client.accept(context.build());
+
+        //then
+        assertEquals(false, result);
+    }
+
+    @Test
+    public void testNotAllowingEmptyPortNames() throws Exception {
+        //given
+        Client client = new TestClient(false);
+
+        ContextBuilder context = ContextBuilder.newContext().withPingPortName("ping");
+        context.withContainer().withUnnamedPort(8888);
+
+        //when
+        boolean result = client.accept(context.build());
+
+        //then
+        assertEquals(false, result);
     }
 
 }

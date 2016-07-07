@@ -41,7 +41,11 @@ public class TestClient extends Client {
     }
 
     public TestClient() {
-        super(null, null, 0, 0, 0, 0, null);
+        super(null, null, 0, 0, 0, 0, null, true);
+    }
+
+    public TestClient(boolean allowEmptyPingPortName) {
+        super(null, null, 0, 0, 0, 0, null, allowEmptyPingPortName);
     }
 
     @Override

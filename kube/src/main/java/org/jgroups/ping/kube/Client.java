@@ -43,9 +43,10 @@ public class Client {
     private final int operationAttempts;
     private final long operationSleep;
     private final StreamProvider streamProvider;
+    private final boolean allowEmptyPortName;
     private final String info;
 
-    public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts, long operationSleep, StreamProvider streamProvider) {
+    public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts, long operationSleep, StreamProvider streamProvider, boolean allowEmptyPortName) {
         this.masterUrl = masterUrl;
         this.headers = headers;
         this.connectTimeout = connectTimeout;
@@ -53,6 +54,7 @@ public class Client {
         this.operationAttempts = operationAttempts;
         this.operationSleep = operationSleep;
         this.streamProvider = streamProvider;
+        this.allowEmptyPortName = allowEmptyPortName;
         Map<String, String> maskedHeaders = new TreeMap<String, String>();
         if (headers != null) {
             for (Map.Entry<String, String> header : headers.entrySet()) {
@@ -172,12 +174,17 @@ public class Client {
         if (ports != null) {
             String pingPortName = context.getPingPortName();
             for (Port port : ports) {
-                if (pingPortName.equalsIgnoreCase(port.getName())) {
+                String portName = port.getName();
+                if (allowEmptyPortName(portName) || pingPortName.equalsIgnoreCase(portName)) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    protected boolean allowEmptyPortName(String portName) {
+        return allowEmptyPortName && (portName == null || "".equals(portName));
     }
 
 }
