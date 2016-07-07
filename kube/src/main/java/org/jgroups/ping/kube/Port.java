@@ -16,19 +16,21 @@
 
 package org.jgroups.ping.kube;
 
+import java.util.Optional;
+
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public final class Port {
-    private final String name;
+    private final Optional<String> name;
     private final int containerPort;
 
-    public Port(String name, int containerPort) {
+    public Port(Optional<String> name, int containerPort) {
         this.name = name;
         this.containerPort = containerPort;
     }
 
-    public String getName() {
+    public Optional<String> getName() {
         return name;
     }
 

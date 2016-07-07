@@ -15,13 +15,8 @@ public class ContainerBuilder {
         return new ContainerBuilder();
     }
 
-    public ContainerBuilder withUnnamedPort(int i) {
+    public ContainerBuilder withPort(int i) {
         container.addPort(new Port(null, i));
-        return this;
-    }
-
-    public ContainerBuilder withNamedPort(String portName, int i) {
-        container.addPort(new Port(portName, i));
         return this;
     }
 

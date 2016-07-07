@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,10 +44,10 @@ public class Client {
     private final int operationAttempts;
     private final long operationSleep;
     private final StreamProvider streamProvider;
-    private final boolean allowEmptyPortName;
+    private final int serverPort;
     private final String info;
 
-    public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts, long operationSleep, StreamProvider streamProvider, boolean allowEmptyPortName) {
+    public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts, long operationSleep, StreamProvider streamProvider, int serverPort) {
         this.masterUrl = masterUrl;
         this.headers = headers;
         this.connectTimeout = connectTimeout;
@@ -54,7 +55,7 @@ public class Client {
         this.operationAttempts = operationAttempts;
         this.operationSleep = operationSleep;
         this.streamProvider = streamProvider;
-        this.allowEmptyPortName = allowEmptyPortName;
+        this.serverPort = serverPort;
         Map<String, String> maskedHeaders = new TreeMap<String, String>();
         if (headers != null) {
             for (Map.Entry<String, String> header : headers.entrySet()) {
@@ -145,11 +146,13 @@ public class Client {
                 Container container = new Container();
                 List<ModelNode> portNodes = portsNode.asList();
                 for (ModelNode portNode : portNodes) {
+                    Optional<String> portName = Optional.empty();
+
                     ModelNode portNameNode = portNode.get("name");
-                    if (!portNameNode.isDefined()) {
-                        continue;
+                    if (portNameNode.isDefined()) {
+                        portName = Optional.of(portNameNode.asString());
                     }
-                    String portName = portNameNode.asString(); // ping
+
                     ModelNode containerPortNode = portNode.get("containerPort");
                     if (!containerPortNode.isDefined()) {
                         continue;
@@ -168,23 +171,14 @@ public class Client {
         return pods;
     }
 
-    public boolean accept(Context context) {
-        Container container = context.getContainer();
-        List<Port> ports = container.getPorts();
-        if (ports != null) {
-            String pingPortName = context.getPingPortName();
-            for (Port port : ports) {
-                String portName = port.getName();
-                if (allowEmptyPortName(portName) || pingPortName.equalsIgnoreCase(portName)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public boolean accept(Container container) {
+        return container.getPorts().stream()
+                .filter(port -> accept(port))
+                .findAny().isPresent();
     }
 
-    protected boolean allowEmptyPortName(String portName) {
-        return allowEmptyPortName && (portName == null || "".equals(portName));
+    public boolean accept(Port port) {
+        return serverPort == port.getContainerPort();
     }
 
 }

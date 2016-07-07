@@ -27,6 +27,9 @@ import org.jgroups.Event;
 import org.jgroups.Message;
 import org.jgroups.PhysicalAddress;
 import org.jgroups.conf.ClassConfigurator;
+import org.jgroups.ping.common.server.Server;
+import org.jgroups.ping.kube.Client;
+import org.jgroups.ping.kube.KubePing;
 import org.jgroups.protocols.PingData;
 import org.jgroups.protocols.PingHeader;
 import org.jgroups.stack.Protocol;
@@ -36,9 +39,6 @@ import org.jgroups.util.UUID;
 import org.jgroups.util.Util;
 import org.junit.Assert;
 import org.junit.Test;
-import org.jgroups.ping.common.server.Server;
-import org.jgroups.ping.kube.Client;
-import org.jgroups.ping.kube.KubePing;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -111,7 +111,11 @@ public abstract class ServerTestBase extends TestBase {
 
         @Override
         protected Client getClient() {
-            return new TestClient();
+            try {
+                return new TestClient();
+            } catch (Exception e) {
+                throw new AssertionError(e);
+            }
         }
     }
     

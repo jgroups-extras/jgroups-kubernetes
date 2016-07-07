@@ -19,12 +19,13 @@ package org.jgroups.ping.kube.test;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.jgroups.ping.kube.Client;
 import org.jgroups.ping.kube.Container;
 import org.jgroups.ping.kube.Pod;
 import org.jgroups.ping.kube.Port;
-import org.jgroups.ping.kube.test.util.ContextBuilder;
+import org.jgroups.ping.kube.test.util.ContainerBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -45,68 +46,73 @@ public class ClientTest {
         Container container = pod.getContainers().get(0);
         Assert.assertNotNull(container.getPorts());
         assertEquals(2, container.getPorts().size());
-        Port port = container.getPort("http");
+        Port port = container.getPorts().get(0);
         assertEquals(8080, port.getContainerPort());
     }
 
     @Test
-    public void testAllowEmptyPortNameWithNullPortName() throws Exception {
+    public void testParsingPortWithoutNames() throws Exception {
         //given
-        Client client = new TestClient();
-
-        ContextBuilder context = ContextBuilder.newContext().withPingPortName("ping");
-        context.withContainer().withUnnamedPort(8888);
+        Client client = new TestClient("/pods_without_ports.json", 8888);
 
         //when
-        boolean result = client.accept(context.build());
+        long numberOfPods = client.getPods(null, null).stream()
+                .map(port -> port.getPodIP())
+                .count();
 
         //then
-        assertEquals(true, result);
+        assertEquals(2, numberOfPods);
     }
 
     @Test
-    public void testAllowEmptyPortNameWithEmptyPortName() throws Exception {
+    public void testAcceptingProperPort() throws Exception {
         //given
         Client client = new TestClient();
 
-        ContextBuilder context = ContextBuilder.newContext().withPingPortName("ping");
-        context.withContainer().withNamedPort("", 8888);
-
         //when
-        boolean result = client.accept(context.build());
+        boolean accepted = client.accept(new Port(Optional.empty(), 8888));
 
         //then
-        assertEquals(true, result);
+        assertEquals(true, accepted);
     }
 
     @Test
-    public void testAllowEmptyPortNameWithWrongName() throws Exception {
+    public void testRejectingWrongPort() throws Exception {
         //given
         Client client = new TestClient();
 
-        ContextBuilder context = ContextBuilder.newContext().withPingPortName("ping");
-        context.withContainer().withNamedPort("wrongName", 8888);
-
         //when
-        boolean result = client.accept(context.build());
+        boolean accepted = client.accept(new Port(Optional.empty(), 1));
 
         //then
-        assertEquals(false, result);
+        assertEquals(false, accepted);
     }
 
     @Test
-    public void testNotAllowingEmptyPortNames() throws Exception {
+    public void testAcceptingProperContainer() throws Exception {
         //given
-        Client client = new TestClient(false);
+        Client client = new TestClient();
 
-        ContextBuilder context = ContextBuilder.newContext().withPingPortName("ping");
-        context.withContainer().withUnnamedPort(8888);
+        Container container = ContainerBuilder.newContainer().withPort(8888).build();
 
         //when
-        boolean result = client.accept(context.build());
+        boolean accepted = client.accept(container);
 
         //then
-        assertEquals(false, result);
+        assertEquals(true, accepted);
     }
 
+    @Test
+    public void testRejectingWrongContainer() throws Exception {
+        //given
+        Client client = new TestClient();
+
+        Container container = ContainerBuilder.newContainer().withPort(1234).build();
+
+        //when
+        boolean accepted = client.accept(container);
+
+        //then
+        assertEquals(false, accepted);
+    }
 }

@@ -72,14 +72,6 @@ public class KubePing extends OpenshiftPing {
     private int _serverPort;
 
     @Property
-    private String pingPortName = "ping";
-    private String _pingPortName;
-
-    @Property
-    private boolean allowEmptyPortName = true;
-    private boolean _allowEmptyPortName = true;
-
-    @Property
     private String clientCertFile;
 
     @Property
@@ -180,10 +172,8 @@ public class KubePing extends OpenshiftPing {
         String ver = getSystemEnv(getSystemEnvName("API_VERSION"), apiVersion, true);
         String url = String.format("%s://%s:%s/api/%s", mProtocol, mHost, mPort, ver);
         _labels = getSystemEnv(getSystemEnvName("LABELS"), labels, true);
-        _pingPortName = getSystemEnv(getSystemEnvName("PORT_NAME"), pingPortName, true);
-        _allowEmptyPortName = Boolean.valueOf(getSystemEnv(getSystemEnvName("ALLOW_EMPTY_PORT_NAME"), Boolean.toString(allowEmptyPortName), true));
         _serverPort = getSystemEnvInt(getSystemEnvName("SERVER_PORT"), serverPort);
-        _client = new Client(url, headers, getConnectTimeout(), getReadTimeout(), getOperationAttempts(), getOperationSleep(), streamProvider, _allowEmptyPortName);
+        _client = new Client(url, headers, getConnectTimeout(), getReadTimeout(), getOperationAttempts(), getOperationSleep(), streamProvider, _serverPort);
 
         if(log.isDebugEnabled()) {
             log.debug("KubePING configuration: " + toString());
@@ -195,7 +185,6 @@ public class KubePing extends OpenshiftPing {
         _namespace = null;
         _labels = null;
         _serverPort = 0;
-        _pingPortName = null;
         _client = null;
         super.destroy();
     }
@@ -214,16 +203,16 @@ public class KubePing extends OpenshiftPing {
             pods = Collections.<Pod>emptyList();
         }
         List<InetSocketAddress> retval = new ArrayList<>();
+
         for (Pod pod : pods) {
-            List<Container> containers = pod.getContainers();
-            for (Container container : containers) {
-                Context context = new Context(container, _pingPortName);
-                if (client.accept(context)) {
-                    String podIP = pod.getPodIP();
-                    int containerPort = container.getPort(_pingPortName).getContainerPort();
-                    retval.add(new InetSocketAddress(podIP, containerPort));
-                }
-            }
+            pod.getContainers().stream()
+                    .filter(container -> client.accept(container))
+                    .flatMap(container -> container.getPorts().stream())
+                    .filter(port -> client.accept(port))
+                    .map(port -> port.getContainerPort())
+                    .forEach(portAsInt -> {
+                        retval.add(new InetSocketAddress(pod.getPodIP(), portAsInt));
+                    });
         }
         return retval;
     }
@@ -234,8 +223,6 @@ public class KubePing extends OpenshiftPing {
                 "_namespace='" + _namespace + '\'' +
                 ", _labels='" + _labels + '\'' +
                 ", _serverPort=" + _serverPort +
-                ", _pingPortName='" + _pingPortName + '\'' +
-                ", _allowEmptyPortName=" + _allowEmptyPortName +
                 '}';
     }
 }
