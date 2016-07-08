@@ -36,16 +36,6 @@ public final class Container {
         return Collections.unmodifiableList(ports);
     }
 
-    public Port getPort(String name) {
-        for (Port port : ports) {
-            if (name.equals(port.getName())) {
-                return port;
-            }
-        }
-        //return null;
-        throw new IllegalArgumentException("No such port: " + name);
-    }
-
     public String toString() {
         return String.format("%s[ports=%s]", getClass().getSimpleName(), ports);
     }

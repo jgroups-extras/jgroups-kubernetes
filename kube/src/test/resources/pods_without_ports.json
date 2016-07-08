@@ -1,0 +1,286 @@
+{
+  "kind": "PodList",
+  "apiVersion": "v1",
+  "metadata": {
+    "selfLink": "\/api\/v1\/namespaces\/myproject\/pods",
+    "resourceVersion": "2548"
+  },
+  "items": [
+    {
+      "metadata": {
+        "name": "infinispan-simple-tutorials-kubernetes-5-n0xo2",
+        "generateName": "infinispan-simple-tutorials-kubernetes-5-",
+        "namespace": "myproject",
+        "selfLink": "\/api\/v1\/namespaces\/myproject\/pods\/infinispan-simple-tutorials-kubernetes-5-n0xo2",
+        "uid": "e9040d4c-4444-11e6-a66e-54ee751d46e3",
+        "resourceVersion": "2469",
+        "creationTimestamp": "2016-07-07T13:15:43Z",
+        "labels": {
+          "deployment": "infinispan-simple-tutorials-kubernetes-5",
+          "deploymentconfig": "infinispan-simple-tutorials-kubernetes",
+          "group": "org.infinispan.tutorial.simple",
+          "project": "infinispan-simple-tutorials-kubernetes",
+          "provider": "fabric8",
+          "version": "1.0.0-SNAPSHOT"
+        },
+        "annotations": {
+          "fabric8.io\/metrics-path": "dashboard\/file\/kubernetes-pods.json\/?var-project=infinispan-simple-tutorials-kubernetes&var-version=1.0.0-SNAPSHOT",
+          "kubernetes.io\/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicationController\",\"namespace\":\"myproject\",\"name\":\"infinispan-simple-tutorials-kubernetes-5\",\"uid\":\"d7d7a6d4-4444-11e6-a66e-54ee751d46e3\",\"apiVersion\":\"v1\",\"resourceVersion\":\"2449\"}}\n",
+          "openshift.io\/deployment-config.latest-version": "5",
+          "openshift.io\/deployment-config.name": "infinispan-simple-tutorials-kubernetes",
+          "openshift.io\/deployment.name": "infinispan-simple-tutorials-kubernetes-5",
+          "openshift.io\/scc": "restricted"
+        }
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "default-token-63adh",
+            "secret": {
+              "secretName": "default-token-63adh"
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "infinispan-kubernetes",
+            "image": "infinispan\/infinispan-simple-tutorials-kubernetes:1.0.0-SNAPSHOT",
+            "ports": [
+              {
+                "containerPort": 8888,
+                "protocol": "TCP"
+              }
+            ],
+            "env": [
+              {
+                "name": "KUBERNETES_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              }
+            ],
+            "resources": {
+
+            },
+            "volumeMounts": [
+              {
+                "name": "default-token-63adh",
+                "readOnly": true,
+                "mountPath": "\/var\/run\/secrets\/kubernetes.io\/serviceaccount"
+              }
+            ],
+            "terminationMessagePath": "\/dev\/termination-log",
+            "imagePullPolicy": "IfNotPresent",
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID",
+                  "SYS_CHROOT"
+                ]
+              },
+              "privileged": false,
+              "seLinuxOptions": {
+                "level": "s0:c6,c0"
+              },
+              "runAsUser": 1000030000
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "dnsPolicy": "ClusterFirst",
+        "host": "slaskawi",
+        "serviceAccountName": "default",
+        "serviceAccount": "default",
+        "nodeName": "slaskawi",
+        "securityContext": {
+          "seLinuxOptions": {
+            "level": "s0:c6,c0"
+          },
+          "fsGroup": 1000030000
+        },
+        "imagePullSecrets": [
+          {
+            "name": "default-dockercfg-4rour"
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2016-07-07T13:15:47Z"
+          }
+        ],
+        "hostIP": "192.168.0.17",
+        "podIP": "172.17.0.5",
+        "startTime": "2016-07-07T13:15:43Z",
+        "containerStatuses": [
+          {
+            "name": "infinispan-kubernetes",
+            "state": {
+              "running": {
+                "startedAt": "2016-07-07T13:15:47Z"
+              }
+            },
+            "lastState": {
+
+            },
+            "ready": true,
+            "restartCount": 0,
+            "image": "infinispan\/infinispan-simple-tutorials-kubernetes:1.0.0-SNAPSHOT",
+            "imageID": "docker:\/\/sha256:e5485332ce388f586afd33999254535f376caafca081689f672df864d97bd150",
+            "containerID": "docker:\/\/c80b770006c23606ae0513e28b927d3035070f66a0d729674b4491c5dd0f0909"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "infinispan-simple-tutorials-kubernetes-5-r0han",
+        "generateName": "infinispan-simple-tutorials-kubernetes-5-",
+        "namespace": "myproject",
+        "selfLink": "\/api\/v1\/namespaces\/myproject\/pods\/infinispan-simple-tutorials-kubernetes-5-r0han",
+        "uid": "227d91f5-4445-11e6-a66e-54ee751d46e3",
+        "resourceVersion": "2505",
+        "creationTimestamp": "2016-07-07T13:17:20Z",
+        "labels": {
+          "deployment": "infinispan-simple-tutorials-kubernetes-5",
+          "deploymentconfig": "infinispan-simple-tutorials-kubernetes",
+          "group": "org.infinispan.tutorial.simple",
+          "project": "infinispan-simple-tutorials-kubernetes",
+          "provider": "fabric8",
+          "version": "1.0.0-SNAPSHOT"
+        },
+        "annotations": {
+          "fabric8.io\/metrics-path": "dashboard\/file\/kubernetes-pods.json\/?var-project=infinispan-simple-tutorials-kubernetes&var-version=1.0.0-SNAPSHOT",
+          "kubernetes.io\/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicationController\",\"namespace\":\"myproject\",\"name\":\"infinispan-simple-tutorials-kubernetes-5\",\"uid\":\"d7d7a6d4-4444-11e6-a66e-54ee751d46e3\",\"apiVersion\":\"v1\",\"resourceVersion\":\"2488\"}}\n",
+          "openshift.io\/deployment-config.latest-version": "5",
+          "openshift.io\/deployment-config.name": "infinispan-simple-tutorials-kubernetes",
+          "openshift.io\/deployment.name": "infinispan-simple-tutorials-kubernetes-5",
+          "openshift.io\/scc": "restricted"
+        }
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "default-token-63adh",
+            "secret": {
+              "secretName": "default-token-63adh"
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "infinispan-kubernetes",
+            "image": "infinispan\/infinispan-simple-tutorials-kubernetes:1.0.0-SNAPSHOT",
+            "ports": [
+              {
+                "containerPort": 8888,
+                "protocol": "TCP"
+              }
+            ],
+            "env": [
+              {
+                "name": "KUBERNETES_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              }
+            ],
+            "resources": {
+
+            },
+            "volumeMounts": [
+              {
+                "name": "default-token-63adh",
+                "readOnly": true,
+                "mountPath": "\/var\/run\/secrets\/kubernetes.io\/serviceaccount"
+              }
+            ],
+            "terminationMessagePath": "\/dev\/termination-log",
+            "imagePullPolicy": "IfNotPresent",
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID",
+                  "SYS_CHROOT"
+                ]
+              },
+              "privileged": false,
+              "seLinuxOptions": {
+                "level": "s0:c6,c0"
+              },
+              "runAsUser": 1000030000
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "dnsPolicy": "ClusterFirst",
+        "host": "slaskawi",
+        "serviceAccountName": "default",
+        "serviceAccount": "default",
+        "nodeName": "slaskawi",
+        "securityContext": {
+          "seLinuxOptions": {
+            "level": "s0:c6,c0"
+          },
+          "fsGroup": 1000030000
+        },
+        "imagePullSecrets": [
+          {
+            "name": "default-dockercfg-4rour"
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2016-07-07T13:17:24Z"
+          }
+        ],
+        "hostIP": "192.168.0.17",
+        "podIP": "172.17.0.2",
+        "startTime": "2016-07-07T13:17:20Z",
+        "containerStatuses": [
+          {
+            "name": "infinispan-kubernetes",
+            "state": {
+              "running": {
+                "startedAt": "2016-07-07T13:17:23Z"
+              }
+            },
+            "lastState": {
+
+            },
+            "ready": true,
+            "restartCount": 0,
+            "image": "infinispan\/infinispan-simple-tutorials-kubernetes:1.0.0-SNAPSHOT",
+            "imageID": "docker:\/\/sha256:e5485332ce388f586afd33999254535f376caafca081689f672df864d97bd150",
+            "containerID": "docker:\/\/1ee2b9b5d350d364df3b787e1a6f13633f68f328a928b503874efa57e60a7c45"
+          }
+        ]
+      }
+    }
+  ]
+}

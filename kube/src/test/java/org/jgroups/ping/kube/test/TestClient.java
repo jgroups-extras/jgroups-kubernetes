@@ -19,6 +19,8 @@ package org.jgroups.ping.kube.test;
 import static org.jgroups.ping.common.Utils.readFileToString;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,23 +31,20 @@ import org.jgroups.ping.kube.Client;
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public class TestClient extends Client {
-    private static final Map<String, String> OPS = new HashMap<>();
+    private final Map<String, String> OPS = new HashMap<>();
 
-    static {
-        try {
-            String json = readFileToString(new File(TestClient.class.getResource("/pods.json").toURI()));
-            OPS.put("pods", json);
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
+    public TestClient() throws URISyntaxException, IOException {
+        this(8888);
     }
 
-    public TestClient() {
-        super(null, null, 0, 0, 0, 0, null, true);
+    public TestClient(int port) throws URISyntaxException, IOException {
+        this("/pods.json", port);
     }
 
-    public TestClient(boolean allowEmptyPingPortName) {
-        super(null, null, 0, 0, 0, 0, null, allowEmptyPingPortName);
+    public TestClient(String jsonFile, int port) throws URISyntaxException, IOException {
+        super(null, null, 0, 0, 0, 0, null, port);
+        String json = readFileToString(new File(TestClient.class.getResource(jsonFile).toURI()));
+        OPS.put("pods", json);
     }
 
     @Override
