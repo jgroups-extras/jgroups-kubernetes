@@ -51,6 +51,12 @@
         <url>https://issues.jboss.org/browse/CLOUD</url>
     </issueManagement>
 
+    <scm>
+      <connection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</connection>
+      <developerConnection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</developerConnection>
+      <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
+   </scm>
+
     <properties>
         <version.jgroups>3.6.10.Final</version.jgroups>
         <version.oauth>20100527</version.oauth>
