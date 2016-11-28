@@ -22,6 +22,7 @@ import static org.jgroups.ping.common.Utils.trimToNull;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -32,10 +33,12 @@ import java.util.concurrent.TimeUnit;
 import org.jgroups.Event;
 import org.jgroups.Message;
 import org.jgroups.annotations.Property;
-import org.jgroups.protocols.PING;
 import org.jgroups.ping.common.server.Server;
 import org.jgroups.ping.common.server.ServerFactory;
 import org.jgroups.ping.common.server.Servers;
+import org.jgroups.protocols.PING;
+import org.openshift.ping.common.compatibility.CompatibilityException;
+import org.openshift.ping.common.compatibility.CompatibilityUtils;
 
 public abstract class OpenshiftPing extends PING {
 
@@ -63,9 +66,20 @@ public abstract class OpenshiftPing extends PING {
     private Server _server;
     private String _serverName;
 
+    private static Method sendMethod; //handled via reflection due to JGroups 3/4 incompatibility
+
     public OpenshiftPing(String systemEnvPrefix) {
         super();
         _systemEnvPrefix = trimToNull(systemEnvPrefix);
+        try {
+            if(CompatibilityUtils.isJGroups4()) {
+                sendMethod = this.getClass().getMethod("up", Message.class);
+            } else {
+                sendMethod = this.getClass().getMethod("up", Event.class);
+            }
+        } catch (Exception e) {
+            throw new CompatibilityException("Could not find suitable 'up' method.", e);
+        }
     }
 
     protected final String getSystemEnvName(String systemEnvSuffix) {
@@ -193,9 +207,21 @@ public abstract class OpenshiftPing extends PING {
         Message msg = new Message();
         msg.readFrom(dataInput);
         try {
-            up(new Event(Event.MSG, msg));
+            sendUp(msg);
         } catch (Exception e) {
             log.error("Error processing GET_MBRS_REQ.", e);
+        }
+    }
+
+    private void sendUp(Message msg) {
+        try {
+            if(CompatibilityUtils.isJGroups4()) {
+                sendMethod.invoke(this, msg);
+            } else {
+                sendMethod.invoke(this, new Event(1, msg));
+            }
+        } catch (Exception e) {
+            throw new CompatibilityException("Could not invoke 'up' method.", e);
         }
     }
 

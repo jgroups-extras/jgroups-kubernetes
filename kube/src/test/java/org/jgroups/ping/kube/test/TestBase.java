@@ -24,7 +24,7 @@ import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.protocols.TCP;
-import org.jgroups.protocols.UNICAST2;
+import org.jgroups.protocols.UNICAST3;
 import org.jgroups.protocols.pbcast.GMS;
 import org.jgroups.protocols.pbcast.NAKACK2;
 import org.jgroups.protocols.pbcast.STABLE;
@@ -69,7 +69,7 @@ public abstract class TestBase {
                 new TCP().setValue("bind_addr", InetAddress.getLoopbackAddress()),
                 ping,
                 new NAKACK2(),
-                new UNICAST2(),
+                new UNICAST3(),
                 new STABLE(),
                 new GMS()
             );

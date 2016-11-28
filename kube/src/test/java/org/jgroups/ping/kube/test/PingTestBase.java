@@ -16,18 +16,37 @@
 
 package org.jgroups.ping.kube.test;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jgroups.Channel;
 import org.jgroups.JChannel;
 import org.jgroups.util.Util;
 import org.junit.Assert;
 import org.junit.Test;
+import org.openshift.ping.common.compatibility.CompatibilityException;
+import org.openshift.ping.common.compatibility.CompatibilityUtils;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public abstract class PingTestBase extends TestBase {
+
+    //handles via reflection because of JGroups 3/4 incompatibility.
+    private static final Method waitForViewMethod;
+
+    static {
+        try {
+            if (CompatibilityUtils.isJGroups4()) {
+                waitForViewMethod = Util.class.getMethod("waitUntilAllChannelsHaveSameView", long.class, long.class, JChannel[].class);
+            } else {
+                waitForViewMethod = Util.class.getMethod("waitUntilAllChannelsHaveSameSize", long.class, long.class, Channel[].class);
+            }
+        } catch (NoSuchMethodException e) {
+            throw new CompatibilityException("Could not find proper 'waitUntilAllChannelsHaveSame*' method.", e);
+        }
+    }
 
     @Test
     public void testCluster() throws Exception {
@@ -45,7 +64,7 @@ public abstract class PingTestBase extends TestBase {
     }
 
     protected void doTestCluster() throws Exception {
-        Util.waitUntilAllChannelsHaveSameSize(10000, 1000, channels);
+        waitForViewMethod.invoke(null, 10000, 1000, channels);
 
         // Tests unicasts from the first to the last
         JChannel first = channels[0], last = channels[getNum() - 1];
