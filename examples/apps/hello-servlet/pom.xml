@@ -4,7 +4,7 @@
    <parent>
        <groupId>org.openshift.ping.examples</groupId>
        <artifactId>openshift-ping-examples-apps</artifactId>
-       <version>1.0.0.Final</version>
+       <version>1.0.1.Final-SNAPSHOT</version>
        <relativePath>../pom.xml</relativePath>
    </parent>
 
