@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import org.jboss.com.sun.net.httpserver.HttpExchange;
 import org.jboss.com.sun.net.httpserver.HttpHandler;
 import org.jboss.com.sun.net.httpserver.HttpServer;
-import org.jgroups.Channel;
+import org.jgroups.JChannel;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -38,7 +38,7 @@ public class JBossServer extends AbstractServer {
         super(port);
     }
 
-    public synchronized boolean start(Channel channel) throws Exception {
+    public synchronized boolean start(JChannel channel) throws Exception {
         boolean started = false;
         if (server == null) {
             try {
@@ -57,7 +57,7 @@ public class JBossServer extends AbstractServer {
         return started;
     }
 
-    public synchronized boolean stop(Channel channel) {
+    public synchronized boolean stop(JChannel channel) {
         boolean stopped = false;
         removeChannel(channel);
         if (server != null && !hasChannels()) {
@@ -82,7 +82,7 @@ public class JBossServer extends AbstractServer {
             try {
                 try {
                     String clusterName = exchange.getRequestHeaders().getFirst(CLUSTER_NAME);
-                    Channel channel = server.getChannel(clusterName);
+                    JChannel channel = server.getChannel(clusterName);
                     try (InputStream stream = exchange.getRequestBody()) {
                         handlePingRequest(channel, stream);
                     }

@@ -16,13 +16,13 @@
 
 package org.openshift.ping.common.server;
 
+import java.io.InputStream;
+
+import org.jgroups.JChannel;
+
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-
-import java.io.InputStream;
-
-import org.jgroups.Channel;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -34,7 +34,7 @@ public class UndertowServer extends AbstractServer {
         super(port);
     }
 
-    public synchronized boolean start(Channel channel) throws Exception {
+    public synchronized boolean start(JChannel channel) throws Exception {
         boolean started = false;
         if (server == null) {
             try {
@@ -53,7 +53,7 @@ public class UndertowServer extends AbstractServer {
         return started;
     }
 
-    public synchronized boolean stop(Channel channel) {
+    public synchronized boolean stop(JChannel channel) {
         boolean stopped = false;
         removeChannel(channel);
         if (server != null && !hasChannels()) {
@@ -82,7 +82,7 @@ public class UndertowServer extends AbstractServer {
 
             exchange.startBlocking();
             String clusterName = exchange.getRequestHeaders().getFirst(CLUSTER_NAME);
-            Channel channel = server.getChannel(clusterName);
+            JChannel channel = server.getChannel(clusterName);
             try (InputStream stream = exchange.getInputStream()) {
                 handlePingRequest(channel, stream);
             }
