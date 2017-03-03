@@ -32,8 +32,8 @@ import org.jgroups.annotations.Property;
 import org.jgroups.conf.ClassConfigurator;
 import org.openshift.ping.common.OpenshiftPing;
 import org.openshift.ping.common.stream.CertificateStreamProvider;
-import org.openshift.ping.common.stream.InsecureStreamProvider;
 import org.openshift.ping.common.stream.StreamProvider;
+import org.openshift.ping.common.stream.TokenStreamProvider;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -88,7 +88,7 @@ public class KubePing extends OpenshiftPing {
     private String clientKeyAlgo = "RSA";
 
     @Property
-    private String caCertFile;
+    private String caCertFile = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
 
     @Property
     private String saTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
@@ -166,12 +166,9 @@ public class KubePing extends OpenshiftPing {
             mHost = getSystemEnv(new String[]{getSystemEnvName("MASTER_HOST"), "KUBERNETES_SERVICE_HOST"}, masterHost, true);
             mPort = getSystemEnvInt(new String[]{getSystemEnvName("MASTER_PORT"), "KUBERNETES_SERVICE_PORT"}, masterPort);
             String saToken = readFileToString(getSystemEnv(getSystemEnvName("SA_TOKEN_FILE"), saTokenFile, true));
-            if (saToken != null) {
-                // curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
-                // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labelSelector=application%3Deap-app
-                headers.put("Authorization", "Bearer " + saToken);
-            }
-            streamProvider = new InsecureStreamProvider();
+            String lCaCertFile = getSystemEnv(new String[]{getSystemEnvName("CA_CERT_FILE"), "KUBERNETES_CA_CERTIFICATE_FILE"}, caCertFile, true);
+
+            streamProvider = new TokenStreamProvider(saToken, lCaCertFile);
         }
         String ver = getSystemEnv(getSystemEnvName("API_VERSION"), apiVersion, true);
         String url = String.format("%s://%s:%s/api/%s", mProtocol, mHost, mPort, ver);
