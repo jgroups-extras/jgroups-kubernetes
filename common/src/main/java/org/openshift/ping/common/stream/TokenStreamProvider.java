@@ -1,9 +1,8 @@
 package org.openshift.ping.common.stream;
 
-import static org.openshift.ping.common.Utils.openFile;
+import static org.jgroups.ping.common.Utils.openFile;
 
 import java.io.FileNotFoundException;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
@@ -19,6 +18,9 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+
+import org.jgroups.ping.common.stream.BaseStreamProvider;
+import org.jgroups.ping.common.stream.InsecureStreamProvider;
 
 /**
  * @author <a href="mailto:rmartine@redhat.com">Ricardo Martinelli</a>

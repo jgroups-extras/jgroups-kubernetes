@@ -27,7 +27,7 @@ public class InsecureStreamProvider extends BaseStreamProvider {
         }
     };
 
-    static final TrustManager[] INSECURE_TRUST_MANAGERS = new TrustManager[] {
+    public static final TrustManager[] INSECURE_TRUST_MANAGERS = new TrustManager[] {
         new X509TrustManager() {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {}
