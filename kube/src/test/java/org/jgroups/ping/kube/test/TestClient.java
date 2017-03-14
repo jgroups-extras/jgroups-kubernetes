@@ -16,13 +16,9 @@
 
 package org.jgroups.ping.kube.test;
 
-import static org.jgroups.ping.common.Utils.readFileToString;
-
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.jboss.dmr.ModelNode;
 import org.jgroups.ping.kube.Client;
@@ -31,28 +27,26 @@ import org.jgroups.ping.kube.Client;
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public class TestClient extends Client {
-    private final Map<String, String> OPS = new HashMap<>();
+
+    private final String file;
 
     public TestClient() throws URISyntaxException, IOException {
         this(8888);
     }
 
     public TestClient(int port) throws URISyntaxException, IOException {
-        this("/pods.json", port);
+        this("pods.json", port);
     }
 
     public TestClient(String jsonFile, int port) throws URISyntaxException, IOException {
         super(null, null, 0, 0, 0, 0, null, port);
-        String json = readFileToString(new File(TestClient.class.getResource(jsonFile).toURI()));
-        OPS.put("pods", json);
+        file = jsonFile;
     }
 
     @Override
     protected ModelNode getNode(String op, String namespace, String labels) throws Exception {
-        String value = OPS.get(op);
-        if (value == null) {
-            throw new IllegalStateException("No such op: " + op);
+        try (InputStream stream = this.getClass().getClassLoader().getResourceAsStream(file)) {
+            return ModelNode.fromJSONStream(stream);
         }
-        return ModelNode.fromJSONString(value);
     }
 }
