@@ -2,6 +2,8 @@
 
 This repository contains Kubernetes Ping protocol for JGroups. The protocol can also be used in OpenShift v3 environment (which is also based on Kubernetes).
 
+This is the stable branch that will work for both JGroups 3 and 4. We are working on a new version (in master branch) which will contain a lot of improvements for JGroups 4. Stay tuned...
+
 = How to use it
 
 In order to run JGroups discovery on Kubernetes one needs to add necessary dependencies to the project:
