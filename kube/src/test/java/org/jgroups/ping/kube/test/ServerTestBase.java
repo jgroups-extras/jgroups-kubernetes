@@ -18,17 +18,14 @@ package org.jgroups.ping.kube.test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.lang.reflect.Constructor;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Collection;
 
 import org.jgroups.Address;
 import org.jgroups.Event;
 import org.jgroups.Message;
 import org.jgroups.PhysicalAddress;
-import org.jgroups.View;
 import org.jgroups.conf.ClassConfigurator;
 import org.jgroups.ping.common.server.Server;
 import org.jgroups.ping.kube.Client;
@@ -42,8 +39,6 @@ import org.jgroups.util.UUID;
 import org.jgroups.util.Util;
 import org.junit.Assert;
 import org.junit.Test;
-import org.openshift.ping.common.compatibility.CompatibilityException;
-import org.openshift.ping.common.compatibility.CompatibilityUtils;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -76,7 +71,8 @@ public abstract class ServerTestBase extends TestBase {
         PhysicalAddress physical_addr = (PhysicalAddress) pinger
                 .down(new Event(Event.GET_PHYSICAL_ADDRESS, local_addr));
         PingHeader hdr = new TestPingHeader();
-        PingData data = createPingData(local_addr, physical_addr);
+        PingData data = new PingData(local_addr, null, false, UUID.get(local_addr),
+                physical_addr != null ? Arrays.asList(physical_addr) : null);
         Message msg = new Message(null).setFlag(Message.Flag.DONT_BUNDLE)
                 .putHeader(pinger.getId(), hdr).setBuffer(streamableToBuffer(data));
 
@@ -91,25 +87,6 @@ public abstract class ServerTestBase extends TestBase {
         out.flush();
 
         Assert.assertEquals(200, conn.getResponseCode());
-    }
-
-    /*
-     * Handled via reflection because of JGroups 3/4 incompatibility.
-     */
-    private PingData createPingData(Address local_addr, PhysicalAddress physical_addr) {
-        try {
-            if(CompatibilityUtils.isJGroups4()) {
-                Constructor<PingData> constructor = PingData.class.getConstructor(Address.class, boolean.class);
-                return constructor.newInstance(local_addr, false);
-            } else {
-                String localAddressAsString = (String) UUID.class.getMethod("get", Address.class).invoke(null, local_addr);
-                Constructor<PingData> constructor = PingData.class.getConstructor(Address.class, View.class, boolean.class, String.class, Collection.class);;
-                return constructor.newInstance(local_addr, null, false, localAddressAsString,
-                      physical_addr != null ? Arrays.asList(physical_addr) : null);
-            }
-        } catch (Exception e) {
-            throw new CompatibilityException("Could not find or invoke proper 'PingData' constructor");
-        }
     }
 
     private static Buffer streamableToBuffer(Streamable obj) {
