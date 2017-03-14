@@ -53,7 +53,7 @@ public class ClientTest {
     @Test
     public void testParsingPortWithoutNames() throws Exception {
         //given
-        Client client = new TestClient("/pods_without_ports.json", 8888);
+        Client client = new TestClient("pods_without_ports.json", 8888);
 
         //when
         long numberOfPods = client.getPods(null, null).stream()
@@ -62,6 +62,18 @@ public class ClientTest {
 
         //then
         assertEquals(2, numberOfPods);
+    }
+
+    @Test
+    public void testParsingJSONWithWrongLabels() throws Exception {
+        //given
+        Client client = new TestClient("pods_with_wrong_labels.json", 8888);
+
+        //when
+        long numberOfPods = client.getPods("doesn't matter", "doesn't matter").size();
+
+        //then
+        assertEquals(0, numberOfPods);
     }
 
     @Test
