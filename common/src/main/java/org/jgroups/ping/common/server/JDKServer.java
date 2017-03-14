@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
-import org.jgroups.Channel;
+import org.jgroups.JChannel;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -38,7 +38,7 @@ public class JDKServer extends AbstractServer {
         super(port);
     }
 
-    public synchronized boolean start(Channel channel) throws Exception {
+    public synchronized boolean start(JChannel channel) throws Exception {
         boolean started = false;
         if (server == null) {
             try {
@@ -57,7 +57,7 @@ public class JDKServer extends AbstractServer {
         return started;
     }
 
-    public synchronized boolean stop(Channel channel) {
+    public synchronized boolean stop(JChannel channel) {
         boolean stopped = false;
         removeChannel(channel);
         if (server != null && !hasChannels()) {
@@ -82,7 +82,7 @@ public class JDKServer extends AbstractServer {
             exchange.sendResponseHeaders(200, 0);
             try {
                 String clusterName = exchange.getRequestHeaders().getFirst(CLUSTER_NAME);
-                Channel channel = server.getChannel(clusterName);
+                JChannel channel = server.getChannel(clusterName);
                 try (InputStream stream = exchange.getRequestBody()) {
                     handlePingRequest(channel, stream);
                 }
