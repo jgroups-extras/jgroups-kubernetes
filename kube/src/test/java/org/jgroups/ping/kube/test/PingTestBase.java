@@ -18,8 +18,11 @@ package org.jgroups.ping.kube.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeoutException;
 
 import org.jgroups.JChannel;
+import org.jgroups.View;
 import org.jgroups.util.Util;
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,7 +48,7 @@ public abstract class PingTestBase extends TestBase {
     }
 
     protected void doTestCluster() throws Exception {
-        Util.waitUntilAllChannelsHaveSameSize(10000, 1000, channels);
+        waitUntilAllChannelsHaveSameView(10000, 1000, channels);
 
         // Tests unicasts from the first to the last
         JChannel first = channels[0], last = channels[getNum() - 1];
@@ -94,6 +97,40 @@ public abstract class PingTestBase extends TestBase {
         }
 
         clearReceivers();
+    }
+
+    /**
+     * This method has been copied from JGroups. It changed name a couple of times, so we should
+     * have a safety copy here...
+     */
+    public static void waitUntilAllChannelsHaveSameView(long timeout, long interval, JChannel... channels) throws TimeoutException {
+        if(interval >= timeout || timeout <= 0)
+            throw new IllegalArgumentException("interval needs to be smaller than timeout or timeout needs to be > 0");
+        long target_time=System.currentTimeMillis() + timeout;
+        while(System.currentTimeMillis() <= target_time) {
+            boolean all_channels_have_correct_view=true;
+            View first=channels[0].getView();
+            for(JChannel ch : channels) {
+                View view=ch.getView();
+                if(!Objects.equals(view, first) || view.size() != channels.length) {
+                    all_channels_have_correct_view=false;
+                    break;
+                }
+            }
+            if(all_channels_have_correct_view)
+                return;
+            Util.sleep(interval);
+        }
+        View[] views=new View[channels.length];
+        StringBuilder sb=new StringBuilder();
+        for(int i=0; i < channels.length; i++) {
+            views[i]=channels[i].getView();
+            sb.append(channels[i].getName()).append(": ").append(views[i]).append("\n");
+        }
+        View first=channels[0].getView();
+        for(View view : views)
+            if(!Objects.equals(view, first))
+                throw new TimeoutException("Timeout " + timeout + " kicked in, views are:\n" + sb);
     }
 
 }
