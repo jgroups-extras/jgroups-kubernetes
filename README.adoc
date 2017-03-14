@@ -1,54 +1,11 @@
 = Kubernetes discovery protocol for JGroups
 
-This repository contains Kubernetes Ping protocol for JGroups. The protocol can also be used in OpenShift v3 environment (which is also based on Kubernetes).
+This is the development branch for the new version of `KUBE_PING`. We plan a lot of changes and you should probably have a look at the `stable` branch.
 
-= How to use it
+== Plans for the future:
 
-In order to run JGroups discovery on Kubernetes one needs to add necessary dependencies to the project:
-
-.Maven dependencies
-[source,xml]
-----
-<dependency>
-    <groupId>org.jgroups.kubernetes</groupId>
-    <artifactId>kubernetes</artifactId>
-    <version>${version.kubernetes-ping}</version>
-</dependency>
-----
-
-It is highly recommended to use JGroups version which is transitively pulled by the Kubernetes discovery protocol (however it is not strictly required).
-
-When deploying on OpenShift v3, the next step requires adding additional privileges using the following command:
-
-.Adding additional privileges
-[source,bash]
-----
-oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default -n $(oc project -q)
-----
-
-Thant's it!
-
-= Additional configuration options
-
-== Environmental variables
-
-The configuration is mainly done using environmental variables:
-
-|==============================================================================================
-|Variable name                   |Meaning                               |Default   |Example
-|OPENSHIFT_KUBE_PING_NAMESPACE   |Namespace used for discovery          |<not set> |Cluster-1
-|OPENSHIFT_KUBE_PING_LABELS      |Labels used for discovery             |default   |my-cluster
-|OPENSHIFT_KUBE_PING_SERVER_PORT |Port used for hosting internal server |8888      |my-cluster
-|===============================================================================================
-
-= How to tell if it's working?
-
-Watch your app logs and look for:
-
-.Successful logs
-[source,bash]
-----
-INFO namespace [MY_APP] set; clustering enabled
-----
-
-All other errors will be placed in the logs.
+[x] Rebase on JGroups 4
+[x] Remove DNS PING (use the one shipped by JGroups instead)
+[ ] Remove HTTP Server
+[ ] Introduce JSON parsing library instead of DMR
+[ ] KUBE_PING should extend (and reuse the logic of) TCPPING
