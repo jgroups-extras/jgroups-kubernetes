@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jgroups.Channel;
 import org.jgroups.JChannel;
 import org.jgroups.ping.common.OpenshiftPing;
 
@@ -30,13 +31,13 @@ import org.jgroups.ping.common.OpenshiftPing;
 public abstract class AbstractServer implements Server {
 
     protected final int port;
-    protected final Map<String, JChannel> CHANNELS = new HashMap<>();
+    protected final Map<String, Channel> CHANNELS = new HashMap<String, Channel>();
 
     protected AbstractServer(int port) {
         this.port = port;
     }
 
-    public final JChannel getChannel(String clusterName) {
+    public final Channel getChannel(String clusterName) {
         if (clusterName != null) {
             synchronized (CHANNELS) {
                 return CHANNELS.get(clusterName);
@@ -45,7 +46,7 @@ public abstract class AbstractServer implements Server {
         return null;
     }
 
-    protected final void addChannel(JChannel channel) {
+    protected final void addChannel(Channel channel) {
         String clusterName = getClusterName(channel);
         if (clusterName != null) {
             synchronized (CHANNELS) {
@@ -54,7 +55,7 @@ public abstract class AbstractServer implements Server {
         }
     }
 
-    protected final void removeChannel(JChannel channel) {
+    protected final void removeChannel(Channel channel) {
         String clusterName = getClusterName(channel);
         if (clusterName != null) {
             synchronized (CHANNELS) {
@@ -69,11 +70,11 @@ public abstract class AbstractServer implements Server {
         }
     }
 
-    private String getClusterName(final JChannel channel) {
+    private String getClusterName(final Channel channel) {
         if (channel != null) {
             String clusterName = channel.getClusterName();
             // clusterName will be null if the Channel is not yet connected, but we still need it!
-            if (clusterName == null) {
+            if (clusterName == null && channel instanceof JChannel) {
                 try {
                     Field field = JChannel.class.getDeclaredField("cluster_name");
                     field.setAccessible(true);
@@ -84,7 +85,7 @@ public abstract class AbstractServer implements Server {
         return null;
     }
 
-    protected final void handlePingRequest(JChannel channel, InputStream stream) throws Exception {
+    protected final void handlePingRequest(Channel channel, InputStream stream) throws Exception {
     	if (channel != null) {
     		OpenshiftPing handler = (OpenshiftPing) channel.getProtocolStack().findProtocol(OpenshiftPing.class);
             handler.handlePingRequest(stream);
