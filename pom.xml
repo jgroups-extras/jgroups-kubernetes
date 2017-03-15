@@ -31,7 +31,7 @@
 
     <groupId>org.jgroups.kubernetes</groupId>
     <artifactId>parent</artifactId>
-    <version>0.9.2</version>
+    <version>0.9.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Kubernetes PING - Parent</name>
@@ -54,7 +54,7 @@
       <connection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</connection>
       <developerConnection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</developerConnection>
       <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
-     <tag>0.9.2</tag>
+     <tag>HEAD</tag>
   </scm>
 
     <properties>
