@@ -24,7 +24,6 @@ import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.protocols.TCP;
-import org.jgroups.protocols.UNICAST2;
 import org.jgroups.protocols.pbcast.GMS;
 import org.jgroups.protocols.pbcast.NAKACK2;
 import org.jgroups.protocols.pbcast.STABLE;
@@ -34,6 +33,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.openshift.ping.common.compatibility.CompatibilityUtils;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -65,11 +65,19 @@ public abstract class TestBase {
         for (int i = 0; i < getNum(); i++) {
             Protocol ping = createPing();
 
+            Protocol unicastProtocol = null;
+            if(CompatibilityUtils.isJGroups4()) {
+                // JGroups 4 don't have UNICAST2 :)
+                unicastProtocol = (Protocol) Class.forName("org.jgroups.protocols.UNICAST3").newInstance();
+            } else {
+                unicastProtocol = (Protocol) Class.forName("org.jgroups.protocols.UNICAST2").newInstance();
+            }
+
             channels[i] = new JChannel(
                 new TCP().setValue("bind_addr", InetAddress.getLoopbackAddress()),
                 ping,
                 new NAKACK2(),
-                new UNICAST2(),
+                unicastProtocol,
                 new STABLE(),
                 new GMS()
             );

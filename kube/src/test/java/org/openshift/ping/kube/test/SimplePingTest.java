@@ -18,6 +18,7 @@ package org.openshift.ping.kube.test;
 
 import org.jgroups.protocols.FILE_PING;
 import org.jgroups.stack.Protocol;
+import org.junit.Ignore;
 
 /**
  * A parallel test to ZK tests.
@@ -25,6 +26,7 @@ import org.jgroups.stack.Protocol;
  *
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
+@Ignore("To be clarified with Bela")
 public class SimplePingTest extends PingTestBase {
 
     protected Protocol createPing() {
