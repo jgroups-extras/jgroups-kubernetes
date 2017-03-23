@@ -141,7 +141,7 @@
             </activation>
             <properties>
                 <!-- Impl -->
-                <version.jgroups>[3.2.6.Final,4.0.1.Final]</version.jgroups>
+                <version.jgroups>3.2.6.Final</version.jgroups>
                 <version.dmr>1.2.0.Final</version.dmr>
                 <!-- Build -->
                 <version.org.wildfly>8.2.1.Final</version.org.wildfly>
