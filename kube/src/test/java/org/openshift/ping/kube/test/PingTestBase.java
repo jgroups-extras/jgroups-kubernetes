@@ -41,7 +41,13 @@ public abstract class PingTestBase extends TestBase {
             if (CompatibilityUtils.isJGroups4()) {
                 waitForViewMethod = Util.class.getMethod("waitUntilAllChannelsHaveSameView", long.class, long.class, JChannel[].class);
             } else {
-                waitForViewMethod = Util.class.getMethod("waitUntilAllChannelsHaveSameSize", long.class, long.class, Channel[].class);
+                Method m;
+                try {
+                    m = Util.class.getMethod("waitUntilAllChannelsHaveSameSize", long.class, long.class, Channel[].class);
+                } catch (NoSuchMethodException e) {
+                    m = Util.class.getMethod("waitUntilAllChannelsHaveSameView", long.class, long.class, Channel[].class);
+                }
+                waitForViewMethod = m;
             }
         } catch (NoSuchMethodException e) {
             throw new CompatibilityException("Could not find proper 'waitUntilAllChannelsHaveSame*' method.", e);
