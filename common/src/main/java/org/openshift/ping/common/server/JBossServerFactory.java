@@ -19,7 +19,7 @@ package org.openshift.ping.common.server;
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
-public class JBossServerFactory implements ServerFactory {
+public class JBossServerFactory extends AbstractServerFactory {
 
     public boolean isAvailable() {
         try {
@@ -30,7 +30,7 @@ public class JBossServerFactory implements ServerFactory {
     }
 
     @Override
-    public Server getServer(int port) {
+    public Server createServer(int port) {
         return new JBossServer(port);
     }
 
