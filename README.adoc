@@ -28,7 +28,7 @@ When deploying on OpenShift v3, the next step requires adding additional privile
 oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default -n $(oc project -q)
 ----
 
-Thant's it!
+That's it!
 
 = Additional configuration options
 
