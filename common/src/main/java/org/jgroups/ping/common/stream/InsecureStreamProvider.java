@@ -1,5 +1,6 @@
 package org.jgroups.ping.common.stream;
 
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
@@ -9,25 +10,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
 public class InsecureStreamProvider extends BaseStreamProvider {
     private static final Logger log = Logger.getLogger(InsecureStreamProvider.class.getName());
 
-    static final HostnameVerifier INSECURE_HOSTNAME_VERIFIER = new HostnameVerifier() {
-        @Override
-        public boolean verify(String arg0, SSLSession arg1) {
-            return true;
-        }
-    };
+    static final HostnameVerifier INSECURE_HOSTNAME_VERIFIER =(arg0, arg1) -> true;
 
-    static final TrustManager[] INSECURE_TRUST_MANAGERS = new TrustManager[] {
+    static final TrustManager[] INSECURE_TRUST_MANAGERS ={
         new X509TrustManager() {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {}

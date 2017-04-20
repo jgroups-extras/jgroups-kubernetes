@@ -16,70 +16,49 @@
 
 package org.jgroups.ping.kube.test;
 
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.protocols.TCP;
+import org.jgroups.protocols.UNICAST3;
 import org.jgroups.protocols.pbcast.GMS;
 import org.jgroups.protocols.pbcast.NAKACK2;
 import org.jgroups.protocols.pbcast.STABLE;
 import org.jgroups.stack.Protocol;
 import org.jgroups.util.Util;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.openshift.ping.common.compatibility.CompatibilityUtils;
+
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public abstract class TestBase {
-    private static final int NUM = 2;
+    protected static final int    NUM = 2;
     protected static final String CLUSTER_NAME = "test";
 
-    protected JChannel[] channels;
+    protected JChannel[]   channels;
     protected MyReceiver[] receivers;
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-    }
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
-
-    protected int getNum() {
-        return NUM;
-    }
 
     @Before
     public void setUp() throws Exception {
-        channels = new JChannel[getNum()];
-        receivers = new MyReceiver[getNum()];
+        channels = new JChannel[NUM];
+        receivers = new MyReceiver[NUM];
 
-        for (int i = 0; i < getNum(); i++) {
-            Protocol ping = createPing();
-
-            Protocol unicastProtocol = null;
-            if(CompatibilityUtils.isJGroups4()) {
-                // JGroups 4 don't have UNICAST2 :)
-                unicastProtocol = (Protocol) Class.forName("org.jgroups.protocols.UNICAST3").newInstance();
-            } else {
-                unicastProtocol = (Protocol) Class.forName("org.jgroups.protocols.UNICAST2").newInstance();
-            }
-
+        for(int i = 0; i < NUM; i++) {
             channels[i] = new JChannel(
-                new TCP().setValue("bind_addr", InetAddress.getLoopbackAddress()),
-                ping,
-                new NAKACK2(),
-                unicastProtocol,
-                new STABLE(),
-                new GMS()
+              new TCP().setValue("bind_addr", InetAddress.getLoopbackAddress()),
+              createPing(),
+              new NAKACK2(),
+              new UNICAST3(),
+              new STABLE(),
+              new GMS()
             );
             channels[i].setName(Character.toString((char) ('A' + i)));
             channels[i].connect(CLUSTER_NAME);
@@ -89,16 +68,13 @@ public abstract class TestBase {
 
     @After
     public void tearDown() throws Exception {
-        for (JChannel channel: channels) {
-            channel.disconnect();
-        }
         Util.close(channels);
     }
 
     protected abstract Protocol createPing();
 
     protected void clearReceivers() {
-        for (MyReceiver r : receivers) r.getList().clear();
+        Stream.of(receivers).forEach(r -> r.getList().clear());
     }
 
     protected static class MyReceiver extends ReceiverAdapter {
@@ -109,8 +85,8 @@ public abstract class TestBase {
         }
 
         public void receive(Message msg) {
-            synchronized (list) {
-                list.add((Integer) msg.getObject());
+            synchronized(list) {
+                list.add(msg.getObject());
             }
         }
     }

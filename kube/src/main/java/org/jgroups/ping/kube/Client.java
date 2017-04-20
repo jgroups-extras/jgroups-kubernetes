@@ -1,53 +1,35 @@
-/**
- *  Copyright 2014 Red Hat, Inc.
- *
- *  Red Hat licenses this file to you under the Apache License, version
- *  2.0 (the "License"); you may not use this file except in compliance
- *  with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- *  implied.  See the License for the specific language governing
- *  permissions and limitations under the License.
- */
-
 package org.jgroups.ping.kube;
 
-import static org.jgroups.ping.common.Utils.openStream;
-import static org.jgroups.ping.common.Utils.urlencode;
+import org.jboss.dmr.ModelNode;
+import org.jgroups.logging.Log;
+import org.jgroups.ping.common.stream.StreamProvider;
 
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.jboss.dmr.ModelNode;
-import org.jgroups.ping.common.stream.StreamProvider;
+import static org.jgroups.ping.common.Utils.openStream;
+import static org.jgroups.ping.common.Utils.urlencode;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public class Client {
-    private static final Logger log = Logger.getLogger(Client.class.getName());
+    protected final String              masterUrl;
+    protected final Map<String, String> headers;
+    protected final int                 connectTimeout;
+    protected final int                 readTimeout;
+    protected final int                 operationAttempts;
+    protected final long                operationSleep;
+    protected final StreamProvider      streamProvider;
+    protected final String              info;
+    protected final Log                 log;
 
-    private final String masterUrl;
-    private final Map<String, String> headers;
-    private final int connectTimeout;
-    private final int readTimeout;
-    private final int operationAttempts;
-    private final long operationSleep;
-    private final StreamProvider streamProvider;
-    private final int serverPort;
-    private final String info;
-
-    public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts, long operationSleep, StreamProvider streamProvider, int serverPort) {
+    public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts,
+                  long operationSleep, StreamProvider streamProvider, Log log) {
         this.masterUrl = masterUrl;
         this.headers = headers;
         this.connectTimeout = connectTimeout;
@@ -55,20 +37,21 @@ public class Client {
         this.operationAttempts = operationAttempts;
         this.operationSleep = operationSleep;
         this.streamProvider = streamProvider;
-        this.serverPort = serverPort;
-        Map<String, String> maskedHeaders = new TreeMap<String, String>();
+        this.log=log;
+        Map<String, String> maskedHeaders=new TreeMap<>();
         if (headers != null) {
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 String key = header.getKey();
                 String value = header.getValue();
-                if ("Authorization".equalsIgnoreCase(key) && value != null) {
+                if ("Authorization".equalsIgnoreCase(key) && value != null)
                     value = "#MASKED:" + value.length() + "#";
-                }
                 maskedHeaders.put(key, value);
             }
         }
-        this.info = String.format("%s[masterUrl=%s, headers=%s, connectTimeout=%s, readTimeout=%s, operationAttempts=%s, operationSleep=%s, streamProvider=%s]",
-                getClass().getSimpleName(), masterUrl, maskedHeaders, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider);
+        info=String.format("%s[masterUrl=%s, headers=%s, connectTimeout=%s, readTimeout=%s, operationAttempts=%s, " +
+                             "operationSleep=%s, streamProvider=%s]",
+                           getClass().getSimpleName(), masterUrl, maskedHeaders, connectTimeout, readTimeout,
+                           operationAttempts, operationSleep, streamProvider);
     }
 
     public final String info() {
@@ -77,21 +60,20 @@ public class Client {
 
     protected ModelNode getNode(String op, String namespace, String labels) throws Exception {
         String url = masterUrl;
-        if (namespace != null && namespace.length() > 0) {
+        if(namespace != null && !namespace.isEmpty())
             url = url + "/namespaces/" + urlencode(namespace);
-        }
         url = url + "/" + op;
-        if (labels != null && labels.length() > 0) {
+        if(labels != null && !labels.isEmpty())
             url = url + "?labelSelector=" + urlencode(labels);
-        }
-        try (InputStream stream = openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider)) {
+        try(InputStream stream = openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider)) {
             return ModelNode.fromJSONStream(stream);
         }
     }
 
-    public final List<Pod> getPods(String namespace, String labels) throws Exception {
+
+    public final List<InetAddress> getPods(String namespace, String labels) throws Exception {
         ModelNode root = getNode("pods", namespace, labels);
-        List<Pod> pods = new ArrayList<Pod>();
+        List<InetAddress> pods =new ArrayList<>();
         List<ModelNode> itemNodes = root.get("items").asList();
         for (ModelNode itemNode : itemNodes) {
             //ModelNode metadataNode = itemNode.get("metadata");
@@ -127,58 +109,18 @@ public class Client {
             */
             //String hostIP = statusNode.get("hostIP").asString(); // 10.34.75.250
             ModelNode podIPNode = statusNode.get("podIP");
-            if (!podIPNode.isDefined()) {
+            if (!podIPNode.isDefined())
                 continue;
-            }
             String podIP = podIPNode.asString(); // 10.1.0.169
-            Pod pod = new Pod(podIP);
-            ModelNode containersNode = specNode.get("containers");
-            if (!containersNode.isDefined()) {
-                continue;
+            try {
+                pods.add(InetAddress.getByName(podIP));
             }
-            List<ModelNode> containerNodes = containersNode.asList();
-            for (ModelNode containerNode : containerNodes) {
-                ModelNode portsNode = containerNode.get("ports");
-                if (!portsNode.isDefined()) {
-                    continue;
-                }
-                //String containerName = containerNode.get("name").asString(); // eap-app
-                Container container = new Container();
-                List<ModelNode> portNodes = portsNode.asList();
-                for (ModelNode portNode : portNodes) {
-                    Optional<String> portName = Optional.empty();
-
-                    ModelNode portNameNode = portNode.get("name");
-                    if (portNameNode.isDefined()) {
-                        portName = Optional.of(portNameNode.asString());
-                    }
-
-                    ModelNode containerPortNode = portNode.get("containerPort");
-                    if (!containerPortNode.isDefined()) {
-                        continue;
-                    }
-                    int containerPort = containerPortNode.asInt(); // 8888
-                    Port port = new Port(portName, containerPort);
-                    container.addPort(port);
-                }
-                pod.addContainer(container);
+            catch(Exception ex) {
+                log.error("failed converting podIP (%s) to InetAddress: %s", podIP, ex);
             }
-            pods.add(pod);
         }
-        if (log.isLoggable(Level.FINE)) {
-            log.log(Level.FINE, String.format("getPods(%s, %s) = %s", namespace, labels, pods));
-        }
+        log.trace("getPods(%s, %s) = %s", namespace, labels, pods);
         return pods;
-    }
-
-    public boolean accept(Container container) {
-        return container.getPorts().stream()
-                .filter(port -> accept(port))
-                .findAny().isPresent();
-    }
-
-    public boolean accept(Port port) {
-        return serverPort == port.getContainerPort();
     }
 
 }

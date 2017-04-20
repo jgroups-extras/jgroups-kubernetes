@@ -16,8 +16,10 @@
 
 package org.jgroups.ping.common.stream;
 
-import static org.jgroups.ping.common.Utils.openFile;
+import net.oauth.signature.pem.PEMReader;
+import net.oauth.signature.pem.PKCS1EncodedKeySpec;
 
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
@@ -32,16 +34,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-
-import net.oauth.signature.pem.PEMReader;
-import net.oauth.signature.pem.PKCS1EncodedKeySpec;
+import static org.jgroups.ping.common.Utils.openFile;
 
 /**
  * @author From Fabric8
@@ -81,7 +74,7 @@ public class CertificateStreamProvider extends BaseStreamProvider {
         return connection.getInputStream();
     }
 
-    private KeyManager[] configureClientCert(String clientCertFile, String clientKeyFile, char[] clientKeyPassword, String clientKeyAlgo) throws Exception {
+    private static KeyManager[] configureClientCert(String clientCertFile, String clientKeyFile, char[] clientKeyPassword, String clientKeyAlgo) throws Exception {
         try {
             InputStream certInputStream = openFile(clientCertFile);
             CertificateFactory certFactory = CertificateFactory.getInstance("X509");
@@ -109,7 +102,7 @@ public class CertificateStreamProvider extends BaseStreamProvider {
         }
     }
 
-    private TrustManager[] configureCaCert(String caCertFile) throws Exception {
+    private static TrustManager[] configureCaCert(String caCertFile) throws Exception {
         if (caCertFile != null) {
             try {
                 InputStream pemInputStream = openFile(caCertFile);

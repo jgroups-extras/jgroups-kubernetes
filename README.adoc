@@ -6,6 +6,6 @@ This is the development branch for the new version of `KUBE_PING`. We plan a lot
 
 [x] Rebase on JGroups 4
 [x] Remove DNS PING (use the one shipped by JGroups instead)
-[ ] Remove HTTP Server
+[x] Remove HTTP Server
 [ ] Introduce JSON parsing library instead of DMR
-[ ] KUBE_PING should extend (and reuse the logic of) TCPPING
+[x] KUBE_PING should extend (and reuse the logic of) TCPPING

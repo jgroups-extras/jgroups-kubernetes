@@ -7,7 +7,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kubernetes</artifactId>
+    <artifactId>jgroups-kubernetes</artifactId>
     <packaging>jar</packaging>
 
     <name>Kubernetes PING - Kubernetes</name>
@@ -36,6 +36,12 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!--<dependency>
+            <groupId>com.grack</groupId>
+            <artifactId>nanojson</artifactId>
+            <version>1.1</version>
+        </dependency>-->
 
     </dependencies>
 
