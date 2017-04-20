@@ -1,41 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ JBoss, Home of Professional Open Source.
-  ~ Copyright 2015, Red Hat, Inc., and individual contributors
-  ~ as indicated by the @author tags. See the copyright.txt file in the
-  ~ distribution for a full listing of individual contributors.
-  ~
-  ~ This is free software; you can redistribute it and/or modify it
-  ~ under the terms of the GNU Lesser General Public License as
-  ~ published by the Free Software Foundation; either version 2.1 of
-  ~ the License, or (at your option) any later version.
-  ~
-  ~ This software is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  ~ Lesser General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public
-  ~ License along with this software; if not, write to the Free
-  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
-  -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!--<parent>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-parent</artifactId>
-        <version>22</version>
-    </parent>-->
-
     <groupId>org.jgroups.kubernetes</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>jgroups-kubernetes</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
-    <name>Kubernetes PING - Parent</name>
-    <description>Kubernetes PING - Parent</description>
+    <name>KUBE_PING</name>
+    <description>JGroups discovery protocol for Kubernetes</description>
 
     <licenses>
         <license>
@@ -46,68 +18,64 @@
     </licenses>
 
     <issueManagement>
-        <system>jira</system>
-        <url>https://issues.jboss.org/browse/CLOUD</url>
+        <system>GitHub</system>
+        <url>https://github.com/jgroups-extras/jgroups-kubernetes/issues</url>
     </issueManagement>
 
     <scm>
-      <connection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</connection>
-      <developerConnection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</developerConnection>
-      <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
-     <tag>HEAD</tag>
-  </scm>
+        <connection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</connection>
+        <developerConnection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</developerConnection>
+        <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
+        <tag>master</tag>
+    </scm>
 
     <properties>
         <version.jgroups>4.0.3-SNAPSHOT</version.jgroups>
         <version.oauth>20100527</version.oauth>
-        <version.undertow>1.3.15.Final</version.undertow>
         <version.junit>4.12</version.junit>
-        <version.org.apache.ant>1.8.2</version.org.apache.ant>
+        <!--<version.org.apache.ant>1.8.2</version.org.apache.ant>-->
         <version.dmr>1.3.0.Final</version.dmr>
-
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
-    <modules>
-        <module>common</module>
-        <module>kube</module>
-    </modules>
 
-    <dependencyManagement>
-        <dependencies>
 
-            <dependency>
-                <groupId>org.jgroups</groupId>
-                <artifactId>jgroups</artifactId>
-                <version>${version.jgroups}</version>
-            </dependency>
 
-            <dependency>
-                <groupId>org.jboss</groupId>
-                <artifactId>jboss-dmr</artifactId>
-                <version>${version.dmr}</version>
-            </dependency>
+    <dependencies>
 
-            <dependency>
-                <groupId>net.oauth.core</groupId>
-                <artifactId>oauth</artifactId>
-                <version>${version.oauth}</version>
-            </dependency>
+        <dependency>
+            <groupId>org.jgroups</groupId>
+            <artifactId>jgroups</artifactId>
+            <version>${version.jgroups}</version>
+        </dependency>
 
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${version.junit}</version>
-                <scope>test</scope>
-            </dependency>
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-dmr</artifactId>
+            <version>${version.dmr}</version>
+        </dependency>
 
-            <!--<dependency>
-                <groupId>com.grack</groupId>
-                <artifactId>nanojson</artifactId>
-                <version>1.1</version>
-            </dependency>-->
-        </dependencies>
-    </dependencyManagement>
+        <dependency>
+            <groupId>net.oauth.core</groupId>
+            <artifactId>oauth</artifactId>
+            <version>${version.oauth}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${version.junit}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--<dependency>
+            <groupId>com.grack</groupId>
+            <artifactId>nanojson</artifactId>
+            <version>1.1</version>
+        </dependency>-->
+
+    </dependencies>
 
 </project>
+
