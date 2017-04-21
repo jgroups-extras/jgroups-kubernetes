@@ -33,12 +33,78 @@
         <version.jgroups>4.0.3-SNAPSHOT</version.jgroups>
         <version.oauth>20100527</version.oauth>
         <version.junit>4.12</version.junit>
-        <!--<version.org.apache.ant>1.8.2</version.org.apache.ant>-->
         <version.dmr>1.3.0.Final</version.dmr>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+
+        <!-- nexus-staging-maven-plugin -->
+        <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        <nexus.server.id>jboss-releases-repository</nexus.server.id>
+        <nexus.server.url>https://repository.jboss.org/nexus</nexus.server.url>
+        <nexus.snapshot.server.id>jboss-snapshots-repository</nexus.snapshot.server.id>
+        <nexus.snapshot.server.url>https://repository.jboss.org/nexus/content/repositories/snapshots/</nexus.snapshot.server.url>
     </properties>
 
+
+    <distributionManagement>
+           <repository>
+               <id>${nexus.server.id}</id>
+               <name>JBoss Releases Repository</name>
+               <url>${nexus.server.url}</url>
+           </repository>
+           <snapshotRepository>
+               <id>${nexus.snapshot.server.id}</id>
+               <url>${nexus.snapshot.server.url}</url>
+           </snapshotRepository>
+       </distributionManagement>
+
+       <repositories>
+           <repository>
+               <id>jboss-public-repository-group</id>
+               <name>JBoss Public Maven Repository Group</name>
+               <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+               <layout>default</layout>
+               <releases>
+                   <enabled>true</enabled>
+                   <updatePolicy>never</updatePolicy>
+               </releases>
+               <snapshots>
+                   <enabled>true</enabled>
+                   <updatePolicy>interval:120</updatePolicy>
+               </snapshots>
+           </repository>
+
+           <repository>
+               <id>jboss-releases-repository</id>
+               <name>JBoss Public Maven Repository Staging</name>
+               <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2</url>
+               <layout>default</layout>
+               <releases>
+                   <enabled>true</enabled>
+                   <updatePolicy>never</updatePolicy>
+               </releases>
+               <snapshots>
+                   <enabled>true</enabled>
+                   <updatePolicy>interval:120</updatePolicy>
+               </snapshots>
+           </repository>
+
+           <repository>
+               <id>jboss-snapshots-repository</id>
+               <name>JBoss Nexus snapshots repository</name>
+               <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+               <layout>default</layout>
+               <releases>
+                   <enabled>false</enabled>
+                   <updatePolicy>never</updatePolicy>
+               </releases>
+               <snapshots>
+                   <enabled>true</enabled>
+                   <updatePolicy>interval:120</updatePolicy>
+               </snapshots>
+           </repository>
+
+       </repositories>
 
 
 
