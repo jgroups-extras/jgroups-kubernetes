@@ -5,9 +5,32 @@
     <artifactId>jgroups-kubernetes</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-
     <name>KUBE_PING</name>
-    <description>JGroups discovery protocol for Kubernetes</description>
+    <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
+
+    <description>
+        JGroups discovery protocol for Kubernetes
+    </description>
+
+    <organization>
+          <name>JBoss, a division of Red Hat</name>
+        <url>http://www.jboss.org</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Ales Justin</name>
+            <email>ales.justin@jboss.org</email>
+        </developer>
+        <developer>
+            <name>Sebastian Łaskawiec</name>
+            <email>slaskawi@redhat.com</email>
+        </developer>
+        <developer>
+            <name>Bela Ban</name>
+            <email>belaban@gmail.com</email>
+        </developer>
+    </developers>
 
     <licenses>
         <license>
@@ -47,64 +70,64 @@
 
 
     <distributionManagement>
-           <repository>
-               <id>${nexus.server.id}</id>
-               <name>JBoss Releases Repository</name>
-               <url>${nexus.server.url}</url>
-           </repository>
-           <snapshotRepository>
-               <id>${nexus.snapshot.server.id}</id>
-               <url>${nexus.snapshot.server.url}</url>
-           </snapshotRepository>
-       </distributionManagement>
+        <repository>
+            <id>${nexus.server.id}</id>
+            <name>JBoss Releases Repository</name>
+            <url>${nexus.server.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>${nexus.snapshot.server.id}</id>
+            <url>${nexus.snapshot.server.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
 
-       <repositories>
-           <repository>
-               <id>jboss-public-repository-group</id>
-               <name>JBoss Public Maven Repository Group</name>
-               <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-               <layout>default</layout>
-               <releases>
-                   <enabled>true</enabled>
-                   <updatePolicy>never</updatePolicy>
-               </releases>
-               <snapshots>
-                   <enabled>true</enabled>
-                   <updatePolicy>interval:120</updatePolicy>
-               </snapshots>
-           </repository>
+    <repositories>
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Maven Repository Group</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>interval:120</updatePolicy>
+            </snapshots>
+        </repository>
 
-           <repository>
-               <id>jboss-releases-repository</id>
-               <name>JBoss Public Maven Repository Staging</name>
-               <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2</url>
-               <layout>default</layout>
-               <releases>
-                   <enabled>true</enabled>
-                   <updatePolicy>never</updatePolicy>
-               </releases>
-               <snapshots>
-                   <enabled>true</enabled>
-                   <updatePolicy>interval:120</updatePolicy>
-               </snapshots>
-           </repository>
+        <repository>
+            <id>jboss-releases-repository</id>
+            <name>JBoss Public Maven Repository Staging</name>
+            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>interval:120</updatePolicy>
+            </snapshots>
+        </repository>
 
-           <repository>
-               <id>jboss-snapshots-repository</id>
-               <name>JBoss Nexus snapshots repository</name>
-               <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
-               <layout>default</layout>
-               <releases>
-                   <enabled>false</enabled>
-                   <updatePolicy>never</updatePolicy>
-               </releases>
-               <snapshots>
-                   <enabled>true</enabled>
-                   <updatePolicy>interval:120</updatePolicy>
-               </snapshots>
-           </repository>
+        <repository>
+            <id>jboss-snapshots-repository</id>
+            <name>JBoss Nexus snapshots repository</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>false</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>interval:120</updatePolicy>
+            </snapshots>
+        </repository>
 
-       </repositories>
+    </repositories>
 
 
 
@@ -142,6 +165,72 @@
         </dependency>-->
 
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <!-- See configuration details at http://books.sonatype.com/nexus-book/reference/staging-deployment.html -->
+                    <nexusUrl>${nexus.server.url}</nexusUrl>
+                    <serverId>${nexus.server.id}</serverId>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+
+        <!-- Make sure we generate src jars too -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestFile>conf/manifest.mf</manifestFile>
+                    </archive>
+                </configuration>
+            </plugin>-->
+        </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.5.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+
+
+    </build>
+
+
 
 </project>
 
