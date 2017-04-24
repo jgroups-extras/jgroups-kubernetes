@@ -124,7 +124,7 @@ public class KUBE_PING extends TCPPING {
                                                              KUBE_PING.class.getSimpleName(), transport.getClass().getSimpleName()));
 
         if(namespace == null) {
-            log.info("namespace not set; clustering disabled");
+            log.warn("namespace not set; clustering disabled");
             return; // no further initialization necessary
         }
         log.info("namespace %s set; clustering enabled", namespace);
@@ -204,7 +204,8 @@ public class KUBE_PING extends TCPPING {
 
     protected List<InetAddress> doReadAll(String clusterName) {
         try {
-            return client.getPods(namespace, labels);
+            if(client != null)
+                return client.getPods(namespace, labels);
         }
         catch(Exception e) {
             log.warn("Problem getting Pod json from Kubernetes %s for cluster [%s], namespace [%s], labels [%s]; encountered [%s: %s]",
