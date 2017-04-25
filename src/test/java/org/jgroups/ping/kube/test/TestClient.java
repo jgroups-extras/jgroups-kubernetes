@@ -32,7 +32,7 @@ public class TestClient extends Client {
     }
 
     @Override
-    protected ModelNode getNode(String op, String namespace, String labels) throws Exception {
+    protected ModelNode getNode(String op, String namespace, String labels, boolean dump_request) throws Exception {
         String value = OPS.get(op);
         if (value == null) {
             throw new IllegalStateException("No such op: " + op);

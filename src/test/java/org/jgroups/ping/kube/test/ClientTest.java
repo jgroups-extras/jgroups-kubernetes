@@ -18,7 +18,7 @@ public class ClientTest {
     @Test
     public void testPods() throws Exception {
         Client client = new TestClient();
-        List<InetAddress> pods = client.getPods(null, null);
+        List<InetAddress> pods = client.getPods(null, null, false);
         Assert.assertNotNull(pods);
         assertEquals(2, pods.size());
         InetAddress pod = pods.get(0);
@@ -31,7 +31,7 @@ public class ClientTest {
         Client client = new TestClient("/pods_without_ports.json");
 
         //when
-        long numberOfPods =(long)client.getPods(null, null).size();
+        long numberOfPods =(long)client.getPods(null, null, false).size();
 
         //then
         assertEquals(2, numberOfPods);
