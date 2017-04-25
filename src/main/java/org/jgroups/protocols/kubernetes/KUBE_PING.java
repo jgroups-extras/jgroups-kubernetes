@@ -42,59 +42,62 @@ public class KUBE_PING extends TCPPING {
 
     @Property(description="Max time (in millis) to wait for a connection to the Kubernetes server. If exceeded, " +
       "an exception will be thrown", systemProperty="KUBERNETES_CONNECT_TIMEOUT")
-    protected int connectTimeout=5000;
+    protected int    connectTimeout=5000;
 
     @Property(description="Max time (in millis) to wait for a response from the Kubernetes server",
       systemProperty="KUBERNETES_READ_TIMEOUT")
-    protected int readTimeout=30000;
+    protected int    readTimeout=30000;
 
     @Property(description="Max number of attempts to send discovery requests", systemProperty="KUBERNETES_OPERATION_ATTEMPTS")
-    protected int operationAttempts=3;
+    protected int    operationAttempts=3;
 
     @Property(description="Time (in millis) between operation attempts", systemProperty="KUBERNETES_OPERATION_SLEEP")
-    protected long operationSleep=1000;
+    protected long   operationSleep=1000;
 
     @Property(description="http (default) or https. Used to send the initial discovery request to the Kubernetes server",
       systemProperty="KUBERNETES_MASTER_PROTOCOL")
-    protected String masterProtocol="https";
+    protected String  masterProtocol="https";
 
     @Property(description="The URL of the Kubernetes server", systemProperty="KUBERNETES_SERVICE_HOST")
-    protected String masterHost;
+    protected String  masterHost;
 
     @Property(description="The port on which the Kubernetes server is listening", systemProperty="KUBERNETES_SERVICE_PORT")
-    protected int masterPort;
+    protected int     masterPort;
 
     @Property(description="The version of the protocol to the Kubernetes server", systemProperty="KUBERNETES_API_VERSION")
-    protected String apiVersion="v1";
+    protected String  apiVersion="v1";
 
     @Property(description="namespace", systemProperty="OPENSHIFT_KUBE_PING_NAMESPACE")
-    protected String namespace="default";
+    protected String  namespace="default";
 
     @Property(description="The labels to use in the discovery request to the Kubernetes server",
       systemProperty="KUBERNETES_LABELS")
-    protected String labels;
+    protected String  labels;
 
     @Property(description="Certificate to access the Kubernetes server", systemProperty="KUBERNETES_CLIENT_CERTIFICATE_FILE")
-    protected String clientCertFile;
+    protected String  clientCertFile;
 
     @Property(description="Client key file (store)", systemProperty="KUBERNETES_CLIENT_KEY_FILE")
-    protected String clientKeyFile;
+    protected String  clientKeyFile;
 
     @Property(description="The password to access the client key store", systemProperty="KUBERNETES_CLIENT_KEY_PASSWORD")
-    protected String clientKeyPassword;
+    protected String  clientKeyPassword;
 
     @Property(description="The algorithm used by the client", systemProperty="KUBERNETES_CLIENT_KEY_ALGO")
-    protected String clientKeyAlgo="RSA";
+    protected String  clientKeyAlgo="RSA";
 
     @Property(description="Client CA certificate", systemProperty="KUBERNETES_CA_CERTIFICATE_FILE")
-    protected String caCertFile;
+    protected String  caCertFile;
 
     @Property(description="Token file", systemProperty="SA_TOKEN_FILE")
-    protected String saTokenFile="/var/run/secrets/kubernetes.io/serviceaccount/token";
+    protected String  saTokenFile="/var/run/secrets/kubernetes.io/serviceaccount/token";
 
-    protected Client client;
+    @Property(description="Dumps all discovery requests and responses to the Kubernetes server to stdout when true")
+    protected boolean dump_requests;
 
-    protected int    tp_bind_port;
+    protected Client  client;
+
+    protected int     tp_bind_port;
 
 
     public void setMasterHost(String masterMost) {
@@ -165,6 +168,8 @@ public class KUBE_PING extends TCPPING {
 
     protected void populateInitialHosts() {
         List<InetAddress> hosts=readAll();
+        if(dump_requests)
+            System.out.printf("<-- %s\n", hosts);
         if(hosts == null || hosts.isEmpty()) {
             log.warn("initial_hosts could not be populated with information from Kubernetes");
             return;
@@ -205,7 +210,7 @@ public class KUBE_PING extends TCPPING {
     protected List<InetAddress> doReadAll(String clusterName) {
         try {
             if(client != null)
-                return client.getPods(namespace, labels);
+                return client.getPods(namespace, labels, dump_requests);
         }
         catch(Exception e) {
             log.warn("Problem getting Pod json from Kubernetes %s for cluster [%s], namespace [%s], labels [%s]; encountered [%s: %s]",

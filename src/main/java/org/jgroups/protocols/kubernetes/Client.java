@@ -58,28 +58,30 @@ public class Client {
         return info;
     }
 
-    protected ModelNode getNode(String op, String namespace, String labels) throws Exception {
+    protected ModelNode getNode(String op, String namespace, String labels, boolean dump_requests) throws Exception {
         String url = masterUrl;
         if(namespace != null && !namespace.isEmpty())
             url = url + "/namespaces/" + urlencode(namespace);
         url = url + "/" + op;
         if(labels != null && !labels.isEmpty())
             url = url + "?labelSelector=" + urlencode(labels);
+        if(dump_requests)
+            System.out.printf("--> %s\n", url);
         try(InputStream stream = openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider)) {
             return ModelNode.fromJSONStream(stream);
         }
     }
 
 
-    public final List<InetAddress> getPods(String namespace, String labels) throws Exception {
-        ModelNode root = getNode("pods", namespace, labels);
+    public final List<InetAddress> getPods(String namespace, String labels, boolean dump_requests) throws Exception {
+        ModelNode root = getNode("pods", namespace, labels, dump_requests);
         List<InetAddress> pods =new ArrayList<>();
         List<ModelNode> itemNodes = root.get("items").asList();
         for (ModelNode itemNode : itemNodes) {
             //ModelNode metadataNode = itemNode.get("metadata");
             //String podName = metadataNode.get("name").asString(); // eap-app-1-43wra
             //String podNamespace = metadataNode.get("namespace").asString(); // dward
-            ModelNode specNode = itemNode.get("spec");
+            // ModelNode specNode = itemNode.get("spec");
             //String serviceAccount = specNode.get("serviceAccount").asString(); // default
             //String host = specNode.get("host").asString(); // ce-openshift-rhel-minion-1.lab.eng.brq.redhat.com
             ModelNode statusNode = itemNode.get("status");
