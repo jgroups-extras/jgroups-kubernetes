@@ -68,7 +68,7 @@ public class KUBE_PING extends TCPPING {
     protected String apiVersion="v1";
 
     @Property(description="namespace", systemProperty="OPENSHIFT_KUBE_PING_NAMESPACE")
-    protected String namespace; // DO NOT HARDCODE A DEFAULT (i.e.: "default") - SEE isClusteringEnabled() and init() METHODS BELOW!
+    protected String namespace="default";
 
     @Property(description="The labels to use in the discovery request to the Kubernetes server",
       systemProperty="KUBERNETES_LABELS")
