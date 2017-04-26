@@ -5,3 +5,47 @@
 Discovery is done by asking Kubernetes for a list of IP addresses of all nodes. Combined with `bind_port` / `port_range`
 of the transport, the protocol will then send a discovery request to all instances and wait for the responses. This
 is done by the superclass `TCPPING` (see  http://www.jgroups.org/manual4/index.html#TCPPING_Prot for details).
+
+A sample configuration looks like this:
+
+.Sample KUBE_PING config
+[source,xml]
+----
+  <TCP
+     bind_addr="loopback,match-interface:eth0"
+     bind_port="7800"
+     port_range="1"
+     ...
+  />
+  <org.jgroups.protocols.kubernetes.KUBE_PING
+     namespace="${KUBE_NAMESPACE:production}"
+     labels="${KUBE_LABEL:cluster=nyc}"
+  />
+  ...
+----
+
+When a discovery is started, `KUBE_PING` asks Kubernetes for a list of the IP addresses of all pods which it launched,
+matching the given _namespace_ and _labels_ (see below).
+
+Let's say Kubernetes launched a cluster of 3 pods with IP addresses `172.17.0.2`, `172.17.0.3` and `172.17.0.5` (all
+launched into the same namespace and without any (or the same) labels).
+
+On a discovery request, Kubernetes returns list of 3 IP addresses. JGroups now knows that the ports have been
+allocated from range [`7800` .. `7801`] (`bind_port` .. (`bind_port` + `port_range`) in `TCP`).
+
+It therefore adds addresses `172.17.0.2:7800`, `172.17.0.2:7801`, `172.17.0.3:7800`, `172.17.0.3:7801`, `172.17.0.5:7800`
+and `172.17.0.5:7801` to `initial_hosts` in superclass `TCPPING` and lets `TCPPING` run the discovery. This is done
+by sending each of the addresses in `initial_hosts` a discovery request and waiting for responses.
+
+
+== Separating different clusters
+
+If pods with containers in different clusters are launched, we'd get a list of IP addresses of all nodes, not just the
+ones in the same cluster, as Kubernetes knows nothing about clusters.
+
+If we start multiple clusters, we therefore need to separate them using namespaces and/or labels.
+
+=== Namespaces
+
+=== Labels
+
