@@ -43,9 +43,79 @@ by sending each of the addresses in `initial_hosts` a discovery request and wait
 If pods with containers in different clusters are launched, we'd get a list of IP addresses of all nodes, not just the
 ones in the same cluster, as Kubernetes knows nothing about clusters.
 
-If we start multiple clusters, we therefore need to separate them using namespaces and/or labels.
+If we start multiple clusters, we need to separate them using namespaces and/or labels. If no namespaces or labels were
+used, things would still work, but we'd see warning messages in the logs about messages from different clusters that
+were discarded.
+
 
 === Namespaces
 
+Namespaces can be used to separate deployments, services and pods. The example below shows namespaces `default`
+(the default namespace) and `kube-system` (the name space used by Kubernetes for its own deployments, pods etc):
+
+----
+[belasmac] /Users/bela/IspnPerfTest$ kubectl get services,deployments,pods --all-namespaces
+NAMESPACE     NAME                       CLUSTER-IP   EXTERNAL-IP   PORT(S)          AGE
+default       svc/ispn-perf-test         10.0.0.137   <nodes>       8090:32700/TCP   8h
+default       svc/kubernetes             10.0.0.1     <none>        443/TCP          53d
+kube-system   svc/kube-dns               10.0.0.10    <none>        53/UDP,53/TCP    53d
+kube-system   svc/kubernetes-dashboard   10.0.0.30    <nodes>       80:30000/TCP     53d
+
+NAMESPACE   NAME                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+default     deploy/ispn-perf-test2   3         3         3            3           8h
+
+NAMESPACE     NAME                                  READY     STATUS    RESTARTS   AGE
+default       po/ispn-perf-test2-2831437780-g07c5   1/1       Running   1          8h
+default       po/ispn-perf-test2-2831437780-np83d   1/1       Running   0          6h
+default       po/ispn-perf-test2-2831437780-szl60   1/1       Running   1          8h
+kube-system   po/kube-addon-manager-minikube        1/1       Running   12         53d
+kube-system   po/kube-dns-v20-b63lk                 3/3       Running   34         53d
+kube-system   po/kubernetes-dashboard-73c7v         1/1       Running   11         53d
+----
+
+The last section shows 6 pods that have been started, 3 in the `default` namespace and 3 by Kubernetes itself in the
+`kube-system` namespace. The following 3 namespaces exist:
+
+----
+[belasmac] /Users/bela$ kubectl get namespaces
+NAME          STATUS    AGE
+belaban       Active    2d
+default       Active    53d
+kube-system   Active    53d
+----
+
+To create a new namespace `foo`, run `kubectl create namespace foo`.
+
+Namespaces have to be created and deleted manually via kubectl.
+
+When launching a new deployment in a pod, the namespace can be given with `-n <name space>` or
+`--namespace=<name space>`. Alternatively, the namespace can be defined in the YAML or JSON config passed to
+`kubectl create -f <config>`.
+
+In the JGroups configuration, attribute `namespace` is used to define the namespace to be used for discovery. The
+example above used `namespace="${KUBE_NAMESPACE:production}"`. This means that the namespace is
+
+* the value of system property `KUBE_NAMESPACE`, if set
+* the value of environment variable `KUBE_NAMESPACE` if set, or
+* `"production"` if neither system property nor env var are set
+
+In the example above, Kubernetes will return only IP addresses of pods created in namespace `"production"`.
+
+
 === Labels
 
+Labels are similar to namespaces; different labels can separate clusters running inside the _same namespace_.
+
+Similarly to namespaces, labels also have to be defined when launching a pod, either via `--labels=<label>` passed
+to `kubectl run`, or in the YAML or JSON configuration file passed to `kubectl create -f <config>`.
+
+In the sample configuration above, labels were deined as `labels="${KUBE_LABEL:cluster=nyc}"`. This means that
+Kubernetes will only return IP addresses of pods started with label `cluster=nyc`.
+
+Namespaces and labels can be both set; in this case, Kubernetes will return the IP addresses of all pods started in
+the given namespace matching the given label(s).
+
+
+== Demo
+
+TBD: describe sample docker image belaban/ispn_perf_test
