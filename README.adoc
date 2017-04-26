@@ -115,6 +115,8 @@ Kubernetes will only return IP addresses of pods started with label `cluster=nyc
 Namespaces and labels can be both set; in this case, Kubernetes will return the IP addresses of all pods started in
 the given namespace matching the given label(s).
 
+If neither namespace nor labels are set, then the IP addresses of all pods created by Kubernetes in the default
+namespace `"default"` will be returned.
 
 == Demo
 
