@@ -1,11 +1,7 @@
 = Kubernetes discovery protocol for JGroups
 
-This is the development branch for the new version of `KUBE_PING`. We plan a lot of changes and you should probably have a look at the `stable` branch.
+`KUBE_PING` is a discovery protocol for JGroups cluster nodes managed by Kubernetes.
 
-== Plans for the future:
-
-[x] Rebase on JGroups 4
-[x] Remove DNS PING (use the one shipped by JGroups instead)
-[x] Remove HTTP Server
-[ ] Introduce JSON parsing library instead of DMR
-[x] KUBE_PING should extend (and reuse the logic of) TCPPING
+Discovery is done by asking Kubernetes for a list of IP addresses of all nodes. Combined with `bind_port` / `port_range`
+of the transport, the protocol will then send a discovery request to all instances and wait for the responses. This
+is done by the superclass `TCPPING` (see  http://www.jgroups.org/manual4/index.html#TCPPING_Prot for details).
