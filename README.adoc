@@ -2,9 +2,9 @@
 
 `KUBE_PING` is a discovery protocol for JGroups cluster nodes managed by Kubernetes.
 
-Discovery is done by asking Kubernetes for a list of IP addresses of all nodes. Combined with `bind_port` / `port_range`
-of the transport, the protocol will then send a discovery request to all instances and wait for the responses. This
-is done by the superclass `TCPPING` (see  http://www.jgroups.org/manual4/index.html#TCPPING_Prot for details).
+Discovery is done by asking Kubernetes for a list of IP addresses of all nodes. Combined with
+`bind_port` / `port_range`, the protocol will then send a discovery request to all instances and wait for the responses.
+This is done by superclass `TCPPING` (see  http://www.jgroups.org/manual4/index.html#TCPPING_Prot for details).
 
 A sample configuration looks like this:
 
@@ -109,7 +109,7 @@ Labels are similar to namespaces; different labels can separate clusters running
 Similarly to namespaces, labels also have to be defined when launching a pod, either via `--labels=<label>` passed
 to `kubectl run`, or in the YAML or JSON configuration file passed to `kubectl create -f <config>`.
 
-In the sample configuration above, labels were deined as `labels="${KUBE_LABEL:cluster=nyc}"`. This means that
+In the sample configuration above, labels were defined as `labels="${KUBE_LABEL:cluster=nyc}"`. This means that
 Kubernetes will only return IP addresses of pods started with label `cluster=nyc`.
 
 Namespaces and labels can be both set; in this case, Kubernetes will return the IP addresses of all pods started in
@@ -225,7 +225,6 @@ ispn-perf-test-2224433472-rlr0m   1/1       Running   0          29s
 We can now run a shell in one of the nodes and confirm that a cluster of 3 has formed. First, we have to exec a bash shell
 in one of the 3 nodes:
 ----
-ispn-perf-test-2224433472-rlr0m   1/1       Running   0          5m
 [belasmac] /Users/bela/kubetest$ kubectl exec -it ispn-perf-test-2224433472-rlr0m bash
 bash-4.3$
 ----
@@ -257,10 +256,7 @@ view=[ispn-perf-test-2224433472-ksh58-1200|2] (3) [ispn-perf-test-2224433472-ksh
 cluster=default
 version=4.0.3-SNAPSHOT (Schiener Berg)
 
-
-
 3 responses (3 matches, 0 non matches)
-bash-4.3$
 ----
 
 As can be seen, every member has the same view `ispn-perf-test-2224433472-ksh58-1200|2] (3)` containing 3 members, so
