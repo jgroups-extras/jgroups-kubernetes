@@ -2,8 +2,14 @@
 
 `KUBE_PING` is a discovery protocol for JGroups cluster nodes managed by Kubernetes.
 
-Discovery is done by asking Kubernetes for a list of IP addresses of all nodes. Combined with
-`bind_port` / `port_range`, the protocol will then send a discovery request to all instances and wait for the responses.
+Since Kubernetes is in charge of launching nodes, it knows the IP addresses of all pods it started, and is therefore
+the best place to ask for cluster discovery.
+
+Discovery is therefore done by asking Kubernetes for a list of IP addresses of all cluster nodes.
+
+Combined with `bind_port` / `port_range`, the protocol will then send a discovery request to all instances and wait for
+the responses.
+
 This is done by superclass `TCPPING` (see  http://www.jgroups.org/manual4/index.html#TCPPING_Prot for details).
 
 A sample configuration looks like this:
@@ -298,3 +304,11 @@ running `probe.sh` again in the other shell, or by pressing `[2] View`):
 
 We can see that the view is now `ispn-perf-test-2224433472-ksh58-51617|3] (4)`, and the cluster has correctly added
 the fourth member.
+
+=== Running on Google Container Engine
+
+The commands for running on https://cloud.google.com/container-engine/docs/[Google Container Engine (GKE)] are the same
+as when running locally in https://github.com/kubernetes/minikube[minikube].
+
+The only difference is that on GKE, contrary to minikube, IP multicasting is not available. This means that the `probe.sh`
+command has to be run as `probe.sh -addr localhost` instead of simply running `probe.sh`.
