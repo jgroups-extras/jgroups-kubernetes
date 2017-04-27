@@ -14,10 +14,10 @@ A sample configuration looks like this:
   <TCP
      bind_addr="loopback,match-interface:eth0"
      bind_port="7800"
-     port_range="1"
      ...
   />
   <org.jgroups.protocols.kubernetes.KUBE_PING
+     port_range="1"
      namespace="${KUBE_NAMESPACE:production}"
      labels="${KUBE_LABEL:cluster=nyc}"
   />
