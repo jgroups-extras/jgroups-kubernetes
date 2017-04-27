@@ -120,4 +120,140 @@ namespace `"default"` will be returned.
 
 == Demo
 
-TBD: describe sample docker image belaban/ispn_perf_test
+In this demo, we're going to let Kubernetes start 3 instances of
+http://www.github.com/belaban/IspnPerfTest[IspnPerfTest] via a YAML configuration. Then we'll
+run a separate instance interactively and confirm that the instances have formed a cluster of 4. All instances
+are created in the default namespace and no labels are used.
+
+The YAML used is:
+
+.ispn-perf-test.yaml
+[source,yaml]
+----
+apiVersion: v1
+items:
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    annotations:
+    name: ispn-perf-test
+    namespace: default
+  spec:
+    replicas: 3
+    selector:
+    template:
+      metadata:
+        labels:
+          run: ispn-perf-test
+      spec:
+        containers:
+        - args:
+          - /opt/jgroups/IspnPerfTest/bin/kube-debug.sh
+          - -nohup
+          env:
+          - name: KUBERNETES_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          image: belaban/ispn_perf_test
+          name: ispn-perf-test
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+kind: List
+metadata: {}
+----
+
+The image is `belaban/ispn_perf_test` which contains the IspnPerfTest project plus some scripts to start nodes. 3
+instances are started and the start command is `kube-debug.sh -nohup`; this launches the programs without the loop
+which reads commands from stdin.
+
+`kubectl get pods` confirms that 3 instances have been created:
+----
+belasmac] /Users/bela/kubetest$ kubectl get pods
+NAME                              READY     STATUS    RESTARTS   AGE
+ispn-perf-test-2224433472-6l456   1/1       Running   0          29s
+ispn-perf-test-2224433472-ksh58   1/1       Running   0          29s
+ispn-perf-test-2224433472-rlr0m   1/1       Running   0          29s
+----
+
+We can now run a shell in one of the nodes and confirm that a cluster of 3 has formed. First, we have to exec a bash shell
+in one of the 3 nodes:
+----
+ispn-perf-test-2224433472-rlr0m   1/1       Running   0          5m
+[belasmac] /Users/bela/kubetest$ kubectl exec -it ispn-perf-test-2224433472-rlr0m bash
+bash-4.3$
+----
+
+Now http://www.jgroups.org/manual4/index.html#Probe[probe] can be used to list all cluster members:
+----
+bash-4.3$ cd IspnPerfTest/
+bash-4.3$ bin/probe.sh
+-- sending probe request to /224.0.75.75:7500
+
+#1 (300 bytes):
+local_addr=ispn-perf-test-2224433472-rlr0m-12151
+physical_addr=172.17.0.5:7800
+view=[ispn-perf-test-2224433472-ksh58-1200|2] (3) [ispn-perf-test-2224433472-ksh58-1200, ispn-perf-test-2224433472-6l456-41832, ispn-perf-test-2224433472-rlr0m-12151]
+cluster=default
+version=4.0.3-SNAPSHOT (Schiener Berg)
+
+#2 (299 bytes):
+local_addr=ispn-perf-test-2224433472-ksh58-1200
+physical_addr=172.17.0.6:7800
+view=[ispn-perf-test-2224433472-ksh58-1200|2] (3) [ispn-perf-test-2224433472-ksh58-1200, ispn-perf-test-2224433472-6l456-41832, ispn-perf-test-2224433472-rlr0m-12151]
+cluster=default
+version=4.0.3-SNAPSHOT (Schiener Berg)
+
+#3 (300 bytes):
+local_addr=ispn-perf-test-2224433472-6l456-41832
+physical_addr=172.17.0.7:7800
+view=[ispn-perf-test-2224433472-ksh58-1200|2] (3) [ispn-perf-test-2224433472-ksh58-1200, ispn-perf-test-2224433472-6l456-41832, ispn-perf-test-2224433472-rlr0m-12151]
+cluster=default
+version=4.0.3-SNAPSHOT (Schiener Berg)
+
+
+
+3 responses (3 matches, 0 non matches)
+bash-4.3$
+----
+
+As can be seen, every member has the same view `ispn-perf-test-2224433472-ksh58-1200|2] (3)` containing 3 members, so
+the cluster has formed correctly.
+
+Now a fourth instance can be created, but this time we'll enable the event loop reading from stdin. To this end, we
+have to use `kubectl run -it` (`-it` for interactively):
+----
+[belasmac] /Users/bela/kubetest$ kubectl run ispn -it --rm=true --image=belaban/ispn_perf_test kube.sh
+Waiting for pod default/ispn-3105267510-nr9dp to be running, status is Pending, pod ready: false
+If you don't see a command prompt, try pressing enter.
+
+-------------------------------------------------------------------
+GMS: address=ispn-3105267510-nr9dp-29942, cluster=default, physical address=172.17.0.8:7800
+-------------------------------------------------------------------
+
+-------------------------------------------------------------------
+GMS: address=ispn-3105267510-nr9dp-43008, cluster=cfg, physical address=172.17.0.8:7900
+-------------------------------------------------------------------
+created 100,000 keys: [1-100,000], old key set size: 0
+Fetched config from ispn-perf-test-2224433472-ksh58-51617: {print_details=true, num_threads=100, print_invokers=false, num_keys=100000, time_secs=60, msg_size=1000, read_percentage=1.0}
+created 100,000 keys: [1-100,000]
+[1] Start test [2] View [3] Cache size [4] Threads (100)
+[5] Keys (100,000) [6] Time (secs) (60) [7] Value size (1.00KB) [8] Validate
+[p] Populate cache [c] Clear cache [v] Versions
+[r] Read percentage (1.00)
+[d] Details (true)  [i] Invokers (false) [l] dump local cache
+[q] Quit [X] Quit all
+----
+
+This starts the instance and it should have joined the cluster, which should now have 4 nodes. This can be confirmed by
+running `probe.sh` again in the other shell, or by pressing `[2] View`):
+----
+2
+
+-- local: ispn-3105267510-nr9dp-43008
+-- view: [ispn-perf-test-2224433472-ksh58-51617|3] (4) [ispn-perf-test-2224433472-ksh58-51617, ispn-perf-test-2224433472-rlr0m-11878, ispn-perf-test-2224433472-6l456-28251, ispn-3105267510-nr9dp-43008]
+----
+
+We can see that the view is now `ispn-perf-test-2224433472-ksh58-51617|3] (4)`, and the cluster has correctly added
+the fourth member.
