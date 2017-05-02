@@ -1,7 +1,6 @@
 
 package org.jgroups.ping.kube.test;
 
-import org.jboss.dmr.ModelNode;
 import org.jgroups.logging.LogFactory;
 import org.jgroups.protocols.kubernetes.Client;
 
@@ -32,11 +31,10 @@ public class TestClient extends Client {
     }
 
     @Override
-    protected ModelNode getNode(String op, String namespace, String labels, boolean dump_request) throws Exception {
+    protected String fetchFromKubernetes(String op, String namespace, String labels, boolean dump_requests) throws Exception {
         String value = OPS.get(op);
-        if (value == null) {
+        if (value == null)
             throw new IllegalStateException("No such op: " + op);
-        }
-        return ModelNode.fromJSONString(value);
+        return value;
     }
 }

@@ -1,15 +1,13 @@
 package org.jgroups.protocols.kubernetes;
 
-import org.jboss.dmr.ModelNode;
+import mjson.Json;
 import org.jgroups.logging.Log;
 import org.jgroups.protocols.kubernetes.stream.StreamProvider;
+import org.jgroups.util.Util;
 
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import static org.jgroups.protocols.kubernetes.Utils.openStream;
 import static org.jgroups.protocols.kubernetes.Utils.urlencode;
@@ -54,11 +52,11 @@ public class Client {
                            operationAttempts, operationSleep, streamProvider);
     }
 
-    public final String info() {
+    public String info() {
         return info;
     }
 
-    protected ModelNode getNode(String op, String namespace, String labels, boolean dump_requests) throws Exception {
+    protected String fetchFromKubernetes(String op, String namespace, String labels, boolean dump_requests) throws Exception {
         String url = masterUrl;
         if(namespace != null && !namespace.isEmpty())
             url = url + "/namespaces/" + urlencode(namespace);
@@ -68,61 +66,59 @@ public class Client {
         if(dump_requests)
             System.out.printf("--> %s\n", url);
         try(InputStream stream = openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider)) {
-            return ModelNode.fromJSONStream(stream);
+            return Util.readContents(stream);
         }
     }
 
 
-    public final List<InetAddress> getPods(String namespace, String labels, boolean dump_requests) throws Exception {
-        ModelNode root = getNode("pods", namespace, labels, dump_requests);
-        List<InetAddress> pods =new ArrayList<>();
-        List<ModelNode> itemNodes = root.get("items").asList();
-        for (ModelNode itemNode : itemNodes) {
-            //ModelNode metadataNode = itemNode.get("metadata");
-            //String podName = metadataNode.get("name").asString(); // eap-app-1-43wra
-            //String podNamespace = metadataNode.get("namespace").asString(); // dward
-            // ModelNode specNode = itemNode.get("spec");
-            //String serviceAccount = specNode.get("serviceAccount").asString(); // default
-            //String host = specNode.get("host").asString(); // ce-openshift-rhel-minion-1.lab.eng.brq.redhat.com
-            ModelNode statusNode = itemNode.get("status");
-            ModelNode phaseNode = statusNode.get("phase");
-            if (!phaseNode.isDefined() || !"Running".equals(phaseNode.asString())) {
-                continue;
-            }
-            /* We don't want to filter on the following as that could result in MERGEs instead of JOINs.
-            ModelNode conditionsNode = statusNode.get("conditions");
-            if (!conditionsNode.isDefined()) {
-                continue;
-            }
-            boolean ready = false;
-            List<ModelNode> conditions = conditionsNode.asList();
-            for (ModelNode condition : conditions) {
-                ModelNode conditionTypeNode = condition.get("type");
-                ModelNode conditionStatusNode = condition.get("status");
-                if (conditionTypeNode.isDefined() && "Ready".equals(conditionTypeNode.asString()) &&
-                        conditionStatusNode.isDefined() && "True".equals(conditionStatusNode.asString())) {
-                    ready = true;
-                    break;
+
+
+    public List<InetAddress> getPods(String namespace, String labels, boolean dump_requests) throws Exception {
+        String result=fetchFromKubernetes("pods", namespace, labels, dump_requests);
+        if(result == null)
+            return Collections.emptyList();
+        return parseJsonResult(result, namespace, labels);
+    }
+
+    protected List<InetAddress> parseJsonResult(String input, String namespace, String labels) {
+        if(input == null)
+            return Collections.emptyList();
+        Json json=Json.read(input);
+        if(json == null || !json.isObject()) {
+            log.error("JSON is not a map: %s", json);
+            return Collections.emptyList();
+        }
+
+        if(!json.has("items")) {
+            log.error("JSON object is missing property \"items\": %s", json);
+            return Collections.emptyList();
+        }
+        List<Json> items=json.at("items").asJsonList();
+        List<InetAddress> pods=new ArrayList<>();
+        for(Json obj: items) {
+            if(obj.isObject() && obj.has("status")) {
+                Json status=obj.at("status");
+                if(status.isObject() && status.has("podIP")) {
+                    String podIP=status.at("podIP").asString();
+                    if(status.has("phase")) {
+                        Json phase=status.at("phase");
+                        if(phase != null && phase.isString() && !"Running".equals(phase.asString())) {
+                            log.trace("skipped pod with IP=%s as it is not running (%s)", podIP, phase);
+                            continue;
+                        }
+                    }
+                    try {
+                        InetAddress addr=InetAddress.getByName(podIP);
+                        if(!pods.contains(addr))
+                            pods.add(addr);
+                    }
+                    catch(Exception ex) {
+                        log.error("failed converting podID to InetAddress", ex);
+                    }
                 }
-            }
-            if (!ready) {
-                continue;
-            }
-            */
-            //String hostIP = statusNode.get("hostIP").asString(); // 10.34.75.250
-            ModelNode podIPNode = statusNode.get("podIP");
-            if (!podIPNode.isDefined())
-                continue;
-            String podIP = podIPNode.asString(); // 10.1.0.169
-            try {
-                pods.add(InetAddress.getByName(podIP));
-            }
-            catch(Exception ex) {
-                log.error("failed converting podIP (%s) to InetAddress: %s", podIP, ex);
             }
         }
         log.trace("getPods(%s, %s) = %s", namespace, labels, pods);
         return pods;
     }
-
 }
