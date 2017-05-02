@@ -3,7 +3,7 @@
 
     <groupId>org.jgroups.kubernetes</groupId>
     <artifactId>jgroups-kubernetes</artifactId>
-    <version>1.0.0.Alpha6</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>KUBE_PING</name>
     <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
