@@ -4,6 +4,7 @@ package org.jgroups.protocols.kubernetes;
 import org.jgroups.Address;
 import org.jgroups.PhysicalAddress;
 import org.jgroups.annotations.MBean;
+import org.jgroups.annotations.ManagedOperation;
 import org.jgroups.annotations.Property;
 import org.jgroups.conf.ClassConfigurator;
 import org.jgroups.protocols.TCPPING;
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.jgroups.protocols.kubernetes.Utils.readFileToString;
 
@@ -162,6 +164,12 @@ public class KUBE_PING extends TCPPING {
         if(!initial_discovery)
             populateInitialHosts();
         super.findMembers(members, initial_discovery, responses);
+    }
+
+    @ManagedOperation(description="Asks Kubernetes for the IP addresses of all pods")
+    public String fetchFromKube() {
+        List<InetAddress> list=readAll();
+        return list.stream().map(InetAddress::getHostAddress).collect(Collectors.joining(", "));
     }
 
     protected void populateInitialHosts() {
