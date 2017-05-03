@@ -6,16 +6,15 @@ import org.jgroups.PhysicalAddress;
 import org.jgroups.annotations.MBean;
 import org.jgroups.annotations.Property;
 import org.jgroups.conf.ClassConfigurator;
+import org.jgroups.protocols.TCPPING;
+import org.jgroups.protocols.TP;
 import org.jgroups.protocols.kubernetes.stream.CertificateStreamProvider;
 import org.jgroups.protocols.kubernetes.stream.InsecureStreamProvider;
 import org.jgroups.protocols.kubernetes.stream.StreamProvider;
-import org.jgroups.protocols.TCPPING;
-import org.jgroups.protocols.TP;
 import org.jgroups.stack.IpAddress;
 import org.jgroups.util.Responses;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -150,7 +149,6 @@ public class KUBE_PING extends TCPPING {
         String url=String.format("%s://%s:%s/api/%s", masterProtocol, masterHost, masterPort, apiVersion);
         client=new Client(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, log);
         log.debug("KubePING configuration: " + toString());
-
         populateInitialHosts();
     }
 
@@ -175,6 +173,9 @@ public class KUBE_PING extends TCPPING {
             return;
         }
         List<PhysicalAddress> tcpping_hosts=getInitialHosts();
+        tcpping_hosts.clear(); // remove left members when scaling down
+        // clearDynamicHostList(); // ?
+
         for(InetAddress host: hosts) {
             for(int i=0; i <= getPortRange(); i++) {
                 IpAddress addr=new IpAddress(host, tp_bind_port+i);
@@ -187,34 +188,15 @@ public class KUBE_PING extends TCPPING {
     }
 
 
-   protected List<InetAddress> readAll() {
-        if(isClusteringEnabled()) {
-            return doReadAll(cluster_name);
-        }
-        else {
-            return Collections.emptyList();
-        }
-    }
-
-    protected List<InetAddress> readAllTest() {
-        if(isClusteringEnabled())
+    protected List<InetAddress> readAll() {
+        if(isClusteringEnabled() && client != null) {
             try {
-                return Collections.singletonList(InetAddress.getByName("127.0.0.1"));
-            }
-            catch(UnknownHostException e) {
-                log.error("failed reading IP address", e);
-            }
-        return Collections.emptyList();
-    }
-
-    protected List<InetAddress> doReadAll(String clusterName) {
-        try {
-            if(client != null)
                 return client.getPods(namespace, labels, dump_requests);
-        }
-        catch(Exception e) {
-            log.warn("Problem getting Pod json from Kubernetes %s for cluster [%s], namespace [%s], labels [%s]; encountered [%s: %s]",
-                     client.info(), clusterName, namespace, labels, e.getClass().getName(), e.getMessage());
+            }
+            catch(Exception e) {
+                log.warn("failed getting JSON response from Kubernetes %s for cluster [%s], namespace [%s], labels [%s]; encountered [%s: %s]",
+                         client.info(), cluster_name, namespace, labels, e.getClass().getName(), e.getMessage());
+            }
         }
         return Collections.emptyList();
     }
