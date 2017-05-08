@@ -249,7 +249,6 @@ public class KUBE_PING extends Discovery {
 
     protected void sendDiscoveryRequest(Message req) {
         try {
-            log.trace("%s: sending discovery request to %s", local_addr, req.getDest());
             down_prot.down(req);
         }
         catch(Throwable t) {
