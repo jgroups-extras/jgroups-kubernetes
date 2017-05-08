@@ -5,7 +5,6 @@ import org.jgroups.protocols.kubernetes.Client;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.InetAddress;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -18,10 +17,10 @@ public class ClientTest {
     @Test
     public void testPods() throws Exception {
         Client client = new TestClient();
-        List<InetAddress> pods = client.getPods(null, null, false);
+        List<String> pods = client.getPods(null, null, false);
         Assert.assertNotNull(pods);
         assertEquals(2, pods.size());
-        InetAddress pod = pods.get(0);
+        String pod = pods.get(0);
         Assert.assertNotNull(pod);
     }
 

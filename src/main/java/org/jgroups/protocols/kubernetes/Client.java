@@ -6,7 +6,6 @@ import org.jgroups.protocols.kubernetes.stream.StreamProvider;
 import org.jgroups.util.Util;
 
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.util.*;
 
 import static org.jgroups.protocols.kubernetes.Utils.openStream;
@@ -72,15 +71,14 @@ public class Client {
 
 
 
-
-    public List<InetAddress> getPods(String namespace, String labels, boolean dump_requests) throws Exception {
+    public List<String> getPods(String namespace, String labels, boolean dump_requests) throws Exception {
         String result=fetchFromKubernetes("pods", namespace, labels, dump_requests);
         if(result == null)
             return Collections.emptyList();
         return parseJsonResult(result, namespace, labels);
     }
 
-    protected List<InetAddress> parseJsonResult(String input, String namespace, String labels) {
+    protected List<String> parseJsonResult(String input, String namespace, String labels) {
         if(input == null)
             return Collections.emptyList();
         Json json=Json.read(input);
@@ -94,7 +92,7 @@ public class Client {
             return Collections.emptyList();
         }
         List<Json> items=json.at("items").asJsonList();
-        List<InetAddress> pods=new ArrayList<>();
+        List<String> pods=new ArrayList<>();
         for(Json obj: items) {
             if(obj.isObject() && obj.has("status")) {
                 Json status=obj.at("status");
@@ -107,14 +105,8 @@ public class Client {
                             continue;
                         }
                     }
-                    try {
-                        InetAddress addr=InetAddress.getByName(podIP);
-                        if(!pods.contains(addr))
-                            pods.add(addr);
-                    }
-                    catch(Exception ex) {
-                        log.error("failed converting podID to InetAddress", ex);
-                    }
+                    if(!pods.contains(podIP))
+                        pods.add(podIP);
                 }
             }
         }
