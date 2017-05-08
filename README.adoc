@@ -10,8 +10,6 @@ Discovery is therefore done by asking Kubernetes for a list of IP addresses of a
 Combined with `bind_port` / `port_range`, the protocol will then send a discovery request to all instances and wait for
 the responses.
 
-This is done by superclass `TCPPING` (see  http://www.jgroups.org/manual4/index.html#TCPPING_Prot for details).
-
 A sample configuration looks like this:
 
 .Sample KUBE_PING config
@@ -39,9 +37,8 @@ launched into the same namespace and without any (or the same) labels).
 On a discovery request, Kubernetes returns list of 3 IP addresses. JGroups now knows that the ports have been
 allocated from range [`7800` .. `7801`] (`bind_port` .. (`bind_port` + `port_range`) in `TCP`).
 
-It therefore adds addresses `172.17.0.2:7800`, `172.17.0.2:7801`, `172.17.0.3:7800`, `172.17.0.3:7801`, `172.17.0.5:7800`
-and `172.17.0.5:7801` to `initial_hosts` in superclass `TCPPING` and lets `TCPPING` run the discovery. This is done
-by sending each of the addresses in `initial_hosts` a discovery request and waiting for responses.
+KUBE_PING therefore sends discovery requests to members at addresses `172.17.0.2:7800`, `172.17.0.2:7801`, `172.17.0.3:7800`,
+`172.17.0.3:7801`, `172.17.0.5:7800` and `172.17.0.5:7801`.
 
 
 == Separating different clusters
@@ -131,6 +128,10 @@ namespace `"default"` will be returned.
 |===============
 |Attribute name|Description
 
+|port_range|Number of additional ports to be probed for membership. A port_range of 0 does not
+                  probe additional ports. Example: `initial_hosts=A[7800] port_range=0` probes `A:7800`, `port_range=1`
+                  probes `A:7800` and `A:7801`
+
 |connectTimeout|Max time (in millis) to wait for a connection to the Kubernetes server. If exceeded, an exception
 will be thrown
 
@@ -199,7 +200,7 @@ items:
       spec:
         containers:
         - args:
-          - /opt/jgroups/IspnPerfTest/bin/kube-debug.sh
+          - /opt/jgroups/IspnPerfTest/bin/kube.sh
           - -nohup
           env:
           - name: KUBERNETES_NAMESPACE
