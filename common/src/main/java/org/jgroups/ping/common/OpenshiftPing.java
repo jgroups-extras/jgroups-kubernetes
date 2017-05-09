@@ -68,6 +68,7 @@ public abstract class OpenshiftPing extends PING {
     private String _serverName;
 
     private static Method sendMethod; //handled via reflection due to JGroups 3/4 incompatibility
+    private static Method setSrcMethod;
 
     public OpenshiftPing(String systemEnvPrefix) {
         super();
@@ -80,6 +81,12 @@ public abstract class OpenshiftPing extends PING {
             }
         } catch (Exception e) {
             throw new CompatibilityException("Could not find suitable 'up' method.", e);
+        }
+        try {
+            //the return parameter changed in JGroups 3/4 :D
+            setSrcMethod = Message.class.getMethod("setSrc", Address.class);
+        } catch (Exception e) {
+            throw new CompatibilityException("Could not find suitable 'setSrc' method.", e);
         }
     }
 
@@ -195,23 +202,11 @@ public abstract class OpenshiftPing extends PING {
             return;
         }
         if (msg.getSrc() == null) {
-            setMessageSourceAddress(msg);
-
+            setSrc(msg);
         }
         for (InetSocketAddress node : nodes) {
             // forward the request to each node
             timer.execute(new SendDiscoveryRequest(node, msg));
-        }
-    }
-
-    private void setMessageSourceAddress(Message msg) {
-        //public void    setSrc(Address new_src)   {src_addr=new_src;} - JGroups 3.6.13
-        //public Message setSrc(Address new_src)   {src_addr=new_src; return this;} - JGroups 4.0.1
-        //unfortunately need to use reflections
-        try {
-            msg.getClass().getMethod("setSrc", Address.class).invoke(msg, local_addr);
-        } catch (Exception e) {
-            log.warn("Setting local address for discovery failed.");
         }
     }
 
@@ -223,6 +218,16 @@ public abstract class OpenshiftPing extends PING {
             sendUp(msg);
         } catch (Exception e) {
             log.error("Error processing GET_MBRS_REQ.", e);
+        }
+    }
+
+    private void setSrc(Message msg) {
+        try {
+            setSrcMethod.invoke(msg, local_addr);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            throw new CompatibilityException("Could not invoke 'setSrc' method.", e);
         }
     }
 

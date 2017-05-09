@@ -19,6 +19,7 @@ package org.jgroups.ping.kube.test;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
@@ -74,12 +75,11 @@ public abstract class ServerTestBase extends TestBase {
     public void testResponse() throws Exception {
         Address local_addr = pinger.getLocalAddress();
         PhysicalAddress physical_addr = (PhysicalAddress) pinger
-                .down(new Event(Event.GET_PHYSICAL_ADDRESS, local_addr));
-        PingHeader hdr = new TestPingHeader();
+              .down(new Event(Event.GET_PHYSICAL_ADDRESS, local_addr));
         PingData data = createPingData(local_addr, physical_addr);
+        final PingHeader hdr = getPingHeader(data);
         Message msg = new Message(null).setFlag(Message.Flag.DONT_BUNDLE)
-                .putHeader(pinger.getId(), hdr).setBuffer(streamableToBuffer(data));
-
+              .putHeader(pinger.getId(), hdr).setBuffer(streamableToBuffer(data));
         URL url = new URL("http://localhost:8888");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.addRequestProperty(Server.CLUSTER_NAME, TestBase.CLUSTER_NAME);
@@ -91,6 +91,34 @@ public abstract class ServerTestBase extends TestBase {
         out.flush();
 
         Assert.assertEquals(200, conn.getResponseCode());
+    }
+
+    private static Buffer streamableToBuffer(Streamable obj) {
+        final ByteArrayOutputStream out_stream = new ByteArrayOutputStream(1024);
+        DataOutputStream out = new DataOutputStream(out_stream);
+        try {
+            Util.writeStreamable(obj, out);
+            return new Buffer(out_stream.toByteArray());
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private PingHeader getPingHeader(PingData data) {
+        try {
+            if(CompatibilityUtils.isJGroups4()) {
+                Constructor<PingHeader> constructor = PingHeader.class.getConstructor(null);
+                PingHeader header = constructor.newInstance(null);
+                Method clusterName = header.getClass().getMethod("clusterName", String.class);
+                clusterName.invoke(header, TestBase.CLUSTER_NAME);
+                return header;
+            } else {
+                Constructor<PingHeader> constructor = PingHeader.class.getConstructor(byte.class, PingData.class, String.class);
+                return constructor.newInstance(PingHeader.GET_MBRS_RSP, data, TestBase.CLUSTER_NAME);
+            }
+        } catch (Exception e) {
+            throw new CompatibilityException("Could not find or invoke proper 'PingHeader' constructor");
+        }
     }
 
     /*
@@ -112,17 +140,6 @@ public abstract class ServerTestBase extends TestBase {
         }
     }
 
-    private static Buffer streamableToBuffer(Streamable obj) {
-        final ByteArrayOutputStream out_stream = new ByteArrayOutputStream(512);
-        DataOutputStream out = new DataOutputStream(out_stream);
-        try {
-            Util.writeStreamable(obj, out);
-            return new Buffer(out_stream.toByteArray());
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
     private static final class TestKubePing extends KubePing {
         static {
             ClassConfigurator.addProtocol(JGROUPS_KUBE_PING_ID, TestKubePing.class);
@@ -139,13 +156,6 @@ public abstract class ServerTestBase extends TestBase {
             } catch (Exception e) {
                 throw new AssertionError(e);
             }
-        }
-    }
-    
-    private static final class TestPingHeader extends PingHeader {
-        private TestPingHeader() {
-            cluster_name = TestBase.CLUSTER_NAME;
-            type = PingHeader.GET_MBRS_REQ;
         }
     }
 }
