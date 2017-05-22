@@ -1,10 +1,172 @@
 = Kubernetes discovery protocol for JGroups
 
-This repository contains Kubernetes Ping protocol for JGroups. The protocol can also be used in OpenShift v3 environment (which is also based on Kubernetes).
+`KUBE_PING` is a discovery protocol for JGroups cluster nodes managed by Kubernetes.
 
-This is the stable branch that will work for both JGroups 3 and 4. We are working on a new version (in master branch) which will contain a lot of improvements for JGroups 4. Stay tuned...
+Since Kubernetes is in charge of launching nodes, it knows the IP addresses of all pods it started, and is therefore
+the best place to ask for cluster discovery.
 
-= How to use it
+Discovery is therefore done by asking Kubernetes API for a list of IP addresses of all cluster nodes.
+
+The protocol spins up a local HTTP Server which is used for sending discovery requests to all instances and wait for
+the responses.
+
+A sample configuration looks like this:
+
+.Sample KUBE_PING config
+[source,xml]
+----
+  <TCP
+     bind_addr="loopback,match-interface:eth0"
+     bind_port="7800"
+     ...
+  />
+  <kubernetes.KUBE_PING
+  />
+  ...
+----
+
+When a discovery is started, `KUBE_PING` asks Kubernetes for a list of the IP addresses of all pods which are launched,
+matching the given _namespace_ and _labels_ (see below).
+
+Let's say Kubernetes launched a cluster of 3 pods with IP addresses `172.17.0.2`, `172.17.0.3` and `172.17.0.5` (all
+launched into the same namespace and without any (or the same) labels).
+
+On a discovery request, Kubernetes returns list of 3 IP addresses. JGroups will use embedded HTTP Server exposed on port
+8888 by default (see below for configuration) and will send HTTP based requests to each od them.
+
+KUBE_PING therefore sends discovery requests to members at addresses `172.17.0.2:8888`, `172.17.0.3:8888` and
+`172.17.0.5:8888`.
+
+
+== Separating different clusters
+
+If pods with containers in different clusters are launched, we'd get a list of IP addresses of all nodes, not just the
+ones in the same cluster, as Kubernetes knows nothing about clusters.
+
+If we start multiple clusters, we have several options to consider. We may use separate namespaces, Network Policies
+and/or separate them using different labels (see configuration parameters below).
+
+
+=== Namespaces
+
+https://kubernetes.io/docs/tasks/administer-cluster/namespaces/[Kubernetes namespaces] provide an easy way to separate
+all resources and limit communication between tenants. This is the most effective method of separating clusters from
+each other. Additionally https://kubernetes.io/docs/concepts/services-networking/networkpolicies/[Network Policies]
+allow to fine-tune this mechanism.
+
+When `KUBE_PING` asks Kubernetes API for Pods, it needs to supply proper namespace to Kubernetes API. This allows
+to distinguish a namespace without matching Pods from asking Kubernetes API with wrong tenant.
+
+Having said that, namespace is a required parameter and must be specified when starting application. The easiest way to
+set it correctly is to use https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information[Downward API].
+
+Here's an example:
+
+.Configuration with namespace
+[source,yaml]
+----
+apiVersion: v1
+items:
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  spec:
+    template:
+      metadata:
+        labels:
+          run: infinispan-server
+      spec:
+        containers:
+        - args:
+          - cloud
+          - -Djboss.default.jgroups.stack=kubernetes
+          env:
+          - name: OPENSHIFT_KUBE_PING_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: OPENSHIFT_KUBE_PING_LABELS
+            value: "cluster=cluster-1"
+          image: jboss/infinispan-server:9.0.0.Final
+          name: infinispan-server
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          - containerPort: 8181
+            protocol: TCP
+          - containerPort: 8888
+            protocol: TCP
+          - containerPort: 9990
+            protocol: TCP
+          - containerPort: 11211
+            protocol: TCP
+          - containerPort: 11222
+            protocol: TCP
+kind: List
+metadata: {}
+----
+
+=== Labels
+
+Labels allow to separate clusters running inside the _same namespace_.
+
+The easiest way to set labels is to use `OPENSHIFT_KUBE_PING_LABELS` environmental variable and define them in
+YAML or JSON configuration file (which can be passed into `kubectl create -f <config>`).
+
+Note, that labels are optional. The cluster will work fine without them.
+
+
+=== KUBE_PING configuration
+
+[align="left",width="90%",options="header"]
+|===============
+|Attribute name|Description
+| connectTimeout|Max time (in millis) to wait for a connection to the Kubernetes server. If exceeded, an exceptionwill be thrown
+| readTimeout|Max time (in millis) to wait for a response from the Kubernetes server
+| operationAttempts | Max number of attempts to send discovery requests
+| operationSleep|Time (in millis) between operation attempts
+| masterProtocol | http (default) or https. Used to send the initial discovery request to the Kubernetes server
+| masterHost | The URL of the Kubernetes server
+| masterPort | The port on which the Kubernetes server is listening
+| apiVersion | The version of the protocol to the Kubernetes server
+| namespace | The namespace to be used (leaving this undefined uses `"default"`)
+| labels | The labels to use in the discovery request to the Kubernetes server
+| clientCertFile | Certificate to access the Kubernetes server
+| clientKeyFile | Client key file (store)
+| clientKeyPassword | The password to access the client key store
+| clientKeyAlgo | The algorithm used by the client
+| caCertFile | Client CA certificate
+| saTokenFile | Token file
+|===============
+
+
+=== KUBE_PING configuration using environmental variables
+
+It is also possible to set the most critical configuration parameters using environmental variables. This approach
+is dedicated to configuration specification using JSON or YAML files.
+
+[align="left",width="90%",options="header"]
+|===============
+|Environmental variable name|Description
+| OPENSHIFT_KUBE_PING_NAMESPACE|Kubernetes/OpenShift namespace
+| OPENSHIFT_KUBE_PING_LABELS|Labels used for discovery
+| OPENSHIFT_KUBE_PING_SERVER_PORT | Port used for running embedded HTTP server
+|===============
+
+== Running inside of OpenShift
+
+OpenShift 3 uses https://docs.openshift.com/enterprise/3.0/dev_guide/service_accounts.html[Service Account]
+mechanism to limit Kubernetes API from the Pods.
+
+This requires additional steps when before running the cluster:
+
+.Adding additional privileges
+[source,bash]
+----
+oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default -n $(oc project -q)
+----
+
+== Maven dependencies
 
 In order to run JGroups discovery on Kubernetes one needs to add necessary dependencies to the project:
 
@@ -18,30 +180,6 @@ In order to run JGroups discovery on Kubernetes one needs to add necessary depen
 </dependency>
 ----
 
-It is highly recommended to use JGroups version which is transitively pulled by the Kubernetes discovery protocol (however it is not strictly required).
-
-When deploying on OpenShift v3, the next step requires adding additional privileges using the following command:
-
-.Adding additional privileges
-[source,bash]
-----
-oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default -n $(oc project -q)
-----
-
-That's it!
-
-= Additional configuration options
-
-== Environmental variables
-
-The configuration is mainly done using environmental variables:
-
-|==============================================================================================
-|Variable name                   |Meaning                               |Default   |Example
-|OPENSHIFT_KUBE_PING_NAMESPACE   |Namespace used for discovery          |<not set> |Cluster-1
-|OPENSHIFT_KUBE_PING_LABELS      |Labels used for discovery             |default   |my-cluster
-|OPENSHIFT_KUBE_PING_SERVER_PORT |Port used for hosting internal server |8888      |my-cluster
-|===============================================================================================
 
 = How to tell if it's working?
 
