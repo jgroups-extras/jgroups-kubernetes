@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.jgroups.kubernetes</groupId>
@@ -13,7 +14,7 @@
     </description>
 
     <organization>
-          <name>JBoss, a division of Red Hat</name>
+        <name>JBoss, a division of Red Hat</name>
         <url>http://www.jboss.org</url>
     </organization>
 
@@ -64,7 +65,8 @@
         <nexus.server.id>jboss-releases-repository</nexus.server.id>
         <nexus.server.url>https://repository.jboss.org/nexus</nexus.server.url>
         <nexus.snapshot.server.id>jboss-snapshots-repository</nexus.snapshot.server.id>
-        <nexus.snapshot.server.url>https://repository.jboss.org/nexus/content/repositories/snapshots/</nexus.snapshot.server.url>
+        <nexus.snapshot.server.url>https://repository.jboss.org/nexus/content/repositories/snapshots/
+        </nexus.snapshot.server.url>
     </properties>
 
 
@@ -95,7 +97,6 @@
                 <updatePolicy>interval:120</updatePolicy>
             </snapshots>
         </repository>
-
         <repository>
             <id>jboss-releases-repository</id>
             <name>JBoss Public Maven Repository Staging</name>
@@ -110,7 +111,6 @@
                 <updatePolicy>interval:120</updatePolicy>
             </snapshots>
         </repository>
-
         <repository>
             <id>jboss-snapshots-repository</id>
             <name>JBoss Nexus snapshots repository</name>
@@ -125,13 +125,10 @@
                 <updatePolicy>interval:120</updatePolicy>
             </snapshots>
         </repository>
-
     </repositories>
 
 
-
     <dependencies>
-
         <dependency>
             <groupId>org.jgroups</groupId>
             <artifactId>jgroups</artifactId>
@@ -150,19 +147,6 @@
             <version>${version.junit}</version>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.sharegov</groupId>
-            <artifactId>mjson</artifactId>
-            <version>1.4.1</version>
-        </dependency>
-
-        <!--<dependency>
-            <groupId>com.grack</groupId>
-            <artifactId>nanojson</artifactId>
-            <version>1.1</version>
-        </dependency>-->
-
     </dependencies>
 
     <build>
@@ -179,7 +163,6 @@
                 </configuration>
             </plugin>
 
-        <!-- Make sure we generate src jars too -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -194,15 +177,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--<plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestFile>conf/manifest.mf</manifestFile>
-                    </archive>
-                </configuration>
-            </plugin>-->
         </plugins>
 
         <pluginManagement>
@@ -224,12 +198,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-
-
-
     </build>
-
-
-
 </project>
 
