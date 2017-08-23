@@ -101,6 +101,11 @@ public class KUBE_PING extends Discovery {
     @Property(description="Dumps all discovery requests and responses to the Kubernetes server to stdout when true")
     protected boolean dump_requests;
 
+    @Property(description="The standard behavior during Rolling Update is to put all Pods in the same cluster. In" +
+          " cases (application level incompatibility) this causes problems. One might decide to split clusters to" +
+          " 'old' and 'new' during that process")
+    protected boolean split_clusters_during_rolling_update;
+
     protected Client  client;
 
     protected int     tp_bind_port;
@@ -168,7 +173,7 @@ public class KUBE_PING extends Discovery {
     }
 
     public void findMembers(List<Address> members, boolean initial_discovery, Responses responses) {
-        List<String>          hosts=readAll();
+        List<Pod>             hosts=readAll();
         List<PhysicalAddress> cluster_members=new ArrayList<>(hosts != null? hosts.size() : 16);
         PhysicalAddress       physical_addr=null;
         PingData              data=null;
@@ -185,10 +190,10 @@ public class KUBE_PING extends Discovery {
         if(hosts != null) {
             if(log.isTraceEnabled())
                 log.trace("%s: hosts fetched from Kubernetes: %s", local_addr, hosts);
-            for(String host: hosts) {
+            for(Pod host: hosts) {
                 for(int i=0; i <= port_range; i++) {
                     try {
-                        IpAddress addr=new IpAddress(host, tp_bind_port + i);
+                        IpAddress addr=new IpAddress(host.getIp(), tp_bind_port + i);
                         if(!cluster_members.contains(addr))
                             cluster_members.add(addr);
                     }
@@ -204,6 +209,33 @@ public class KUBE_PING extends Discovery {
             Collection<PhysicalAddress> list=(Collection<PhysicalAddress>)down_prot.down(new Event(Event.GET_PHYSICAL_ADDRESSES));
             if(list != null)
                 list.stream().filter(phys_addr -> !cluster_members.contains(phys_addr)).forEach(cluster_members::add);
+        }
+
+        if (split_clusters_during_rolling_update) {
+            if(physical_addr != null) {
+                String senderIp = ((IpAddress)physical_addr).getIpAddress().getHostAddress();
+                String senderParentDeployment = hosts.stream()
+                      .filter(pod -> senderIp.contains(pod.getIp()))
+                      .map(Pod::getParentDeployment)
+                      .findFirst().orElse(null);
+                if(senderParentDeployment != null) {
+                    Set<String> allowedAddresses = hosts.stream()
+                          .filter(pod -> senderParentDeployment.equals(pod.getParentDeployment()))
+                          .map(Pod::getIp)
+                          .collect(Collectors.toSet());
+                    for(Iterator<PhysicalAddress> memberIterator = cluster_members.iterator(); memberIterator.hasNext();) {
+                        IpAddress podAddress = (IpAddress) memberIterator.next();
+                        if(!allowedAddresses.contains(podAddress.getIpAddress().getHostAddress())) {
+                            log.trace("removing pod %s from cluster members list since its parent domain is different than senders (%s). Allowed hosts: %s", podAddress, senderParentDeployment, allowedAddresses);
+                            memberIterator.remove();
+                        }
+                    }
+                } else {
+                    log.warn("split_clusters_during_rolling_update is set to 'true' but can't obtain local node parent deployment. All nodes will be placed in the same cluster.");
+                }
+            } else {
+                log.warn("split_clusters_during_rolling_update is set to 'true' but can't obtain local node IP address. All nodes will be placed in the same cluster.");
+            }
         }
 
         if(log.isTraceEnabled())
@@ -229,12 +261,12 @@ public class KUBE_PING extends Discovery {
 
     @ManagedOperation(description="Asks Kubernetes for the IP addresses of all pods")
     public String fetchFromKube() {
-        List<String> list=readAll();
-        return list.stream().collect(Collectors.joining(", "));
+        List<Pod> list=readAll();
+        return list.toString();
     }
 
 
-    protected List<String> readAll() {
+    protected List<Pod> readAll() {
         if(isClusteringEnabled() && client != null) {
             try {
                 return client.getPods(namespace, labels, dump_requests);
