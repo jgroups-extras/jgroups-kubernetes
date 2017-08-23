@@ -167,6 +167,8 @@ will be thrown
 
 | dump_requests | Dumps all discovery requests and responses to the Kubernetes server to stdout when true
 
+| split_clusters_during_rolling_update | During the Rolling Update, prevents from putting all Pods into a single cluster
+
 |===============
 
 
