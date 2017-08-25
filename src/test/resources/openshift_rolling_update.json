@@ -1,0 +1,1519 @@
+{
+  "kind": "PodList",
+  "apiVersion": "v1",
+  "metadata": {
+    "selfLink": "/api/v1/namespaces/myproject/pods",
+    "resourceVersion": "3135"
+  },
+  "items": [
+    {
+      "metadata": {
+        "name": "infinispan-app-2-h5xkc",
+        "generateName": "infinispan-app-2-",
+        "namespace": "myproject",
+        "selfLink": "/api/v1/namespaces/myproject/pods/infinispan-app-2-h5xkc",
+        "uid": "2b311b33-87ca-11e7-bfdb-54ee751d46e3",
+        "resourceVersion": "3069",
+        "creationTimestamp": "2017-08-23T06:13:23Z",
+        "deletionTimestamp": "2017-08-23T07:47:07Z",
+        "deletionGracePeriodSeconds": 120,
+        "labels": {
+          "application": "infinispan-app",
+          "deployment": "infinispan-app-2",
+          "deploymentConfig": "infinispan-app",
+          "deploymentconfig": "infinispan-app"
+        },
+        "annotations": {
+          "kubernetes.io/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicationController\",\"namespace\":\"myproject\",\"name\":\"infinispan-app-2\",\"uid\":\"1bda1bf8-87ca-11e7-bfdb-54ee751d46e3\",\"apiVersion\":\"v1\",\"resourceVersion\":\"1651\"}}\n",
+          "openshift.io/deployment-config.latest-version": "2",
+          "openshift.io/deployment-config.name": "infinispan-app",
+          "openshift.io/deployment.name": "infinispan-app-2",
+          "openshift.io/scc": "restricted"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "kind": "ReplicationController",
+            "name": "infinispan-app-2",
+            "uid": "1bda1bf8-87ca-11e7-bfdb-54ee751d46e3",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "infinispan-app-configuration",
+            "configMap": {
+              "name": "infinispan-app-configuration",
+              "defaultMode": 420
+            }
+          },
+          {
+            "name": "infinispan-app-token-gx5nc",
+            "secret": {
+              "secretName": "infinispan-app-token-gx5nc",
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "infinispan-app",
+            "image": "jboss/infinispan-server:9.1.0.Final-1",
+            "args": [
+              "custom/cloud-ephemeral.xml",
+              "-Djboss.default.jgroups.stack=kubernetes",
+              "--debug"
+            ],
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "name": "management",
+                "containerPort": 9990,
+                "protocol": "TCP"
+              },
+              {
+                "name": "ping",
+                "containerPort": 8888,
+                "protocol": "TCP"
+              },
+              {
+                "name": "hotrod",
+                "containerPort": 11222,
+                "protocol": "TCP"
+              }
+            ],
+            "env": [
+              {
+                "name": "OPENSHIFT_KUBE_PING_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "OPENSHIFT_KUBE_PING_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "KUBERNETES_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "KUBERNETES_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "MGMT_USER",
+                "value": "de1KjbNp"
+              },
+              {
+                "name": "MGMT_PASS",
+                "value": "Cy0qNj5K"
+              },
+              {
+                "name": "APP_USER",
+                "value": "827J6qfR"
+              },
+              {
+                "name": "APP_PASS",
+                "value": "u4aCSCWd"
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "infinispan-app-configuration",
+                "mountPath": "/opt/jboss/infinispan-server/standalone/configuration/custom"
+              },
+              {
+                "name": "infinispan-app-token-gx5nc",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_running.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 1,
+              "failureThreshold": 5
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_healthy.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 2,
+              "failureThreshold": 5
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent",
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID",
+                  "SYS_CHROOT"
+                ]
+              },
+              "privileged": false,
+              "seLinuxOptions": {
+                "level": "s0:c7,c4"
+              },
+              "runAsUser": 1000050000
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 120,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "infinispan-app",
+        "serviceAccount": "infinispan-app",
+        "nodeName": "localhost",
+        "securityContext": {
+          "seLinuxOptions": {
+            "level": "s0:c7,c4"
+          },
+          "fsGroup": 1000050000
+        },
+        "imagePullSecrets": [
+          {
+            "name": "infinispan-app-dockercfg-m1qdc"
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T06:13:23Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T06:14:24Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T06:13:23Z"
+          }
+        ],
+        "hostIP": "192.168.0.17",
+        "podIP": "172.17.0.8",
+        "startTime": "2017-08-23T06:13:23Z",
+        "containerStatuses": [
+          {
+            "name": "infinispan-app",
+            "state": {
+              "running": {
+                "startedAt": "2017-08-23T06:13:27Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "docker.io/jboss/infinispan-server:9.1.0.Final-1",
+            "imageID": "docker-pullable://docker.io/jboss/infinispan-server@sha256:61afc4a719b151cde08a6da2aeb632f273874a624baf12114ef6ef4dc8f54904",
+            "containerID": "docker://ea67b1200abc5e704ca07c73e353e0550b11a87b39030773fbe368a31ff9b00d"
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    },
+    {
+      "metadata": {
+        "name": "infinispan-app-2-m1wxf",
+        "generateName": "infinispan-app-2-",
+        "namespace": "myproject",
+        "selfLink": "/api/v1/namespaces/myproject/pods/infinispan-app-2-m1wxf",
+        "uid": "1ec980ec-87ca-11e7-bfdb-54ee751d46e3",
+        "resourceVersion": "3135",
+        "creationTimestamp": "2017-08-23T06:13:02Z",
+        "deletionTimestamp": "2017-08-23T07:48:07Z",
+        "deletionGracePeriodSeconds": 120,
+        "labels": {
+          "application": "infinispan-app",
+          "deployment": "infinispan-app-2",
+          "deploymentConfig": "infinispan-app",
+          "deploymentconfig": "infinispan-app"
+        },
+        "annotations": {
+          "kubernetes.io/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicationController\",\"namespace\":\"myproject\",\"name\":\"infinispan-app-2\",\"uid\":\"1bda1bf8-87ca-11e7-bfdb-54ee751d46e3\",\"apiVersion\":\"v1\",\"resourceVersion\":\"1619\"}}\n",
+          "openshift.io/deployment-config.latest-version": "2",
+          "openshift.io/deployment-config.name": "infinispan-app",
+          "openshift.io/deployment.name": "infinispan-app-2",
+          "openshift.io/scc": "restricted"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "kind": "ReplicationController",
+            "name": "infinispan-app-2",
+            "uid": "1bda1bf8-87ca-11e7-bfdb-54ee751d46e3",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "infinispan-app-configuration",
+            "configMap": {
+              "name": "infinispan-app-configuration",
+              "defaultMode": 420
+            }
+          },
+          {
+            "name": "infinispan-app-token-gx5nc",
+            "secret": {
+              "secretName": "infinispan-app-token-gx5nc",
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "infinispan-app",
+            "image": "jboss/infinispan-server:9.1.0.Final-1",
+            "args": [
+              "custom/cloud-ephemeral.xml",
+              "-Djboss.default.jgroups.stack=kubernetes",
+              "--debug"
+            ],
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "name": "management",
+                "containerPort": 9990,
+                "protocol": "TCP"
+              },
+              {
+                "name": "ping",
+                "containerPort": 8888,
+                "protocol": "TCP"
+              },
+              {
+                "name": "hotrod",
+                "containerPort": 11222,
+                "protocol": "TCP"
+              }
+            ],
+            "env": [
+              {
+                "name": "OPENSHIFT_KUBE_PING_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "OPENSHIFT_KUBE_PING_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "KUBERNETES_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "KUBERNETES_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "MGMT_USER",
+                "value": "de1KjbNp"
+              },
+              {
+                "name": "MGMT_PASS",
+                "value": "Cy0qNj5K"
+              },
+              {
+                "name": "APP_USER",
+                "value": "827J6qfR"
+              },
+              {
+                "name": "APP_PASS",
+                "value": "u4aCSCWd"
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "infinispan-app-configuration",
+                "mountPath": "/opt/jboss/infinispan-server/standalone/configuration/custom"
+              },
+              {
+                "name": "infinispan-app-token-gx5nc",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_running.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 1,
+              "failureThreshold": 5
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_healthy.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 2,
+              "failureThreshold": 5
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent",
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID",
+                  "SYS_CHROOT"
+                ]
+              },
+              "privileged": false,
+              "seLinuxOptions": {
+                "level": "s0:c7,c4"
+              },
+              "runAsUser": 1000050000
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 120,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "infinispan-app",
+        "serviceAccount": "infinispan-app",
+        "nodeName": "localhost",
+        "securityContext": {
+          "seLinuxOptions": {
+            "level": "s0:c7,c4"
+          },
+          "fsGroup": 1000050000
+        },
+        "imagePullSecrets": [
+          {
+            "name": "infinispan-app-dockercfg-m1qdc"
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T06:13:02Z"
+          },
+          {
+            "type": "Ready",
+            "status": "False",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:46:13Z",
+            "reason": "ContainersNotReady",
+            "message": "containers with unready status: [infinispan-app]"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T06:13:02Z"
+          }
+        ],
+        "hostIP": "192.168.0.17",
+        "startTime": "2017-08-23T06:13:02Z",
+        "containerStatuses": [
+          {
+            "name": "infinispan-app",
+            "state": {
+              "terminated": {
+                "exitCode": 0,
+                "reason": "Completed",
+                "startedAt": "2017-08-23T06:13:04Z",
+                "finishedAt": "2017-08-23T07:46:13Z",
+                "containerID": "docker://6e0c726f66f4a7293b9731fdbfb92d15e15db61520cf6f166e3321a41089b11b"
+              }
+            },
+            "lastState": {},
+            "ready": false,
+            "restartCount": 0,
+            "image": "docker.io/jboss/infinispan-server:9.1.0.Final-1",
+            "imageID": "docker-pullable://docker.io/jboss/infinispan-server@sha256:61afc4a719b151cde08a6da2aeb632f273874a624baf12114ef6ef4dc8f54904",
+            "containerID": "docker://6e0c726f66f4a7293b9731fdbfb92d15e15db61520cf6f166e3321a41089b11b"
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    },
+    {
+      "metadata": {
+        "name": "infinispan-app-3-2tmw3",
+        "generateName": "infinispan-app-3-",
+        "namespace": "myproject",
+        "selfLink": "/api/v1/namespaces/myproject/pods/infinispan-app-3-2tmw3",
+        "uid": "ef807319-87d6-11e7-bfdb-54ee751d46e3",
+        "resourceVersion": "3106",
+        "creationTimestamp": "2017-08-23T07:44:46Z",
+        "labels": {
+          "application": "infinispan-app",
+          "deployment": "infinispan-app-3",
+          "deploymentConfig": "infinispan-app",
+          "deploymentconfig": "infinispan-app"
+        },
+        "annotations": {
+          "kubernetes.io/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicationController\",\"namespace\":\"myproject\",\"name\":\"infinispan-app-3\",\"uid\":\"b5ceba4c-87d6-11e7-bfdb-54ee751d46e3\",\"apiVersion\":\"v1\",\"resourceVersion\":\"3035\"}}\n",
+          "openshift.io/deployment-config.latest-version": "3",
+          "openshift.io/deployment-config.name": "infinispan-app",
+          "openshift.io/deployment.name": "infinispan-app-3",
+          "openshift.io/scc": "restricted"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "kind": "ReplicationController",
+            "name": "infinispan-app-3",
+            "uid": "b5ceba4c-87d6-11e7-bfdb-54ee751d46e3",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "infinispan-app-configuration",
+            "configMap": {
+              "name": "infinispan-app-configuration",
+              "defaultMode": 420
+            }
+          },
+          {
+            "name": "infinispan-app-token-gx5nc",
+            "secret": {
+              "secretName": "infinispan-app-token-gx5nc",
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "infinispan-app",
+            "image": "jboss/infinispan-server:9.1.0.Final-1",
+            "args": [
+              "custom/cloud-ephemeral.xml",
+              "-Djboss.default.jgroups.stack=kubernetes",
+              "--debug"
+            ],
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "name": "management",
+                "containerPort": 9990,
+                "protocol": "TCP"
+              },
+              {
+                "name": "ping",
+                "containerPort": 8888,
+                "protocol": "TCP"
+              },
+              {
+                "name": "hotrod",
+                "containerPort": 11222,
+                "protocol": "TCP"
+              }
+            ],
+            "env": [
+              {
+                "name": "OPENSHIFT_KUBE_PING_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "OPENSHIFT_KUBE_PING_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "KUBERNETES_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "KUBERNETES_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "MGMT_USER",
+                "value": "de1KjbNp"
+              },
+              {
+                "name": "MGMT_PASS",
+                "value": "Cy0qNj5K"
+              },
+              {
+                "name": "APP_USER",
+                "value": "827J6qfR"
+              },
+              {
+                "name": "APP_PASS",
+                "value": "u4aCSCWd"
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "infinispan-app-configuration",
+                "mountPath": "/opt/jboss/infinispan-server/standalone/configuration/custom"
+              },
+              {
+                "name": "infinispan-app-token-gx5nc",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_running.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 1,
+              "failureThreshold": 5
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_healthy.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 2,
+              "failureThreshold": 5
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent",
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID",
+                  "SYS_CHROOT"
+                ]
+              },
+              "privileged": false,
+              "seLinuxOptions": {
+                "level": "s0:c7,c4"
+              },
+              "runAsUser": 1000050000
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 120,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "infinispan-app",
+        "serviceAccount": "infinispan-app",
+        "nodeName": "localhost",
+        "securityContext": {
+          "seLinuxOptions": {
+            "level": "s0:c7,c4"
+          },
+          "fsGroup": 1000050000
+        },
+        "imagePullSecrets": [
+          {
+            "name": "infinispan-app-dockercfg-m1qdc"
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:44:47Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:45:48Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:44:47Z"
+          }
+        ],
+        "hostIP": "192.168.0.17",
+        "podIP": "127.0.0.1",
+        "startTime": "2017-08-23T07:44:47Z",
+        "containerStatuses": [
+          {
+            "name": "infinispan-app",
+            "state": {
+              "running": {
+                "startedAt": "2017-08-23T07:44:49Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "docker.io/jboss/infinispan-server:9.1.0.Final-1",
+            "imageID": "docker-pullable://docker.io/jboss/infinispan-server@sha256:61afc4a719b151cde08a6da2aeb632f273874a624baf12114ef6ef4dc8f54904",
+            "containerID": "docker://a772b4b1986a1a2bf2b206baa876f9373877323aa3adfa20443fe2dc0047a93a"
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    },
+    {
+      "metadata": {
+        "name": "infinispan-app-3-8h0fx",
+        "generateName": "infinispan-app-3-",
+        "namespace": "myproject",
+        "selfLink": "/api/v1/namespaces/myproject/pods/infinispan-app-3-8h0fx",
+        "uid": "bf180233-87d6-11e7-bfdb-54ee751d46e3",
+        "resourceVersion": "3015",
+        "creationTimestamp": "2017-08-23T07:43:25Z",
+        "labels": {
+          "application": "infinispan-app",
+          "deployment": "infinispan-app-3",
+          "deploymentConfig": "infinispan-app",
+          "deploymentconfig": "infinispan-app"
+        },
+        "annotations": {
+          "kubernetes.io/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicationController\",\"namespace\":\"myproject\",\"name\":\"infinispan-app-3\",\"uid\":\"b5ceba4c-87d6-11e7-bfdb-54ee751d46e3\",\"apiVersion\":\"v1\",\"resourceVersion\":\"2952\"}}\n",
+          "openshift.io/deployment-config.latest-version": "3",
+          "openshift.io/deployment-config.name": "infinispan-app",
+          "openshift.io/deployment.name": "infinispan-app-3",
+          "openshift.io/scc": "restricted"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "kind": "ReplicationController",
+            "name": "infinispan-app-3",
+            "uid": "b5ceba4c-87d6-11e7-bfdb-54ee751d46e3",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "infinispan-app-configuration",
+            "configMap": {
+              "name": "infinispan-app-configuration",
+              "defaultMode": 420
+            }
+          },
+          {
+            "name": "infinispan-app-token-gx5nc",
+            "secret": {
+              "secretName": "infinispan-app-token-gx5nc",
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "infinispan-app",
+            "image": "jboss/infinispan-server:9.1.0.Final-1",
+            "args": [
+              "custom/cloud-ephemeral.xml",
+              "-Djboss.default.jgroups.stack=kubernetes",
+              "--debug"
+            ],
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "name": "management",
+                "containerPort": 9990,
+                "protocol": "TCP"
+              },
+              {
+                "name": "ping",
+                "containerPort": 8888,
+                "protocol": "TCP"
+              },
+              {
+                "name": "hotrod",
+                "containerPort": 11222,
+                "protocol": "TCP"
+              }
+            ],
+            "env": [
+              {
+                "name": "OPENSHIFT_KUBE_PING_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "OPENSHIFT_KUBE_PING_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "KUBERNETES_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "KUBERNETES_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "MGMT_USER",
+                "value": "de1KjbNp"
+              },
+              {
+                "name": "MGMT_PASS",
+                "value": "Cy0qNj5K"
+              },
+              {
+                "name": "APP_USER",
+                "value": "827J6qfR"
+              },
+              {
+                "name": "APP_PASS",
+                "value": "u4aCSCWd"
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "infinispan-app-configuration",
+                "mountPath": "/opt/jboss/infinispan-server/standalone/configuration/custom"
+              },
+              {
+                "name": "infinispan-app-token-gx5nc",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_running.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 1,
+              "failureThreshold": 5
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_healthy.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 2,
+              "failureThreshold": 5
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent",
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID",
+                  "SYS_CHROOT"
+                ]
+              },
+              "privileged": false,
+              "seLinuxOptions": {
+                "level": "s0:c7,c4"
+              },
+              "runAsUser": 1000050000
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 120,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "infinispan-app",
+        "serviceAccount": "infinispan-app",
+        "nodeName": "localhost",
+        "securityContext": {
+          "seLinuxOptions": {
+            "level": "s0:c7,c4"
+          },
+          "fsGroup": 1000050000
+        },
+        "imagePullSecrets": [
+          {
+            "name": "infinispan-app-dockercfg-m1qdc"
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:43:25Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:44:26Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:43:25Z"
+          }
+        ],
+        "hostIP": "192.168.0.17",
+        "podIP": "172.17.0.6",
+        "startTime": "2017-08-23T07:43:25Z",
+        "containerStatuses": [
+          {
+            "name": "infinispan-app",
+            "state": {
+              "running": {
+                "startedAt": "2017-08-23T07:43:27Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "docker.io/jboss/infinispan-server:9.1.0.Final-1",
+            "imageID": "docker-pullable://docker.io/jboss/infinispan-server@sha256:61afc4a719b151cde08a6da2aeb632f273874a624baf12114ef6ef4dc8f54904",
+            "containerID": "docker://2fe2926c9511a84698dcb4925384823c1504d0e918cea5601284c7b270058963"
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    },
+    {
+      "metadata": {
+        "name": "infinispan-app-3-kt6xq",
+        "generateName": "infinispan-app-3-",
+        "namespace": "myproject",
+        "selfLink": "/api/v1/namespaces/myproject/pods/infinispan-app-3-kt6xq",
+        "uid": "cb3c38f1-87d6-11e7-bfdb-54ee751d46e3",
+        "resourceVersion": "3046",
+        "creationTimestamp": "2017-08-23T07:43:46Z",
+        "labels": {
+          "application": "infinispan-app",
+          "deployment": "infinispan-app-3",
+          "deploymentConfig": "infinispan-app",
+          "deploymentconfig": "infinispan-app"
+        },
+        "annotations": {
+          "kubernetes.io/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicationController\",\"namespace\":\"myproject\",\"name\":\"infinispan-app-3\",\"uid\":\"b5ceba4c-87d6-11e7-bfdb-54ee751d46e3\",\"apiVersion\":\"v1\",\"resourceVersion\":\"2983\"}}\n",
+          "openshift.io/deployment-config.latest-version": "3",
+          "openshift.io/deployment-config.name": "infinispan-app",
+          "openshift.io/deployment.name": "infinispan-app-3",
+          "openshift.io/scc": "restricted"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "kind": "ReplicationController",
+            "name": "infinispan-app-3",
+            "uid": "b5ceba4c-87d6-11e7-bfdb-54ee751d46e3",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "infinispan-app-configuration",
+            "configMap": {
+              "name": "infinispan-app-configuration",
+              "defaultMode": 420
+            }
+          },
+          {
+            "name": "infinispan-app-token-gx5nc",
+            "secret": {
+              "secretName": "infinispan-app-token-gx5nc",
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "infinispan-app",
+            "image": "jboss/infinispan-server:9.1.0.Final-1",
+            "args": [
+              "custom/cloud-ephemeral.xml",
+              "-Djboss.default.jgroups.stack=kubernetes",
+              "--debug"
+            ],
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "name": "management",
+                "containerPort": 9990,
+                "protocol": "TCP"
+              },
+              {
+                "name": "ping",
+                "containerPort": 8888,
+                "protocol": "TCP"
+              },
+              {
+                "name": "hotrod",
+                "containerPort": 11222,
+                "protocol": "TCP"
+              }
+            ],
+            "env": [
+              {
+                "name": "OPENSHIFT_KUBE_PING_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "OPENSHIFT_KUBE_PING_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "KUBERNETES_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "KUBERNETES_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "MGMT_USER",
+                "value": "de1KjbNp"
+              },
+              {
+                "name": "MGMT_PASS",
+                "value": "Cy0qNj5K"
+              },
+              {
+                "name": "APP_USER",
+                "value": "827J6qfR"
+              },
+              {
+                "name": "APP_PASS",
+                "value": "u4aCSCWd"
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "infinispan-app-configuration",
+                "mountPath": "/opt/jboss/infinispan-server/standalone/configuration/custom"
+              },
+              {
+                "name": "infinispan-app-token-gx5nc",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_running.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 1,
+              "failureThreshold": 5
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_healthy.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 2,
+              "failureThreshold": 5
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent",
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID",
+                  "SYS_CHROOT"
+                ]
+              },
+              "privileged": false,
+              "seLinuxOptions": {
+                "level": "s0:c7,c4"
+              },
+              "runAsUser": 1000050000
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 120,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "infinispan-app",
+        "serviceAccount": "infinispan-app",
+        "nodeName": "localhost",
+        "securityContext": {
+          "seLinuxOptions": {
+            "level": "s0:c7,c4"
+          },
+          "fsGroup": 1000050000
+        },
+        "imagePullSecrets": [
+          {
+            "name": "infinispan-app-dockercfg-m1qdc"
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:43:46Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:44:47Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:43:46Z"
+          }
+        ],
+        "hostIP": "192.168.0.17",
+        "podIP": "172.17.0.9",
+        "startTime": "2017-08-23T07:43:46Z",
+        "containerStatuses": [
+          {
+            "name": "infinispan-app",
+            "state": {
+              "running": {
+                "startedAt": "2017-08-23T07:43:49Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "docker.io/jboss/infinispan-server:9.1.0.Final-1",
+            "imageID": "docker-pullable://docker.io/jboss/infinispan-server@sha256:61afc4a719b151cde08a6da2aeb632f273874a624baf12114ef6ef4dc8f54904",
+            "containerID": "docker://23b7564774f728748727e00a99a0cd762186c73e9e515263902164982198d91c"
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    },
+    {
+      "metadata": {
+        "name": "infinispan-app-3-xzxl7",
+        "generateName": "infinispan-app-3-",
+        "namespace": "myproject",
+        "selfLink": "/api/v1/namespaces/myproject/pods/infinispan-app-3-xzxl7",
+        "uid": "fbd7e796-87d6-11e7-bfdb-54ee751d46e3",
+        "resourceVersion": "3127",
+        "creationTimestamp": "2017-08-23T07:45:07Z",
+        "labels": {
+          "application": "infinispan-app",
+          "deployment": "infinispan-app-3",
+          "deploymentConfig": "infinispan-app",
+          "deploymentconfig": "infinispan-app"
+        },
+        "annotations": {
+          "kubernetes.io/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicationController\",\"namespace\":\"myproject\",\"name\":\"infinispan-app-3\",\"uid\":\"b5ceba4c-87d6-11e7-bfdb-54ee751d46e3\",\"apiVersion\":\"v1\",\"resourceVersion\":\"3077\"}}\n",
+          "openshift.io/deployment-config.latest-version": "3",
+          "openshift.io/deployment-config.name": "infinispan-app",
+          "openshift.io/deployment.name": "infinispan-app-3",
+          "openshift.io/scc": "restricted"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "kind": "ReplicationController",
+            "name": "infinispan-app-3",
+            "uid": "b5ceba4c-87d6-11e7-bfdb-54ee751d46e3",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "infinispan-app-configuration",
+            "configMap": {
+              "name": "infinispan-app-configuration",
+              "defaultMode": 420
+            }
+          },
+          {
+            "name": "infinispan-app-token-gx5nc",
+            "secret": {
+              "secretName": "infinispan-app-token-gx5nc",
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "infinispan-app",
+            "image": "jboss/infinispan-server:9.1.0.Final-1",
+            "args": [
+              "custom/cloud-ephemeral.xml",
+              "-Djboss.default.jgroups.stack=kubernetes",
+              "--debug"
+            ],
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "name": "management",
+                "containerPort": 9990,
+                "protocol": "TCP"
+              },
+              {
+                "name": "ping",
+                "containerPort": 8888,
+                "protocol": "TCP"
+              },
+              {
+                "name": "hotrod",
+                "containerPort": 11222,
+                "protocol": "TCP"
+              }
+            ],
+            "env": [
+              {
+                "name": "OPENSHIFT_KUBE_PING_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "OPENSHIFT_KUBE_PING_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "KUBERNETES_LABELS",
+                "value": "application=infinispan-app"
+              },
+              {
+                "name": "KUBERNETES_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "MGMT_USER",
+                "value": "de1KjbNp"
+              },
+              {
+                "name": "MGMT_PASS",
+                "value": "Cy0qNj5K"
+              },
+              {
+                "name": "APP_USER",
+                "value": "827J6qfR"
+              },
+              {
+                "name": "APP_PASS",
+                "value": "u4aCSCWd"
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "infinispan-app-configuration",
+                "mountPath": "/opt/jboss/infinispan-server/standalone/configuration/custom"
+              },
+              {
+                "name": "infinispan-app-token-gx5nc",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_running.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 1,
+              "failureThreshold": 5
+            },
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/usr/local/bin/is_healthy.sh"
+                ]
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 80,
+              "periodSeconds": 60,
+              "successThreshold": 2,
+              "failureThreshold": 5
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent",
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID",
+                  "SYS_CHROOT"
+                ]
+              },
+              "privileged": false,
+              "seLinuxOptions": {
+                "level": "s0:c7,c4"
+              },
+              "runAsUser": 1000050000
+            }
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 120,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "infinispan-app",
+        "serviceAccount": "infinispan-app",
+        "nodeName": "localhost",
+        "securityContext": {
+          "seLinuxOptions": {
+            "level": "s0:c7,c4"
+          },
+          "fsGroup": 1000050000
+        },
+        "imagePullSecrets": [
+          {
+            "name": "infinispan-app-dockercfg-m1qdc"
+          }
+        ],
+        "schedulerName": "default-scheduler"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:45:07Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:46:08Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2017-08-23T07:45:07Z"
+          }
+        ],
+        "hostIP": "192.168.0.17",
+        "podIP": "172.17.0.7",
+        "startTime": "2017-08-23T07:45:07Z",
+        "containerStatuses": [
+          {
+            "name": "infinispan-app",
+            "state": {
+              "running": {
+                "startedAt": "2017-08-23T07:45:10Z"
+              }
+            },
+            "lastState": {},
+            "ready": true,
+            "restartCount": 0,
+            "image": "docker.io/jboss/infinispan-server:9.1.0.Final-1",
+            "imageID": "docker-pullable://docker.io/jboss/infinispan-server@sha256:61afc4a719b151cde08a6da2aeb632f273874a624baf12114ef6ef4dc8f54904",
+            "containerID": "docker://644070c909751e1e5892fa3d1a3b59479d1aa06344450607ffce4e89546c743c"
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    }
+  ]
+}

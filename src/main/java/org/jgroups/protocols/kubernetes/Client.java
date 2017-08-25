@@ -1,15 +1,21 @@
 package org.jgroups.protocols.kubernetes;
 
-import mjson.Json;
+import static org.jgroups.protocols.kubernetes.Utils.openStream;
+import static org.jgroups.protocols.kubernetes.Utils.urlencode;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
+
 import org.jgroups.logging.Log;
 import org.jgroups.protocols.kubernetes.stream.StreamProvider;
 import org.jgroups.util.Util;
 
-import java.io.InputStream;
-import java.util.*;
-
-import static org.jgroups.protocols.kubernetes.Utils.openStream;
-import static org.jgroups.protocols.kubernetes.Utils.urlencode;
+import mjson.Json;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -71,17 +77,18 @@ public class Client {
 
 
 
-    public List<String> getPods(String namespace, String labels, boolean dump_requests) throws Exception {
+    public List<Pod> getPods(String namespace, String labels, boolean dump_requests) throws Exception {
         String result=fetchFromKubernetes("pods", namespace, labels, dump_requests);
         if(result == null)
             return Collections.emptyList();
         return parseJsonResult(result, namespace, labels);
     }
 
-    protected List<String> parseJsonResult(String input, String namespace, String labels) {
+    protected List<Pod> parseJsonResult(String input, String namespace, String labels) {
         if(input == null)
             return Collections.emptyList();
         Json json=Json.read(input);
+
         if(json == null || !json.isObject()) {
             log.error("JSON is not a map: %s", json);
             return Collections.emptyList();
@@ -92,22 +99,28 @@ public class Client {
             return Collections.emptyList();
         }
         List<Json> items=json.at("items").asJsonList();
-        List<String> pods=new ArrayList<>();
+        List<Pod> pods=new ArrayList<>();
         for(Json obj: items) {
-            if(obj.isObject() && obj.has("status")) {
-                Json status=obj.at("status");
-                if(status.isObject() && status.has("podIP")) {
-                    String podIP=status.at("podIP").asString();
-                    if(status.has("phase")) {
-                        Json phase=status.at("phase");
-                        if(phase != null && phase.isString() && !"Running".equals(phase.asString())) {
-                            log.trace("skipped pod with IP=%s as it is not running (%s)", podIP, phase);
-                            continue;
-                        }
-                    }
-                    if(!pods.contains(podIP))
-                        pods.add(podIP);
-                }
+            String parentDeployment = Optional.ofNullable(obj.at("metadata"))
+                  .map(podMetadata -> podMetadata.at("labels"))
+                  .map(podLabels -> podLabels.at("deployment"))
+                  .map(podDeployment -> podDeployment.asString())
+                  .orElseGet(() -> null);
+            String name = Optional.ofNullable(obj.at("metadata"))
+                  .map(podMetadata -> podMetadata.at("name"))
+                  .map(podName -> podName.asString())
+                  .orElseGet(() -> null);
+            String podIP = Optional.ofNullable(obj.at("status"))
+                  .map(podStatus -> podStatus.at("podIP"))
+                  .map(podIp -> podIp.asString())
+                  .orElseGet(() -> null);
+            if(podIP == null) {
+                //Previously we did checks on phase. But from my observations, it is extremely rare to have a container
+                //listed by Kubernetes API with any other status but Running (I might imagine it will hang in scheduled).
+                //However in both cases, its IP address will be null. So it is much better to stick to that.
+                log.trace("Skipping pod %s since it has no IP %s", name, podIP);
+            } else {
+                pods.add(new Pod(name, podIP, parentDeployment));
             }
         }
         log.trace("getPods(%s, %s) = %s", namespace, labels, pods);
