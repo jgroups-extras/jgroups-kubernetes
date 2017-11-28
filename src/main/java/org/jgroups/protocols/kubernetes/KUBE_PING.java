@@ -73,11 +73,11 @@ public class KUBE_PING extends Discovery {
     @Property(description="The version of the protocol to the Kubernetes server", systemProperty="KUBERNETES_API_VERSION")
     protected String  apiVersion="v1";
 
-    @Property(description="namespace", systemProperty="KUBERNETES_NAMESPACE")
+    @Property(description="namespace", systemProperty={"KUBERNETES_NAMESPACE", "OPENSHIFT_KUBE_PING_NAMESPACE"})
     protected String  namespace="default";
 
     @Property(description="The labels to use in the discovery request to the Kubernetes server",
-      systemProperty="KUBERNETES_LABELS")
+      systemProperty={"KUBERNETES_LABELS", "OPENSHIFT_KUBE_PING_LABELS"})
     protected String  labels;
 
     @Property(description="Certificate to access the Kubernetes server", systemProperty="KUBERNETES_CLIENT_CERTIFICATE_FILE")
@@ -140,6 +140,8 @@ public class KUBE_PING extends Discovery {
             throw new IllegalArgumentException(String.format("%s only works with  %s.bind_port > 0",
                                                              KUBE_PING.class.getSimpleName(), transport.getClass().getSimpleName()));
 
+        checkDeprecatedProperties();
+
         if(namespace == null) {
             log.warn("namespace not set; clustering disabled");
             return; // no further initialization necessary
@@ -166,6 +168,24 @@ public class KUBE_PING extends Discovery {
         log.debug("KubePING configuration: " + toString());
     }
 
+    private void checkDeprecatedProperties() {
+        checkDeprecatedProperty("KUBERNETES_NAMESPACE", "OPENSHIFT_KUBE_PING_NAMESPACE");
+        checkDeprecatedProperty("KUBERNETES_LABELS", "OPENSHIFT_KUBE_PING_LABELS");
+    }
+
+    private void checkDeprecatedProperty(String property_name, String deprecated_name) {
+        boolean propertyDefined = isPropertyDefined(property_name);
+        boolean deprecatedDefined = isPropertyDefined(deprecated_name);
+        if (propertyDefined && deprecatedDefined)
+            log.warn("Both %s and %s are defined, %s is deprecated so please remove it", property_name, deprecated_name, deprecated_name);
+        else
+            log.warn("%s is deprecated, please remove it and use %s instead", deprecated_name, property_name);
+    }
+
+    private boolean isPropertyDefined(String property_name) {
+        return System.getProperty(property_name) != null
+                || System.getenv(property_name) != null;
+    }
 
     @Override public void destroy() {
         client=null;
