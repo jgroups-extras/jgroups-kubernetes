@@ -54,7 +54,6 @@
 
     <properties>
         <version.jgroups>4.0.4.Final</version.jgroups>
-        <version.oauth>20100527</version.oauth>
         <version.junit>4.12</version.junit>
         <version.assertj>3.8.0</version.assertj>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -134,12 +133,6 @@
             <groupId>org.jgroups</groupId>
             <artifactId>jgroups</artifactId>
             <version>${version.jgroups}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.oauth.core</groupId>
-            <artifactId>oauth</artifactId>
-            <version>${version.oauth}</version>
         </dependency>
 
         <dependency>
