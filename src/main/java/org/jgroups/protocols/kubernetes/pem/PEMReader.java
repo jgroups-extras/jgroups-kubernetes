@@ -53,7 +53,7 @@ public class PEMReader {
 
     private static final String BEGIN_MARKER = "-----BEGIN ";
 
-    private InputStream stream;
+    private final InputStream stream;
     private byte[] derBytes;
     private String beginMarker;
 
@@ -87,22 +87,17 @@ public class PEMReader {
     protected void readFile() throws IOException {
 
         String  line;
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(stream));
-        try {
-            while ((line = reader.readLine()) != null)
-            {
-                if (line.indexOf(BEGIN_MARKER) != -1)
-                {
-                    beginMarker = line.trim();
-                    String endMarker = beginMarker.replace("BEGIN", "END");
-                    derBytes = readBytes(reader, endMarker);
+        try(BufferedReader reader=new BufferedReader(
+          new InputStreamReader(stream))) {
+            while((line=reader.readLine()) != null) {
+                if(line.contains(BEGIN_MARKER)) {
+                    beginMarker=line.trim();
+                    String endMarker=beginMarker.replace("BEGIN", "END");
+                    derBytes=readBytes(reader, endMarker);
                     return;
                 }
-            }	        
+            }
             throw new IOException("Invalid PEM file: no begin marker");
-        } finally {
-            reader.close();
         }
     }
 
@@ -114,14 +109,14 @@ public class PEMReader {
      * @return DER encoded octet stream
      * @throws IOException
      */
-    private byte[] readBytes(BufferedReader reader, String endMarker) throws IOException
+    private static byte[] readBytes(BufferedReader reader, String endMarker) throws IOException
     {
         String          line = null;
-        StringBuffer    buf = new StringBuffer();
+        StringBuilder   buf = new StringBuilder();
 
         while ((line = reader.readLine()) != null)
         {
-            if (line.indexOf(endMarker) != -1) {
+            if (line.contains(endMarker)) {
                 return Base64.getDecoder().decode(buf.toString());
             }
 
