@@ -147,5 +147,13 @@ public final class Utils {
         return value;
     }
 
+    public static void close(AutoCloseable cl) {
+        if (cl == null) return;
+        try {
+            cl.close();
+        } catch (Exception e) {
+        }
+    }
+
     private Utils() {}
 }

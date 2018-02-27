@@ -1,10 +1,7 @@
-
 package org.jgroups.protocols.kubernetes.stream;
 
-import net.oauth.signature.pem.PEMReader;
-import net.oauth.signature.pem.PKCS1EncodedKeySpec;
+import static org.jgroups.protocols.kubernetes.Utils.openFile;
 
-import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
@@ -19,7 +16,16 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.jgroups.protocols.kubernetes.Utils.openFile;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+
+import org.jgroups.protocols.kubernetes.pem.PEMReader;
+import org.jgroups.protocols.kubernetes.pem.PKCS1EncodedKeySpec;
 
 
 /**
