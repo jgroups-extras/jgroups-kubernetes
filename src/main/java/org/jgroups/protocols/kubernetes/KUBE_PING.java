@@ -178,7 +178,7 @@ public class KUBE_PING extends Discovery {
         boolean deprecatedDefined = isPropertyDefined(deprecated_name);
         if (propertyDefined && deprecatedDefined)
             log.warn("Both %s and %s are defined, %s is deprecated so please remove it", property_name, deprecated_name, deprecated_name);
-        else
+        else if (deprecatedDefined)
             log.warn("%s is deprecated, please remove it and use %s instead", deprecated_name, property_name);
     }
 
