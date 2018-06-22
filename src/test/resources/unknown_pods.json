@@ -1,0 +1,1648 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "kubernetes.io/change-cause": "jenkins-platform-demo-test-pip-service-master-26-2018-06-21T21:11:48.053Z",
+                    "kubernetes.io/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicaSet\",\"namespace\":\"demo-test-pip-service-staging\",\"name\":\"demo-test-pip-service-3932235708\",\"uid\":\"4a439ed0-7598-11e8-95e6-f01fafdd34be\",\"apiVersion\":\"extensions\",\"resourceVersion\":\"1595718931\"}}\n"
+                },
+                "creationTimestamp": "2018-06-21T22:14:58Z",
+                "generateName": "demo-test-pip-service-3932235708-",
+                "labels": {
+                    "acme.com/app": "demo-test-pip-service",
+                    "acme.com/track": "main",
+                    "calico/PERMISSIONS_PIP": "true",
+                    "calico/SKYNET_WALLE": "true",
+                    "pod-template-hash": "3932235708"
+                },
+                "name": "demo-test-pip-service-3932235708-9bq42",
+                "namespace": "demo-test-pip-service-staging",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "extensions/v1beta1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ReplicaSet",
+                        "name": "demo-test-pip-service-3932235708",
+                        "uid": "4a439ed0-7598-11e8-95e6-f01fafdd34be"
+                    }
+                ],
+                "resourceVersion": "1595738811",
+                "selfLink": "/api/v1/namespaces/demo-test-pip-service-staging/pods/demo-test-pip-service-3932235708-9bq42",
+                "uid": "88fc4173-75a0-11e8-95e6-f01fafdd34be"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "command": [
+                            "runascontainer",
+                            "java",
+                            "-Xms1g",
+                            "-Xmx1g",
+                            "-jar",
+                            "demo-test-pip-service.jar",
+                            "--spring.profiles.active=staging"
+                        ],
+                        "env": [
+                            {
+                                "name": "ANALYTICS_LOG_PATH",
+                                "value": "/var/analytics"
+                            },
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "BOX_ENV",
+                                "value": "staging"
+                            },
+                            {
+                                "name": "KUBERNETES_CA_CERTIFICATE_FILE",
+                                "value": "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+                            },
+                            {
+                                "name": "KUBERNETES_SERVICE_HOST",
+                                "value": "compute-master-vip.cluster.acmedc.net"
+                            },
+                            {
+                                "name": "KUBERNETES_SERVICE_PORT",
+                                "value": "443"
+                            },
+                            {
+                                "name": "POD_IP",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "status.podIP"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "DEPRECATED_DC_METRICS_TAG",
+                                "value": "dev"
+                            },
+                            {
+                                "name": "DEPRECATED_SERVER_TYPE_METRICS_TAG",
+                                "value": "demo-test-pip-service"
+                            }
+                        ],
+                        "image": "acme-registry.jfrog.io/jenkins/demo-test-pip-service:61bd9cdb1668-2018.06.21_13.56.22",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/health",
+                                "port": 8080,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 120,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 2
+                        },
+                        "name": "demo-test-pip-service",
+                        "ports": [
+                            {
+                                "containerPort": 8080,
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 8090,
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/health",
+                                "port": 8080,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 120,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 2
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "1",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "1",
+                                "memory": "1Gi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "FSETID",
+                                    "FOWNER",
+                                    "MKNOD",
+                                    "SETPCAP",
+                                    "SYS_CHROOT",
+                                    "KILL",
+                                    "AUDIT_WRITE"
+                                ]
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/analytics",
+                                "name": "analytics-logs"
+                            },
+                            {
+                                "mountPath": "/var/log/service",
+                                "name": "service-logs"
+                            },
+                            {
+                                "mountPath": "/var/metrics",
+                                "name": "metrics-logs"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-x4mj4",
+                                "readOnly": true
+                            }
+                        ]
+                    },
+                    {
+                        "command": [
+                            "runascontainer",
+                            "java",
+                            "-server",
+                            "-Dacme.service.id=log-collector",
+                            "-Dacme.zk.servers=staging-zookeeper01.dev.acme.net,staging-zookeeper02.dev.acme.net,staging-zookeeper03.dev.acme.net,staging-zookeeper04.dev.acme.net,staging-zookeeper05.dev.acme.net/acme",
+                            "-XX:PermSize=32m",
+                            "-XX:MaxPermSize=64m",
+                            "-XX:+UseConcMarkSweepGC",
+                            "-XX:+UseParNewGC",
+                            "-Xms64m",
+                            "-Xmx128m",
+                            "-cp",
+                            "/var/lib/logback:/var/lib/log-collector:/var/lib/log-collector/log-collector.jar",
+                            "com.acme.analytics.walle.LogCollectorServiceMain"
+                        ],
+                        "env": [
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "NODE_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "spec.nodeName"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "SERVICE_NAME",
+                                "value": "demo-test-pip-service"
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "DEPRECATED_DC_METRICS_TAG",
+                                "value": "dev"
+                            },
+                            {
+                                "name": "DEPRECATED_SERVER_TYPE_METRICS_TAG",
+                                "value": "log-collector"
+                            }
+                        ],
+                        "image": "acme-registry.jfrog.io/jenkins/log-collector:35d002da4541-2018.03.22_14.25.30",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/ping",
+                                "port": 9173,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 2
+                        },
+                        "name": "log-collector",
+                        "ports": [
+                            {
+                                "containerPort": 9173,
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "resources": {
+                            "requests": {
+                                "cpu": "10m",
+                                "memory": "512Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "FSETID",
+                                    "FOWNER",
+                                    "MKNOD",
+                                    "SETPCAP",
+                                    "SYS_CHROOT",
+                                    "KILL",
+                                    "AUDIT_WRITE"
+                                ]
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/audit",
+                                "name": "log-collector-audit"
+                            },
+                            {
+                                "mountPath": "/etc/pipelines",
+                                "name": "log-collector-pipelines"
+                            },
+                            {
+                                "mountPath": "/etc/log-collector",
+                                "name": "log-collector-conf"
+                            },
+                            {
+                                "mountPath": "/var/lib/log-collector/states",
+                                "name": "log-collector-states"
+                            },
+                            {
+                                "mountPath": "/var/lib/logback",
+                                "name": "log-collector-logback"
+                            },
+                            {
+                                "mountPath": "/var/log/service",
+                                "name": "service-logs"
+                            },
+                            {
+                                "mountPath": "/var/metrics",
+                                "name": "metrics-logs"
+                            },
+                            {
+                                "mountPath": "/var/analytics",
+                                "name": "analytics-logs"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-x4mj4",
+                                "readOnly": true
+                            }
+                        ]
+                    },
+                    {
+                        "command": [
+                            "runascontainer",
+                            "/bin/bash",
+                            "-c",
+                            "while true; do logrotate --state /var/lib/logrotate/logrotate.status /etc/logrotate/logrotate.conf; sleep 1h; done"
+                        ],
+                        "image": "acme-registry.jfrog.io/jenkins/acme-sl6:latest",
+                        "imagePullPolicy": "Always",
+                        "name": "logrotate",
+                        "resources": {
+                            "requests": {
+                                "cpu": "10m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "FSETID",
+                                    "FOWNER",
+                                    "MKNOD",
+                                    "SETPCAP",
+                                    "SYS_CHROOT",
+                                    "KILL",
+                                    "AUDIT_WRITE"
+                                ]
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/log/metrics",
+                                "name": "metrics-logs"
+                            },
+                            {
+                                "mountPath": "/var/log/analytics",
+                                "name": "analytics-logs"
+                            },
+                            {
+                                "mountPath": "/etc/logrotate",
+                                "name": "logrotate-conf-0f5401683b8ed1341612223091b35a2e"
+                            },
+                            {
+                                "mountPath": "/var/lib/logrotate",
+                                "name": "logrotate-state"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-x4mj4",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "Default",
+                "nodeName": "compute-node5.cluster.acmedc.net",
+                "nodeSelector": {
+                    "acme.com/pool": "generic"
+                },
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "default",
+                "serviceAccountName": "default",
+                "terminationGracePeriodSeconds": 30,
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "internal-jwt-validation-keys-b5e6ed3727dbab0d7c1731c4610c3b67"
+                        },
+                        "name": "internal-jwt-validation-keys"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-audit"
+                        },
+                        "name": "log-collector-audit"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-pipelines-d0c4a4f6c46baf7346d55455e8ca517c"
+                        },
+                        "name": "log-collector-pipelines"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-conf-8e27de770965c1f1b985756142eb3d0e"
+                        },
+                        "name": "log-collector-conf"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "log-collector-states"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-logback"
+                        },
+                        "name": "log-collector-logback"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "analytics-logs"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "metrics-logs"
+                    },
+                    {
+                        "hostPath": {
+                            "path": "/acme/var/log/raw/demo-test-pip-service-staging"
+                        },
+                        "name": "service-logs"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "logrotate-state"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "logrotate-conf-0f5401683b8ed1341612223091b35a2e"
+                        },
+                        "name": "logrotate-conf-0f5401683b8ed1341612223091b35a2e"
+                    },
+                    {
+                        "name": "default-token-x4mj4",
+                        "secret": {
+                            "defaultMode": 420,
+                            "secretName": "default-token-x4mj4"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2018-06-21T22:14:58Z",
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2018-06-21T22:17:28Z",
+                        "status": "True",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2018-06-21T22:14:58Z",
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "containerID": "docker://0575709bb378e541eb093d35bdd6eb424b3ed9e7a0cd737f77840a3e99674162",
+                        "image": "acme-registry.jfrog.io/jenkins/acme-sl6:latest",
+                        "imageID": "docker-pullable://acme-registry.jfrog.io/jenkins/acme-sl6@sha256:49ba1c7eb333dddf3dfe1120664b66814480c207a5a88aed5b8a3301aa272b66",
+                        "lastState": {},
+                        "name": "logrotate",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2018-06-21T22:15:04Z"
+                            }
+                        }
+                    },
+                    {
+                        "containerID": "docker://93b70b660779b77326d7706e3baec64510a0313269efad3f38f7cda90783ab4a",
+                        "image": "acme-registry.jfrog.io/jenkins/demo-test-pip-service:61bd9cdb1668-2018.06.21_13.56.22",
+                        "imageID": "docker-pullable://acme-registry.jfrog.io/jenkins/demo-test-pip-service@sha256:17d6a39a68c4334fc7bc6a19deb24bb9f0a2285d312e94a726bfa478f9b12cdd",
+                        "lastState": {},
+                        "name": "demo-test-pip-service",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2018-06-21T22:15:09Z"
+                            }
+                        }
+                    },
+                    {
+                        "containerID": "docker://53f38a48f23efe4fd1c71e795dfcfc3fa755869886b258641cd1063a71864b7c",
+                        "image": "acme-registry.jfrog.io/jenkins/log-collector:35d002da4541-2018.03.22_14.25.30",
+                        "imageID": "docker-pullable://acme-registry.jfrog.io/jenkins/log-collector@sha256:77b25161c8b5159ae23b5d96d7cab36f24fd782eb5fdacf3f2513b66562d7834",
+                        "lastState": {},
+                        "name": "log-collector",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2018-06-21T22:15:03Z"
+                            }
+                        }
+                    }
+                ],
+                "hostIP": "10.228.82.143",
+                "phase": "Running",
+                "podIP": "10.232.82.162",
+                "qosClass": "Burstable",
+                "startTime": "2018-06-21T22:14:58Z"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "kubernetes.io/change-cause": "jenkins-platform-demo-test-pip-service-master-26-2018-06-21T21:11:48.053Z",
+                    "kubernetes.io/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicaSet\",\"namespace\":\"demo-test-pip-service-staging\",\"name\":\"demo-test-pip-service-3932235708\",\"uid\":\"4a439ed0-7598-11e8-95e6-f01fafdd34be\",\"apiVersion\":\"extensions\",\"resourceVersion\":\"1595506212\"}}\n"
+                },
+                "creationTimestamp": "2018-06-21T21:15:57Z",
+                "generateName": "demo-test-pip-service-3932235708-",
+                "labels": {
+                    "acme.com/app": "demo-test-pip-service",
+                    "acme.com/track": "main",
+                    "calico/PERMISSIONS_PIP": "true",
+                    "calico/SKYNET_WALLE": "true",
+                    "pod-template-hash": "3932235708"
+                },
+                "name": "demo-test-pip-service-3932235708-mb497",
+                "namespace": "demo-test-pip-service-staging",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "extensions/v1beta1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ReplicaSet",
+                        "name": "demo-test-pip-service-3932235708",
+                        "uid": "4a439ed0-7598-11e8-95e6-f01fafdd34be"
+                    }
+                ],
+                "resourceVersion": "1595718927",
+                "selfLink": "/api/v1/namespaces/demo-test-pip-service-staging/pods/demo-test-pip-service-3932235708-mb497",
+                "uid": "4a452f3f-7598-11e8-95e6-f01fafdd34be"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "command": [
+                            "runascontainer",
+                            "java",
+                            "-Xms1g",
+                            "-Xmx1g",
+                            "-jar",
+                            "demo-test-pip-service.jar",
+                            "--spring.profiles.active=staging"
+                        ],
+                        "env": [
+                            {
+                                "name": "ANALYTICS_LOG_PATH",
+                                "value": "/var/analytics"
+                            },
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "BOX_ENV",
+                                "value": "staging"
+                            },
+                            {
+                                "name": "KUBERNETES_CA_CERTIFICATE_FILE",
+                                "value": "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+                            },
+                            {
+                                "name": "KUBERNETES_SERVICE_HOST",
+                                "value": "compute-master-vip.cluster.acmedc.net"
+                            },
+                            {
+                                "name": "KUBERNETES_SERVICE_PORT",
+                                "value": "443"
+                            },
+                            {
+                                "name": "POD_IP",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "status.podIP"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "DEPRECATED_DC_METRICS_TAG",
+                                "value": "dev"
+                            },
+                            {
+                                "name": "DEPRECATED_SERVER_TYPE_METRICS_TAG",
+                                "value": "demo-test-pip-service"
+                            }
+                        ],
+                        "image": "acme-registry.jfrog.io/jenkins/demo-test-pip-service:61bd9cdb1668-2018.06.21_13.56.22",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/health",
+                                "port": 8080,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 120,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 2
+                        },
+                        "name": "demo-test-pip-service",
+                        "ports": [
+                            {
+                                "containerPort": 8080,
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 8090,
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/health",
+                                "port": 8080,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 120,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 2
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "1",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "1",
+                                "memory": "1Gi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "FSETID",
+                                    "FOWNER",
+                                    "MKNOD",
+                                    "SETPCAP",
+                                    "SYS_CHROOT",
+                                    "KILL",
+                                    "AUDIT_WRITE"
+                                ]
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/analytics",
+                                "name": "analytics-logs"
+                            },
+                            {
+                                "mountPath": "/var/log/service",
+                                "name": "service-logs"
+                            },
+                            {
+                                "mountPath": "/var/metrics",
+                                "name": "metrics-logs"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-x4mj4",
+                                "readOnly": true
+                            }
+                        ]
+                    },
+                    {
+                        "command": [
+                            "runascontainer",
+                            "java",
+                            "-server",
+                            "-Dacme.service.id=log-collector",
+                            "-Dacme.zk.servers=staging-zookeeper01.dev.acme.net,staging-zookeeper02.dev.acme.net,staging-zookeeper03.dev.acme.net,staging-zookeeper04.dev.acme.net,staging-zookeeper05.dev.acme.net/acme",
+                            "-XX:PermSize=32m",
+                            "-XX:MaxPermSize=64m",
+                            "-XX:+UseConcMarkSweepGC",
+                            "-XX:+UseParNewGC",
+                            "-Xms64m",
+                            "-Xmx128m",
+                            "-cp",
+                            "/var/lib/logback:/var/lib/log-collector:/var/lib/log-collector/log-collector.jar",
+                            "com.acme.analytics.walle.LogCollectorServiceMain"
+                        ],
+                        "env": [
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "NODE_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "spec.nodeName"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "SERVICE_NAME",
+                                "value": "demo-test-pip-service"
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "DEPRECATED_DC_METRICS_TAG",
+                                "value": "dev"
+                            },
+                            {
+                                "name": "DEPRECATED_SERVER_TYPE_METRICS_TAG",
+                                "value": "log-collector"
+                            }
+                        ],
+                        "image": "acme-registry.jfrog.io/jenkins/log-collector:35d002da4541-2018.03.22_14.25.30",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/ping",
+                                "port": 9173,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 2
+                        },
+                        "name": "log-collector",
+                        "ports": [
+                            {
+                                "containerPort": 9173,
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "resources": {
+                            "requests": {
+                                "cpu": "10m",
+                                "memory": "512Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "FSETID",
+                                    "FOWNER",
+                                    "MKNOD",
+                                    "SETPCAP",
+                                    "SYS_CHROOT",
+                                    "KILL",
+                                    "AUDIT_WRITE"
+                                ]
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/audit",
+                                "name": "log-collector-audit"
+                            },
+                            {
+                                "mountPath": "/etc/pipelines",
+                                "name": "log-collector-pipelines"
+                            },
+                            {
+                                "mountPath": "/etc/log-collector",
+                                "name": "log-collector-conf"
+                            },
+                            {
+                                "mountPath": "/var/lib/log-collector/states",
+                                "name": "log-collector-states"
+                            },
+                            {
+                                "mountPath": "/var/lib/logback",
+                                "name": "log-collector-logback"
+                            },
+                            {
+                                "mountPath": "/var/log/service",
+                                "name": "service-logs"
+                            },
+                            {
+                                "mountPath": "/var/metrics",
+                                "name": "metrics-logs"
+                            },
+                            {
+                                "mountPath": "/var/analytics",
+                                "name": "analytics-logs"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-x4mj4",
+                                "readOnly": true
+                            }
+                        ]
+                    },
+                    {
+                        "command": [
+                            "runascontainer",
+                            "/bin/bash",
+                            "-c",
+                            "while true; do logrotate --state /var/lib/logrotate/logrotate.status /etc/logrotate/logrotate.conf; sleep 1h; done"
+                        ],
+                        "image": "acme-registry.jfrog.io/jenkins/acme-sl6:latest",
+                        "imagePullPolicy": "Always",
+                        "name": "logrotate",
+                        "resources": {
+                            "requests": {
+                                "cpu": "10m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "FSETID",
+                                    "FOWNER",
+                                    "MKNOD",
+                                    "SETPCAP",
+                                    "SYS_CHROOT",
+                                    "KILL",
+                                    "AUDIT_WRITE"
+                                ]
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/log/metrics",
+                                "name": "metrics-logs"
+                            },
+                            {
+                                "mountPath": "/var/log/analytics",
+                                "name": "analytics-logs"
+                            },
+                            {
+                                "mountPath": "/etc/logrotate",
+                                "name": "logrotate-conf-0f5401683b8ed1341612223091b35a2e"
+                            },
+                            {
+                                "mountPath": "/var/lib/logrotate",
+                                "name": "logrotate-state"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-x4mj4",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "Default",
+                "nodeName": "compute-node1.cluster.acmedc.net",
+                "nodeSelector": {
+                    "acme.com/pool": "generic"
+                },
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "default",
+                "serviceAccountName": "default",
+                "terminationGracePeriodSeconds": 30,
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "internal-jwt-validation-keys-b5e6ed3727dbab0d7c1731c4610c3b67"
+                        },
+                        "name": "internal-jwt-validation-keys"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-audit"
+                        },
+                        "name": "log-collector-audit"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-pipelines-d0c4a4f6c46baf7346d55455e8ca517c"
+                        },
+                        "name": "log-collector-pipelines"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-conf-8e27de770965c1f1b985756142eb3d0e"
+                        },
+                        "name": "log-collector-conf"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "log-collector-states"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-logback"
+                        },
+                        "name": "log-collector-logback"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "analytics-logs"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "metrics-logs"
+                    },
+                    {
+                        "hostPath": {
+                            "path": "/acme/var/log/raw/demo-test-pip-service-staging"
+                        },
+                        "name": "service-logs"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "logrotate-state"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "logrotate-conf-0f5401683b8ed1341612223091b35a2e"
+                        },
+                        "name": "logrotate-conf-0f5401683b8ed1341612223091b35a2e"
+                    },
+                    {
+                        "name": "default-token-x4mj4",
+                        "secret": {
+                            "defaultMode": 420,
+                            "secretName": "default-token-x4mj4"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2018-06-21T21:15:57Z",
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2018-06-21T22:12:08Z",
+                        "status": "True",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2018-06-21T21:15:57Z",
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "containerID": "docker://5ec88f300c98375a8612d33ecb0b1443416afeaec1635e1b2d0d9ceabc1c6926",
+                        "image": "acme-registry.jfrog.io/jenkins/acme-sl6:latest",
+                        "imageID": "docker-pullable://acme-registry.jfrog.io/jenkins/acme-sl6@sha256:49ba1c7eb333dddf3dfe1120664b66814480c207a5a88aed5b8a3301aa272b66",
+                        "lastState": {
+                            "terminated": {
+                                "containerID": "docker://bd265084f38f594c871d087ed546a81c2c78f05c24cedc0a4067c27f943b156a",
+                                "exitCode": 143,
+                                "finishedAt": "2018-06-21T22:09:42Z",
+                                "reason": "Error",
+                                "startedAt": "2018-06-21T21:16:01Z"
+                            }
+                        },
+                        "name": "logrotate",
+                        "ready": true,
+                        "restartCount": 1,
+                        "state": {
+                            "running": {
+                                "startedAt": "2018-06-21T22:10:12Z"
+                            }
+                        }
+                    },
+                    {
+                        "containerID": "docker://e51af18cf83d1e739eb52824becb2d4eded12036f4d760655ad3d51f76508932",
+                        "image": "acme-registry.jfrog.io/jenkins/demo-test-pip-service:61bd9cdb1668-2018.06.21_13.56.22",
+                        "imageID": "docker-pullable://acme-registry.jfrog.io/jenkins/demo-test-pip-service@sha256:17d6a39a68c4334fc7bc6a19deb24bb9f0a2285d312e94a726bfa478f9b12cdd",
+                        "lastState": {
+                            "terminated": {
+                                "containerID": "docker://ec483649405f4727ad1f6b695e98296a2df335718d031214f4c61092bad0df52",
+                                "exitCode": 143,
+                                "finishedAt": "2018-06-21T22:09:41Z",
+                                "reason": "Error",
+                                "startedAt": "2018-06-21T21:16:00Z"
+                            }
+                        },
+                        "name": "demo-test-pip-service",
+                        "ready": true,
+                        "restartCount": 1,
+                        "state": {
+                            "running": {
+                                "startedAt": "2018-06-21T22:10:02Z"
+                            }
+                        }
+                    },
+                    {
+                        "containerID": "docker://ee7c868730cec66cda2774bc86231312d925039388c678733d5d25536ad25d23",
+                        "image": "acme-registry.jfrog.io/jenkins/log-collector:35d002da4541-2018.03.22_14.25.30",
+                        "imageID": "docker-pullable://acme-registry.jfrog.io/jenkins/log-collector@sha256:77b25161c8b5159ae23b5d96d7cab36f24fd782eb5fdacf3f2513b66562d7834",
+                        "lastState": {
+                            "terminated": {
+                                "containerID": "docker://f331c6eb16772623b19a6323c5cdda6e142ab2572471b01b648de85822a3b87b",
+                                "exitCode": 0,
+                                "finishedAt": "2018-06-21T22:09:41Z",
+                                "reason": "Completed",
+                                "startedAt": "2018-06-21T21:16:00Z"
+                            }
+                        },
+                        "name": "log-collector",
+                        "ready": true,
+                        "restartCount": 1,
+                        "state": {
+                            "running": {
+                                "startedAt": "2018-06-21T22:10:06Z"
+                            }
+                        }
+                    }
+                ],
+                "hostIP": "10.228.82.141",
+                "phase": "Running",
+                "podIP": "10.232.81.89",
+                "qosClass": "Burstable",
+                "startTime": "2018-06-21T21:15:57Z"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "kubernetes.io/change-cause": "jenkins-platform-demo-test-pip-service-master-26-2018-06-21T21:11:48.053Z",
+                    "kubernetes.io/created-by": "{\"kind\":\"SerializedReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"ReplicaSet\",\"namespace\":\"demo-test-pip-service-staging\",\"name\":\"demo-test-pip-service-3932235708\",\"uid\":\"4a439ed0-7598-11e8-95e6-f01fafdd34be\",\"apiVersion\":\"extensions\",\"resourceVersion\":\"1595514524\"}}\n"
+                },
+                "creationTimestamp": "2018-06-21T21:18:22Z",
+                "deletionGracePeriodSeconds": 30,
+                "deletionTimestamp": "2018-06-21T22:15:28Z",
+                "generateName": "demo-test-pip-service-3932235708-",
+                "labels": {
+                    "acme.com/app": "demo-test-pip-service",
+                    "acme.com/track": "main",
+                    "calico/PERMISSIONS_PIP": "true",
+                    "calico/SKYNET_WALLE": "true",
+                    "pod-template-hash": "3932235708"
+                },
+                "name": "demo-test-pip-service-3932235708-sn6k7",
+                "namespace": "demo-test-pip-service-staging",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "extensions/v1beta1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ReplicaSet",
+                        "name": "demo-test-pip-service-3932235708",
+                        "uid": "4a439ed0-7598-11e8-95e6-f01fafdd34be"
+                    }
+                ],
+                "resourceVersion": "1595728628",
+                "selfLink": "/api/v1/namespaces/demo-test-pip-service-staging/pods/demo-test-pip-service-3932235708-sn6k7",
+                "uid": "a0d26f9c-7598-11e8-95e6-f01fafdd34be"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "command": [
+                            "runascontainer",
+                            "java",
+                            "-Xms1g",
+                            "-Xmx1g",
+                            "-jar",
+                            "demo-test-pip-service.jar",
+                            "--spring.profiles.active=staging"
+                        ],
+                        "env": [
+                            {
+                                "name": "ANALYTICS_LOG_PATH",
+                                "value": "/var/analytics"
+                            },
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "BOX_ENV",
+                                "value": "staging"
+                            },
+                            {
+                                "name": "KUBERNETES_CA_CERTIFICATE_FILE",
+                                "value": "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+                            },
+                            {
+                                "name": "KUBERNETES_SERVICE_HOST",
+                                "value": "compute-master-vip.cluster.acmedc.net"
+                            },
+                            {
+                                "name": "KUBERNETES_SERVICE_PORT",
+                                "value": "443"
+                            },
+                            {
+                                "name": "POD_IP",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "status.podIP"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "DEPRECATED_DC_METRICS_TAG",
+                                "value": "dev"
+                            },
+                            {
+                                "name": "DEPRECATED_SERVER_TYPE_METRICS_TAG",
+                                "value": "demo-test-pip-service"
+                            }
+                        ],
+                        "image": "acme-registry.jfrog.io/jenkins/demo-test-pip-service:61bd9cdb1668-2018.06.21_13.56.22",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/health",
+                                "port": 8080,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 120,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 2
+                        },
+                        "name": "demo-test-pip-service",
+                        "ports": [
+                            {
+                                "containerPort": 8080,
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 8090,
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/health",
+                                "port": 8080,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 120,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 2
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "1",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "1",
+                                "memory": "1Gi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "FSETID",
+                                    "FOWNER",
+                                    "MKNOD",
+                                    "SETPCAP",
+                                    "SYS_CHROOT",
+                                    "KILL",
+                                    "AUDIT_WRITE"
+                                ]
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/analytics",
+                                "name": "analytics-logs"
+                            },
+                            {
+                                "mountPath": "/var/log/service",
+                                "name": "service-logs"
+                            },
+                            {
+                                "mountPath": "/var/metrics",
+                                "name": "metrics-logs"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-x4mj4",
+                                "readOnly": true
+                            }
+                        ]
+                    },
+                    {
+                        "command": [
+                            "runascontainer",
+                            "java",
+                            "-server",
+                            "-Dacme.service.id=log-collector",
+                            "-Dacme.zk.servers=staging-zookeeper01.dev.acme.net,staging-zookeeper02.dev.acme.net,staging-zookeeper03.dev.acme.net,staging-zookeeper04.dev.acme.net,staging-zookeeper05.dev.acme.net/acme",
+                            "-XX:PermSize=32m",
+                            "-XX:MaxPermSize=64m",
+                            "-XX:+UseConcMarkSweepGC",
+                            "-XX:+UseParNewGC",
+                            "-Xms64m",
+                            "-Xmx128m",
+                            "-cp",
+                            "/var/lib/logback:/var/lib/log-collector:/var/lib/log-collector/log-collector.jar",
+                            "com.acme.analytics.walle.LogCollectorServiceMain"
+                        ],
+                        "env": [
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "NODE_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "spec.nodeName"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "SERVICE_NAME",
+                                "value": "demo-test-pip-service"
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "DEPRECATED_DC_METRICS_TAG",
+                                "value": "dev"
+                            },
+                            {
+                                "name": "DEPRECATED_SERVER_TYPE_METRICS_TAG",
+                                "value": "log-collector"
+                            }
+                        ],
+                        "image": "acme-registry.jfrog.io/jenkins/log-collector:35d002da4541-2018.03.22_14.25.30",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/ping",
+                                "port": 9173,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 2
+                        },
+                        "name": "log-collector",
+                        "ports": [
+                            {
+                                "containerPort": 9173,
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "resources": {
+                            "requests": {
+                                "cpu": "10m",
+                                "memory": "512Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "FSETID",
+                                    "FOWNER",
+                                    "MKNOD",
+                                    "SETPCAP",
+                                    "SYS_CHROOT",
+                                    "KILL",
+                                    "AUDIT_WRITE"
+                                ]
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/etc/audit",
+                                "name": "log-collector-audit"
+                            },
+                            {
+                                "mountPath": "/etc/pipelines",
+                                "name": "log-collector-pipelines"
+                            },
+                            {
+                                "mountPath": "/etc/log-collector",
+                                "name": "log-collector-conf"
+                            },
+                            {
+                                "mountPath": "/var/lib/log-collector/states",
+                                "name": "log-collector-states"
+                            },
+                            {
+                                "mountPath": "/var/lib/logback",
+                                "name": "log-collector-logback"
+                            },
+                            {
+                                "mountPath": "/var/log/service",
+                                "name": "service-logs"
+                            },
+                            {
+                                "mountPath": "/var/metrics",
+                                "name": "metrics-logs"
+                            },
+                            {
+                                "mountPath": "/var/analytics",
+                                "name": "analytics-logs"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-x4mj4",
+                                "readOnly": true
+                            }
+                        ]
+                    },
+                    {
+                        "command": [
+                            "runascontainer",
+                            "/bin/bash",
+                            "-c",
+                            "while true; do logrotate --state /var/lib/logrotate/logrotate.status /etc/logrotate/logrotate.conf; sleep 1h; done"
+                        ],
+                        "image": "acme-registry.jfrog.io/jenkins/acme-sl6:latest",
+                        "imagePullPolicy": "Always",
+                        "name": "logrotate",
+                        "resources": {
+                            "requests": {
+                                "cpu": "10m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "FSETID",
+                                    "FOWNER",
+                                    "MKNOD",
+                                    "SETPCAP",
+                                    "SYS_CHROOT",
+                                    "KILL",
+                                    "AUDIT_WRITE"
+                                ]
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/log/metrics",
+                                "name": "metrics-logs"
+                            },
+                            {
+                                "mountPath": "/var/log/analytics",
+                                "name": "analytics-logs"
+                            },
+                            {
+                                "mountPath": "/etc/logrotate",
+                                "name": "logrotate-conf-0f5401683b8ed1341612223091b35a2e"
+                            },
+                            {
+                                "mountPath": "/var/lib/logrotate",
+                                "name": "logrotate-state"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-x4mj4",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "Default",
+                "nodeName": "compute-node2.cluster.acmedc.net",
+                "nodeSelector": {
+                    "acme.com/pool": "generic"
+                },
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "default",
+                "serviceAccountName": "default",
+                "terminationGracePeriodSeconds": 30,
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "internal-jwt-validation-keys-b5e6ed3727dbab0d7c1731c4610c3b67"
+                        },
+                        "name": "internal-jwt-validation-keys"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-audit"
+                        },
+                        "name": "log-collector-audit"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-pipelines-d0c4a4f6c46baf7346d55455e8ca517c"
+                        },
+                        "name": "log-collector-pipelines"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-conf-8e27de770965c1f1b985756142eb3d0e"
+                        },
+                        "name": "log-collector-conf"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "log-collector-states"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "log-collector-logback"
+                        },
+                        "name": "log-collector-logback"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "analytics-logs"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "metrics-logs"
+                    },
+                    {
+                        "hostPath": {
+                            "path": "/acme/var/log/raw/demo-test-pip-service-staging"
+                        },
+                        "name": "service-logs"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "logrotate-state"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "logrotate-conf-0f5401683b8ed1341612223091b35a2e"
+                        },
+                        "name": "logrotate-conf-0f5401683b8ed1341612223091b35a2e"
+                    },
+                    {
+                        "name": "default-token-x4mj4",
+                        "secret": {
+                            "defaultMode": 420,
+                            "secretName": "default-token-x4mj4"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2018-06-21T21:18:22Z",
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2018-06-21T21:20:42Z",
+                        "status": "False",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2018-06-21T21:18:22Z",
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "containerID": "docker://1c8cc169a90040557266c09d4be8353aebfbfdf54a12c62734750685134d2c18",
+                        "image": "acme-registry.jfrog.io/jenkins/acme-sl6:latest",
+                        "imageID": "docker-pullable://acme-registry.jfrog.io/jenkins/acme-sl6@sha256:49ba1c7eb333dddf3dfe1120664b66814480c207a5a88aed5b8a3301aa272b66",
+                        "lastState": {},
+                        "name": "logrotate",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2018-06-21T21:18:25Z"
+                            }
+                        }
+                    },
+                    {
+                        "containerID": "docker://d3ae95c2f44aad0b8871e0c8f701b9470353f1c72a148161527dd30f6c3af94a",
+                        "image": "acme-registry.jfrog.io/jenkins/demo-test-pip-service:61bd9cdb1668-2018.06.21_13.56.22",
+                        "imageID": "docker-pullable://acme-registry.jfrog.io/jenkins/demo-test-pip-service@sha256:17d6a39a68c4334fc7bc6a19deb24bb9f0a2285d312e94a726bfa478f9b12cdd",
+                        "lastState": {},
+                        "name": "demo-test-pip-service",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2018-06-21T21:18:24Z"
+                            }
+                        }
+                    },
+                    {
+                        "containerID": "docker://9a1b23fcda89706a19377cd036f8787523fcb75b0bba845be65483f1d46f2071",
+                        "image": "acme-registry.jfrog.io/jenkins/log-collector:35d002da4541-2018.03.22_14.25.30",
+                        "imageID": "docker-pullable://acme-registry.jfrog.io/jenkins/log-collector@sha256:77b25161c8b5159ae23b5d96d7cab36f24fd782eb5fdacf3f2513b66562d7834",
+                        "lastState": {},
+                        "name": "log-collector",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2018-06-21T21:18:24Z"
+                            }
+                        }
+                    }
+                ],
+                "hostIP": "10.228.82.140",
+                "message": "Node compute-node2.cluster.acmedc.net which was running pod demo-test-pip-service-3932235708-sn6k7 is unresponsive",
+                "phase": "Running",
+                "podIP": "10.232.82.196",
+                "qosClass": "Burstable",
+                "reason": "NodeLost",
+                "startTime": "2018-06-21T21:18:22Z"
+            }
+        }
+    ],
+    "kind": "List",
+    "metadata": {},
+    "resourceVersion": "",
+    "selfLink": ""
+}

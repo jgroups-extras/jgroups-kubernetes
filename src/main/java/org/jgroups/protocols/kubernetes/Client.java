@@ -104,20 +104,91 @@ public class Client {
                   .map(podMetadata -> podMetadata.at("name"))
                   .map(Json::asString)
                   .orElse(null);
-            String podIP = Optional.ofNullable(obj.at("status"))
-                  .map(podStatus -> podStatus.at("podIP"))
+            Json podStatus = Optional.ofNullable(obj.at("status")).orElse(null);
+            String podIP = null;
+            if(podStatus != null) {
+                podIP = Optional.ofNullable(podStatus.at("podIP"))
                   .map(Json::asString)
                   .orElse(null);
-            if(podIP == null) {
-                //Previously we did checks on phase. But from my observations, it is extremely rare to have a container
-                //listed by Kubernetes API with any other status but Running (I might imagine it will hang in scheduled).
-                //However in both cases, its IP address will be null. So it is much better to stick to that.
-                log.trace("Skipping pod %s since it has no IP %s", name, podIP);
+            }
+            boolean running = podRunning(podStatus);
+            if(podIP == null || !running) {
+                log.trace("Skipping pod %s since it's IP is %s or running is %s", name, Boolean.toString(running));
             } else {
                 pods.add(new Pod(name, podIP, parentDeployment));
             }
         }
         log.trace("getPods(%s, %s) = %s", namespace, labels, pods);
         return pods;
+    }
+    
+    /**
+     * Helper method to determine if a pod is considered running or not.
+     * 
+     * @param podStatus a Json object expected to contain the "status" object of a pod
+     * @return true if the pod is considered available, false otherwise
+     */
+    protected boolean podRunning(Json podStatus) {
+        if(podStatus == null) {
+            return false;
+        }
+        
+        /*
+         * A pod can only be considered 'running' if the following conditions are all true:
+         * 1. status.phase == "Running",
+         * 2. status.message is Undefined (does not exist)
+         * 3. status.reason is Undefined (does not exist)
+         * 4. all of status.containerStatuses[*].ready == true
+         * 5. for conditions[*].type == "Ready" conditions[*].status must be "True" 
+         */
+        // walk through each condition step by step
+        // 1 status.phase
+        log.trace("Determining pod status");
+        String phase = Optional.ofNullable(podStatus.at("phase"))
+                .map(Json::asString)
+                .orElse("not running");
+        log.trace("  status.phase=%s", phase);
+        if(!phase.equalsIgnoreCase("Running")) {
+            return false;
+        }
+        // 2. and 3. status.message and status.reason
+        String statusMessage = Optional.ofNullable(podStatus.at("message"))
+                .map(Json::asString)
+                .orElse(null);
+        String statusReason = Optional.ofNullable(podStatus.at("reason"))
+                .map(Json::asString)
+                .orElse(null);
+        log.trace("  status.message=%s and status.reason=%s", statusMessage, statusReason);
+        if(statusMessage != null || statusReason != null) {
+            return false;
+        }
+        // 4. status.containerStatuses.ready
+        List<Json> containerStatuses = Optional.ofNullable(podStatus.at("containerStatuses"))
+                .map(Json::asJsonList)
+                .orElse(Collections.emptyList());
+        boolean ready = true;
+        // if we have no containerStatuses, we don't check for it and consider this condition as passed
+        for(Json containerStatus: containerStatuses) {
+            ready = ready && containerStatus.at("ready").asBoolean();
+        }
+        log.trace("  containerStatuses[].status of all container is %s", Boolean.toString(ready));
+        if(!ready) {
+            return false;
+        }
+        // 5. ready condition must be "True"
+        Boolean readyCondition = Boolean.FALSE;
+        List<Json> conditions = podStatus.at("conditions").asJsonList();
+        // walk through all the conditions and find type=="Ready" and get the value of the status property
+        for(Json condition: conditions) {
+            String type = condition.at("type").asString();
+            if(type.equalsIgnoreCase("Ready")) {
+                readyCondition = new Boolean(condition.at("status").asString());
+            }
+        }
+        log.trace(  "conditions with type==\"Ready\" has status property value = %s", readyCondition.toString());
+        if(!readyCondition.booleanValue()) {
+            return false;
+        }
+        return true;
     }
 }
