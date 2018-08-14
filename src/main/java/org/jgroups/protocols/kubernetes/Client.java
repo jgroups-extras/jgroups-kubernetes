@@ -113,7 +113,7 @@ public class Client {
             }
             boolean running = podRunning(podStatus);
             if(podIP == null || !running) {
-                log.trace("Skipping pod %s since it's IP is %s or running is %s", name, Boolean.toString(running));
+                log.trace("Skipping pod %s since it's IP is %s or running is %s", name, podIP, Boolean.toString(running));
             } else {
                 pods.add(new Pod(name, podIP, parentDeployment));
             }
