@@ -179,11 +179,48 @@ http://www.github.com/belaban/IspnPerfTest[IspnPerfTest] via a YAML configuratio
 run a separate instance interactively and confirm that the instances have formed a cluster of 4. All instances
 are created in the default namespace and no labels are used.
 
-The YAML used is:
+Copy n' paste the snippet below in a terminal where kubectl is running against your K8S cluster
 
-.ispn-perf-test.yaml
-[source,yaml]
 ----
+# ---------------------------------------------------------------------
+# This demo assumes that RBAC is enabled on the Kubernetes cluster.
+#
+# The serviceaccount, clusterrole and clusterrolebinding provide
+# permission for the pods to query K8S api
+# ---------------------------------------------------------------------
+
+# Change to a Kubernetes namespace of your preference
+export TARGET_NAMESPACE=default
+
+kubectl create serviceaccount jgroups-kubeping-service-account -n $TARGET_NAMESPACE
+
+cat <<EOF | kubectl apply -f -
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jgroups-kubeping-pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: jgroups-kubeping-api-access
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jgroups-kubeping-pod-reader
+subjects:
+- kind: ServiceAccount
+  name: jgroups-kubeping-service-account
+  namespace: $TARGET_NAMESPACE
+
+---
+
 apiVersion: v1
 items:
 - apiVersion: extensions/v1beta1
@@ -191,7 +228,7 @@ items:
   metadata:
     annotations:
     name: ispn-perf-test
-    namespace: default
+    namespace: $TARGET_NAMESPACE
   spec:
     replicas: 3
     selector:
@@ -200,6 +237,7 @@ items:
         labels:
           run: ispn-perf-test
       spec:
+        serviceAccountName: jgroups-kubeping-service-account
         containers:
         - args:
           - /opt/jgroups/IspnPerfTest/bin/kube.sh
@@ -216,7 +254,15 @@ items:
           terminationMessagePath: /dev/termination-log
 kind: List
 metadata: {}
+
+EOF
 ----
+
+To remove the resources when demo time is over:
+----
+kubectl delete deployment/ispn-perf-test clusterrolebinding/jgroups-kubeping-api-access clusterrole/jgroups-kubeping-pod-reader serviceaccount/jgroups-kubeping-service-account -n $TARGET_NAMESPACE
+----
+
 
 The image is `belaban/ispn_perf_test` which contains the IspnPerfTest project plus some scripts to start nodes. 3
 instances are started and the start command is `kube-debug.sh -nohup`; this launches the programs without the loop
