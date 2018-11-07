@@ -1,13 +1,5 @@
 package org.jgroups.ping.kube.test;
 
-import static org.jgroups.ping.kube.test.util.FreePortFinder.findFreePort;
-
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.assertj.core.api.Assertions;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
@@ -18,6 +10,14 @@ import org.jgroups.protocols.pbcast.GMS;
 import org.jgroups.protocols.pbcast.NAKACK2;
 import org.jgroups.stack.IpAddress;
 import org.junit.Test;
+
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.jgroups.ping.kube.test.util.FreePortFinder.findFreePort;
 
 /**
  * Tests Rolling update scenarios.
@@ -40,7 +40,7 @@ public class RollingUpdateTest {
             .map(e -> ((IpAddress)e.getDest()).getIpAddress().getHostAddress())
             .collect(Collectors.toSet());
       List<String> allPodsFromKubernetesApi = testedProtocol.getPods().stream()
-            .map(pod -> pod.getIp())
+            .map(Pod::getIp)
             .collect(Collectors.toList());
 
       //then
@@ -57,21 +57,21 @@ public class RollingUpdateTest {
       sendInitialDiscovery(testedProtocol);
       String senderParentDeployment = testedProtocol.getPods().stream()
             .filter(pod -> "127.0.0.1".equals(pod.getIp()))
-            .map(pod -> pod.getParentDeployment())
+            .map(Pod::getParentDeployment)
             .findFirst().get();
       Set<String> membersUsedForDiscovery = testedProtocol.getCollectedMessages().stream()
             .map(e -> ((IpAddress)e.getDest()).getIpAddress().getHostAddress())
             .collect(Collectors.toSet());
       List<String> allowedPodsFromKubernetesApi = testedProtocol.getPods().stream()
             .filter(pod -> senderParentDeployment.equals(pod.getParentDeployment()))
-            .map(pod -> pod.getIp())
+            .map(Pod::getIp)
             .collect(Collectors.toList());
 
       //then
       Assertions.assertThat(allowedPodsFromKubernetesApi).containsAll(membersUsedForDiscovery);
    }
 
-   private void sendInitialDiscovery(KUBE_PING kubePingProtocol) throws Exception {
+   private static void sendInitialDiscovery(KUBE_PING kubePingProtocol) throws Exception {
       new JChannel(
             new TCP().setValue("bind_addr", InetAddress.getLoopbackAddress()).setValue("bind_port", findFreePort()),
             kubePingProtocol,
@@ -83,7 +83,7 @@ public class RollingUpdateTest {
    static class KUBE_PING_FOR_TESTING extends KUBE_PING {
 
       private final String resourceFile;
-      private List<Message> collectedMessages = new ArrayList<>();
+      private final List<Message> collectedMessages = new ArrayList<>();
       private List<Pod> pods;
 
       public KUBE_PING_FOR_TESTING(String resourceFile) {
