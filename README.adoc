@@ -34,7 +34,7 @@ matching the given _namespace_ and _labels_ (see below).
 Let's say Kubernetes launched a cluster of 3 pods with IP addresses `172.17.0.2`, `172.17.0.3` and `172.17.0.5` (all
 launched into the same namespace and without any (or the same) labels).
 
-On a discovery request, Kubernetes returns list of 3 IP addresses. JGroups now knows that the ports have been
+On a discovery request, Kubernetes returns a list of 3 IP addresses. JGroups now knows that the ports have been
 allocated from range [`7800` .. `7801`] (`bind_port` .. (`bind_port` + `port_range`) in `TCP`).
 
 KUBE_PING therefore sends discovery requests to members at addresses `172.17.0.2:7800`, `172.17.0.2:7801`, `172.17.0.3:7800`,
