@@ -22,8 +22,8 @@ A sample configuration looks like this:
   />
   <org.jgroups.protocols.kubernetes.KUBE_PING
      port_range="1"
-     namespace="${KUBE_NAMESPACE:production}"
-     labels="${KUBE_LABEL:cluster=nyc}"
+     namespace="${KUBERNETES_NAMESPACE:production}"
+     labels="${KUBERNETES_LABEL:cluster=nyc}"
   />
   ...
 ----
@@ -96,10 +96,10 @@ When launching a new deployment in a pod, the namespace can be given with `-n <n
 `kubectl create -f <config>`.
 
 In the JGroups configuration, attribute `namespace` is used to define the namespace to be used for discovery. The
-example above used `namespace="${KUBE_NAMESPACE:production}"`. This means that the namespace is
+example above used `namespace="${KUBERNETES_NAMESPACE:production}"`. This means that the namespace is
 
-* the value of system property `KUBE_NAMESPACE`, if set
-* the value of environment variable `KUBE_NAMESPACE` if set, or
+* the value of system property `KUBERNETES_NAMESPACE`, if set
+* the value of environment variable `KUBERNETES_NAMESPACE` if set, or
 * `"production"` if neither system property nor env var are set
 
 In the example above, Kubernetes will return only IP addresses of pods created in namespace `"production"`.
@@ -112,7 +112,7 @@ Labels are similar to namespaces; different labels can separate clusters running
 Similarly to namespaces, labels also have to be defined when launching a pod, either via `--labels=<label>` passed
 to `kubectl run`, or in the YAML or JSON configuration file passed to `kubectl create -f <config>`.
 
-In the sample configuration above, labels were defined as `labels="${KUBE_LABEL:cluster=nyc}"`. This means that
+In the sample configuration above, labels were defined as `labels="${KUBERNETES_LABEL:cluster=nyc}"`. This means that
 Kubernetes will only return IP addresses of pods started with label `cluster=nyc`.
 
 Namespaces and labels can be both set; in this case, Kubernetes will return the IP addresses of all pods started in
