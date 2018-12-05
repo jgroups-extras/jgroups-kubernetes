@@ -22,8 +22,8 @@ A sample configuration looks like this:
   />
   <org.jgroups.protocols.kubernetes.KUBE_PING
      port_range="1"
-     namespace="${KUBE_NAMESPACE:production}"
-     labels="${KUBE_LABEL:cluster=nyc}"
+     namespace="${KUBERNETES_NAMESPACE:production}"
+     labels="${KUBERNETES_LABEL:cluster=nyc}"
   />
   ...
 ----
@@ -34,7 +34,7 @@ matching the given _namespace_ and _labels_ (see below).
 Let's say Kubernetes launched a cluster of 3 pods with IP addresses `172.17.0.2`, `172.17.0.3` and `172.17.0.5` (all
 launched into the same namespace and without any (or the same) labels).
 
-On a discovery request, Kubernetes returns list of 3 IP addresses. JGroups now knows that the ports have been
+On a discovery request, Kubernetes returns a list of 3 IP addresses. JGroups now knows that the ports have been
 allocated from range [`7800` .. `7801`] (`bind_port` .. (`bind_port` + `port_range`) in `TCP`).
 
 KUBE_PING therefore sends discovery requests to members at addresses `172.17.0.2:7800`, `172.17.0.2:7801`, `172.17.0.3:7800`,
@@ -96,10 +96,10 @@ When launching a new deployment in a pod, the namespace can be given with `-n <n
 `kubectl create -f <config>`.
 
 In the JGroups configuration, attribute `namespace` is used to define the namespace to be used for discovery. The
-example above used `namespace="${KUBE_NAMESPACE:production}"`. This means that the namespace is
+example above used `namespace="${KUBERNETES_NAMESPACE:production}"`. This means that the namespace is
 
-* the value of system property `KUBE_NAMESPACE`, if set
-* the value of environment variable `KUBE_NAMESPACE` if set, or
+* the value of system property `KUBERNETES_NAMESPACE`, if set
+* the value of environment variable `KUBERNETES_NAMESPACE` if set, or
 * `"production"` if neither system property nor env var are set
 
 In the example above, Kubernetes will return only IP addresses of pods created in namespace `"production"`.
@@ -112,7 +112,7 @@ Labels are similar to namespaces; different labels can separate clusters running
 Similarly to namespaces, labels also have to be defined when launching a pod, either via `--labels=<label>` passed
 to `kubectl run`, or in the YAML or JSON configuration file passed to `kubectl create -f <config>`.
 
-In the sample configuration above, labels were defined as `labels="${KUBE_LABEL:cluster=nyc}"`. This means that
+In the sample configuration above, labels were defined as `labels="${KUBERNETES_LABEL:cluster=nyc}"`. This means that
 Kubernetes will only return IP addresses of pods started with label `cluster=nyc`.
 
 Namespaces and labels can be both set; in this case, Kubernetes will return the IP addresses of all pods started in
@@ -179,11 +179,48 @@ http://www.github.com/belaban/IspnPerfTest[IspnPerfTest] via a YAML configuratio
 run a separate instance interactively and confirm that the instances have formed a cluster of 4. All instances
 are created in the default namespace and no labels are used.
 
-The YAML used is:
+Copy n' paste the snippet below in a terminal where kubectl is running against your K8S cluster
 
-.ispn-perf-test.yaml
-[source,yaml]
 ----
+# ---------------------------------------------------------------------
+# This demo assumes that RBAC is enabled on the Kubernetes cluster.
+#
+# The serviceaccount, clusterrole and clusterrolebinding provide
+# permission for the pods to query K8S api
+# ---------------------------------------------------------------------
+
+# Change to a Kubernetes namespace of your preference
+export TARGET_NAMESPACE=default
+
+kubectl create serviceaccount jgroups-kubeping-service-account -n $TARGET_NAMESPACE
+
+cat <<EOF | kubectl apply -f -
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jgroups-kubeping-pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: jgroups-kubeping-api-access
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jgroups-kubeping-pod-reader
+subjects:
+- kind: ServiceAccount
+  name: jgroups-kubeping-service-account
+  namespace: $TARGET_NAMESPACE
+
+---
+
 apiVersion: v1
 items:
 - apiVersion: extensions/v1beta1
@@ -191,7 +228,7 @@ items:
   metadata:
     annotations:
     name: ispn-perf-test
-    namespace: default
+    namespace: $TARGET_NAMESPACE
   spec:
     replicas: 3
     selector:
@@ -200,6 +237,7 @@ items:
         labels:
           run: ispn-perf-test
       spec:
+        serviceAccountName: jgroups-kubeping-service-account
         containers:
         - args:
           - /opt/jgroups/IspnPerfTest/bin/kube.sh
@@ -216,7 +254,15 @@ items:
           terminationMessagePath: /dev/termination-log
 kind: List
 metadata: {}
+
+EOF
 ----
+
+To remove the resources when demo time is over:
+----
+kubectl delete deployment/ispn-perf-test clusterrolebinding/jgroups-kubeping-api-access clusterrole/jgroups-kubeping-pod-reader serviceaccount/jgroups-kubeping-service-account -n $TARGET_NAMESPACE
+----
+
 
 The image is `belaban/ispn_perf_test` which contains the IspnPerfTest project plus some scripts to start nodes. 3
 instances are started and the start command is `kube-debug.sh -nohup`; this launches the programs without the loop
