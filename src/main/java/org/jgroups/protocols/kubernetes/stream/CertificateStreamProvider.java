@@ -12,6 +12,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.RSAPrivateCrtKeySpec;
+import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -99,17 +100,20 @@ public class CertificateStreamProvider extends BaseStreamProvider {
             try {
                 InputStream pemInputStream = openFile(caCertFile);
                 CertificateFactory certFactory = CertificateFactory.getInstance("X509");
-                X509Certificate cert = (X509Certificate)certFactory.generateCertificate(pemInputStream);
-    
+
                 KeyStore trustStore = KeyStore.getInstance("JKS");
                 trustStore.load(null);
-    
-                String alias = cert.getSubjectX500Principal().getName();
-                trustStore.setCertificateEntry(alias, cert);
-    
+
+                Collection<? extends Certificate> certificates = certFactory.generateCertificates(pemInputStream);
+                for (Certificate c : certificates) {
+                    X509Certificate certificate = (X509Certificate) c;
+                    String alias = certificate.getSubjectX500Principal().getName();
+                    trustStore.setCertificateEntry(alias, certificate);
+                }
+
                 TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
                 trustManagerFactory.init(trustStore);
-    
+
                 return trustManagerFactory.getTrustManagers();
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Could not create trust manager for " + caCertFile, e);
