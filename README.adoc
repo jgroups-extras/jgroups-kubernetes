@@ -124,50 +124,49 @@ namespace `"default"` will be returned.
 
 === KUBE_PING configuration
 
-[align="left",width="90%",cols="2,10",options="header"]
+[align="left",width="90%",cols="3,3,10",options="header"]
 |===============
-|Attribute name|Description
+|Attribute name | System property | Description
 
-|port_range|Number of additional ports to be probed for membership. A port_range of 0 does not
+| port_range || Number of additional ports to be probed for membership. A port_range of 0 does not
                   probe additional ports. Example: `initial_hosts=A[7800] port_range=0` probes `A:7800`, `port_range=1`
                   probes `A:7800` and `A:7801`
 
-|connectTimeout|Max time (in millis) to wait for a connection to the Kubernetes server. If exceeded, an exception
-will be thrown
+| connectTimeout | KUBERNETES_CONNECT_TIMEOUT | Max time (in millis) to wait for a connection to the Kubernetes server. If exceeded, an exception will be thrown
 
-| readTimeout|Max time (in millis) to wait for a response from the Kubernetes server
+| readTimeout | KUBERNETES_READ_TIMEOUT | Max time (in millis) to wait for a response from the Kubernetes server
 
-|operationAttempts | Max number of attempts to send discovery requests
+| operationAttempts | KUBERNETES_OPERATION_ATTEMPTS | Max number of attempts to send discovery requests
 
-| operationSleep|Time (in millis) between operation attempts
+| operationSleep | KUBERNETES_OPERATION_SLEEP | Time (in millis) between operation attempts
 
-| masterProtocol | http (default) or https. Used to send the initial discovery request to the Kubernetes server
+| masterProtocol | KUBERNETES_MASTER_PROTOCOL | http (default) or https. Used to send the initial discovery request to the Kubernetes server
 
-| masterHost | The URL of the Kubernetes server
+| masterHost | KUBERNETES_SERVICE_HOST | The URL of the Kubernetes server
 
-| masterPort | The port on which the Kubernetes server is listening
+| masterPort | KUBERNETES_SERVICE_PORT | The port on which the Kubernetes server is listening
 
-| apiVersion | The version of the protocol to the Kubernetes server
+| apiVersion | KUBERNETES_API_VERSION | The version of the protocol to the Kubernetes server
 
-| namespace | The namespace to be used (leaving this undefined uses `"default"`)
+| namespace | KUBERNETES_NAMESPACE | The namespace to be used (leaving this undefined uses `"default"`)
 
-| labels | The labels to use in the discovery request to the Kubernetes server
+| labels | KUBERNETES_LABELS | The labels to use in the discovery request to the Kubernetes server
 
-| clientCertFile | Certificate to access the Kubernetes server
+| clientCertFile | KUBERNETES_CLIENT_CERTIFICATE_FILE | Certificate to access the Kubernetes server
 
-| clientKeyFile | Client key file (store)
+| clientKeyFile | KUBERNETES_CLIENT_KEY_FILE | Client key file (store)
 
-| clientKeyPassword | The password to access the client key store
+| clientKeyPassword | KUBERNETES_CLIENT_KEY_PASSWORD | The password to access the client key store
 
-| clientKeyAlgo | The algorithm used by the client
+| clientKeyAlgo | KUBERNETES_CLIENT_KEY_ALGO | The algorithm used by the client
 
-| caCertFile | Client CA certificate
+| caCertFile | KUBERNETES_CA_CERTIFICATE_FILE | Client CA certificate
 
-| saTokenFile | Token file
+| saTokenFile | SA_TOKEN_FILE | Token file
 
-| dump_requests | Dumps all discovery requests and responses to the Kubernetes server to stdout when true
+| dump_requests || Dumps all discovery requests and responses to the Kubernetes server to stdout when true
 
-| split_clusters_during_rolling_update | During the Rolling Update, prevents from putting all Pods into a single cluster
+| split_clusters_during_rolling_update || During the Rolling Update, prevents from putting all Pods into a single cluster
 
 |===============
 
