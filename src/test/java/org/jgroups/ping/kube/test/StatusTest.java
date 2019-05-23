@@ -1,9 +1,7 @@
 package org.jgroups.ping.kube.test;
 
-import static org.jgroups.protocols.kubernetes.Utils.readFileToString;
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.util.List;
 
 import org.jgroups.protocols.kubernetes.Client;
