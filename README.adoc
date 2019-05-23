@@ -140,7 +140,7 @@ namespace `"default"` will be returned.
 
 | operationSleep | KUBERNETES_OPERATION_SLEEP | Time (in millis) between operation attempts
 
-| masterProtocol | KUBERNETES_MASTER_PROTOCOL | http (default) or https. Used to send the initial discovery request to the Kubernetes server
+| masterProtocol | KUBERNETES_MASTER_PROTOCOL | http or https (default). Used to send the initial discovery request to the Kubernetes server
 
 | masterHost | KUBERNETES_SERVICE_HOST | The URL of the Kubernetes server
 
