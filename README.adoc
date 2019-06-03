@@ -40,6 +40,9 @@ allocated from range [`7800` .. `7801`] (`bind_port` .. (`bind_port` + `port_ran
 KUBE_PING therefore sends discovery requests to members at addresses `172.17.0.2:7800`, `172.17.0.2:7801`, `172.17.0.3:7800`,
 `172.17.0.3:7801`, `172.17.0.5:7800` and `172.17.0.5:7801`.
 
+NOTE: Clients need permission to ask Kubernetes for a list of pod IPs. This is done by creating various policies e.g.
+with YAML. See the 3 example policies at the top of the <<Demo>> section below.
+
 
 == Separating different clusters
 
@@ -171,6 +174,7 @@ namespace `"default"` will be returned.
 |===============
 
 
+[[Demo]]
 == Demo
 
 In this demo, we're going to let Kubernetes start 3 instances of
