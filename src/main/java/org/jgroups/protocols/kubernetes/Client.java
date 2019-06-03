@@ -62,10 +62,24 @@ public class Client {
         url = url + "/" + op;
         if(labels != null && !labels.isEmpty())
             url = url + "?labelSelector=" + urlencode(labels);
-        if(dump_requests)
-            System.out.printf("--> %s\n", url);
-        try(InputStream stream = openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider)) {
-            return Util.readContents(stream);
+
+        InputStream stream=null;
+        String retval=null;
+        try {
+            stream=openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider);
+            retval=Util.readContents(stream);
+            if(dump_requests)
+                System.out.printf("--> %s\n<-- %s\n", url, retval);
+            return retval;
+        }
+        catch(Throwable t) {
+            retval=t.getMessage();
+            if(dump_requests)
+                System.out.printf("--> %s\n<-- ERROR: %s\n", url, t.getMessage());
+            throw t;
+        }
+        finally {
+            Util.close(stream);
         }
     }
 
