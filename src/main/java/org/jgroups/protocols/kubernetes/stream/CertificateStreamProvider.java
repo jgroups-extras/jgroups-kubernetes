@@ -2,6 +2,7 @@ package org.jgroups.protocols.kubernetes.stream;
 
 import static org.jgroups.protocols.kubernetes.Utils.openFile;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
@@ -95,8 +96,8 @@ public class CertificateStreamProvider extends BaseStreamProvider {
         }
     }
 
-    private static TrustManager[] configureCaCert(String caCertFile) throws Exception {
-        if (caCertFile != null) {
+    static TrustManager[] configureCaCert(String caCertFile) throws Exception {
+        if (caCertFile != null && !caCertFile.isEmpty()) {
             try {
                 InputStream pemInputStream = openFile(caCertFile);
                 CertificateFactory certFactory = CertificateFactory.getInstance("X509");
@@ -115,15 +116,18 @@ public class CertificateStreamProvider extends BaseStreamProvider {
                 trustManagerFactory.init(trustStore);
 
                 return trustManagerFactory.getTrustManagers();
+            } catch (FileNotFoundException ignore) {
+                log.log(Level.WARNING, "ca cert file not found " + caCertFile + " - defaulting to insecure trust manager");
+                return TrustManagers.INSECURE_TRUST_MANAGERS;
             } catch (Exception e) {
                 log.log(Level.SEVERE, "Could not create trust manager for " + caCertFile, e);
                 throw e;
             }
         } else {
             if (log.isLoggable(Level.WARNING)) {
-                log.log(Level.WARNING, "ca cert file undefined");
+                log.log(Level.WARNING, "ca cert file undefined - defaulting to insecure trust manager");
             }
-            return InsecureStreamProvider.INSECURE_TRUST_MANAGERS;
+            return TrustManagers.INSECURE_TRUST_MANAGERS;
         }
     }
 

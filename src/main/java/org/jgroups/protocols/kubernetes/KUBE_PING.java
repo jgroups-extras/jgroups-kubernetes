@@ -14,8 +14,8 @@ import org.jgroups.protocols.PingData;
 import org.jgroups.protocols.PingHeader;
 import org.jgroups.protocols.TP;
 import org.jgroups.protocols.kubernetes.stream.CertificateStreamProvider;
-import org.jgroups.protocols.kubernetes.stream.InsecureStreamProvider;
 import org.jgroups.protocols.kubernetes.stream.StreamProvider;
+import org.jgroups.protocols.kubernetes.stream.TokenStreamProvider;
 import org.jgroups.stack.IpAddress;
 import org.jgroups.util.NameCache;
 import org.jgroups.util.Responses;
@@ -31,6 +31,7 @@ import static org.jgroups.protocols.kubernetes.Utils.readFileToString;
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  * @author Sebastian Łaskawiec
  * @author Bela Ban
+ * @author Radoslav Husar
  */
 @MBean(description="Kubernetes based discovery protocol")
 public class KUBE_PING extends Discovery {
@@ -92,8 +93,9 @@ public class KUBE_PING extends Discovery {
     @Property(description="The algorithm used by the client", systemProperty="KUBERNETES_CLIENT_KEY_ALGO")
     protected String  clientKeyAlgo="RSA";
 
-    @Property(description="Client CA certificate", systemProperty="KUBERNETES_CA_CERTIFICATE_FILE")
-    protected String  caCertFile;
+    @Property(description = "Location of certificate bundle used to verify the serving certificate of the apiserver. If the specified file is unavailable, "
+            + "a warning message is issued.", systemProperty = "KUBERNETES_CA_CERTIFICATE_FILE")
+    protected String  caCertFile="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
 
     @Property(description="Token file", systemProperty="SA_TOKEN_FILE")
     protected String  saTokenFile="/var/run/secrets/kubernetes.io/serviceaccount/token";
@@ -161,7 +163,7 @@ public class KUBE_PING extends Discovery {
                 // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labelSelector=application%3Deap-app
                 headers.put("Authorization", "Bearer " + saToken);
             }
-            streamProvider=new InsecureStreamProvider();
+            streamProvider = new TokenStreamProvider(saToken, caCertFile);
         }
         String url=String.format("%s://%s:%s/api/%s", masterProtocol, masterHost, masterPort, apiVersion);
         client=new Client(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, log);
