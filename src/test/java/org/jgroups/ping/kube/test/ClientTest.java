@@ -31,7 +31,7 @@ public class ClientTest {
         Client client = new TestClient("/pods_without_ports.json");
 
         //when
-        long numberOfPods =(long)client.getPods(null, null, false).size();
+        int numberOfPods = client.getPods(null, null, false).size();
 
         //then
         assertEquals(2, numberOfPods);

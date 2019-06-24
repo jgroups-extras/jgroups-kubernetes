@@ -86,7 +86,7 @@ public class RollingUpdateTest {
       private final List<Message> collectedMessages = new ArrayList<>();
       private List<Pod> pods;
 
-      public KUBE_PING_FOR_TESTING(String resourceFile) {
+      KUBE_PING_FOR_TESTING(String resourceFile) {
          this.resourceFile = resourceFile;
       }
 
@@ -102,11 +102,11 @@ public class RollingUpdateTest {
          collectedMessages.add(req);
       }
 
-      public List<Message> getCollectedMessages() {
+      List<Message> getCollectedMessages() {
          return collectedMessages;
       }
 
-      public List<Pod> getPods() {
+      List<Pod> getPods() {
          return pods;
       }
    }

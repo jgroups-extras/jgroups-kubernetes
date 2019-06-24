@@ -4,7 +4,9 @@ import java.net.ServerSocket;
 
 public class FreePortFinder {
 
-   public static int DEFAULT_PORT = 13256;
+   private static final int DEFAULT_PORT = 13256;
+
+   private FreePortFinder() { }
 
    public static int findFreePort() {
       try (ServerSocket socket = new ServerSocket(0)) {

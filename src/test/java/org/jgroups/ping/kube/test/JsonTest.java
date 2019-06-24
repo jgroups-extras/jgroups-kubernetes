@@ -7,6 +7,7 @@ import java.io.File;
 import java.util.List;
 
 import static org.jgroups.protocols.kubernetes.Utils.readFileToString;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Bela Ban
@@ -27,6 +28,7 @@ public class JsonTest {
             Json phase=status.at("phase");
             Json ip=status.at("podIP");
             System.out.printf("%s -> %s\n", ip, phase);
+            assertEquals("Running", phase.asString());
         }
 
         /* JsonObject root=JsonParser.object().from(input);
