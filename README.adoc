@@ -1,4 +1,4 @@
-= Kubernetes discovery protocol for JGroups
+
 
 `KUBE_PING` is a discovery protocol for JGroups cluster nodes managed by Kubernetes.
 
