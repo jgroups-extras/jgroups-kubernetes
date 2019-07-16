@@ -12,6 +12,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
+                    env.JAVA_HOME = tool('JDK 8')
                     def mvnHome = tool 'Maven'
                     sh "${mvnHome}/bin/mvn clean install -Dmaven.test.failure.ignore=true"
                     junit '**/target/*-reports/*.xml'
@@ -27,6 +28,7 @@ pipeline {
             steps {
                 configFileProvider([configFile(fileId: 'maven-settings-with-deploy-snapshot', variable: 'MAVEN_SETTINGS')]) {
                     script {
+                        env.JAVA_HOME = tool('JDK 8')
                         def mvnHome = tool 'Maven'
                         sh "${mvnHome}/bin/mvn deploy -s $MAVEN_SETTINGS -DskipTests"
                     }
