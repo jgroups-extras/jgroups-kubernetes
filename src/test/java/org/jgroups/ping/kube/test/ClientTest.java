@@ -37,4 +37,29 @@ public class ClientTest {
         assertEquals(2, numberOfPods);
     }
 
+    @Test
+    public void testParsingPodGroupPodTemplateHash() throws Exception {
+        //given
+        Client client = new TestClient("/pods_without_ports.json");
+
+        //when
+        String podGroup = client.getPods(null, null, false).get(0).getPodGroup();
+
+        //then
+        assertEquals("infinispan-simple-tutorials-kubernetes-5", podGroup);
+    }
+
+    @Test
+    public void testParsingPodGroupOpenshift() throws Exception {
+        //given
+        Client client = new TestClient("/replicaset_rolling_update.json");
+
+        //when
+        String podGroup = client.getPods(null, null, false).get(0).getPodGroup();
+
+        //then
+        assertEquals("6569c544b", podGroup);
+    }
+
+
 }

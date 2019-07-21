@@ -48,22 +48,34 @@ public class RollingUpdateTest {
    }
 
    @Test
-   public void testPutOnlyNodesWithTheSameParentDuringRollingUpdate() throws Exception {
+   public void testPutOnlyNodesWithTheSameParentDuringRollingUpdateOpenShift() throws Exception {
       //given
       KUBE_PING_FOR_TESTING testedProtocol = new KUBE_PING_FOR_TESTING("/openshift_rolling_update.json");
       testedProtocol.setValue("split_clusters_during_rolling_update", true);
 
+      testPutOnlyNodesWithTheSameParentDuringRollingUpdate(testedProtocol);
+   }
+
+   @Test
+   public void testPutOnlyNodesWithTheSameParentDuringRollingUpdateReplicaSet() throws Exception {
+      //given
+      KUBE_PING_FOR_TESTING testedProtocol = new KUBE_PING_FOR_TESTING("/replicaset_rolling_update.json");
+      testedProtocol.setValue("split_clusters_during_rolling_update", true);
+      testPutOnlyNodesWithTheSameParentDuringRollingUpdate(testedProtocol);
+   }
+
+   private void testPutOnlyNodesWithTheSameParentDuringRollingUpdate(KUBE_PING_FOR_TESTING testedProtocol) throws Exception {
       //when
       sendInitialDiscovery(testedProtocol);
       String senderParentDeployment = testedProtocol.getPods().stream()
             .filter(pod -> "127.0.0.1".equals(pod.getIp()))
-            .map(Pod::getParentDeployment)
+            .map(Pod::getPodGroup)
             .findFirst().get();
       Set<String> membersUsedForDiscovery = testedProtocol.getCollectedMessages().stream()
-            .map(e -> ((IpAddress)e.getDest()).getIpAddress().getHostAddress())
-            .collect(Collectors.toSet());
+              .map(e -> ((IpAddress)e.getDest()).getIpAddress().getHostAddress())
+              .collect(Collectors.toSet());
       List<String> allowedPodsFromKubernetesApi = testedProtocol.getPods().stream()
-            .filter(pod -> senderParentDeployment.equals(pod.getParentDeployment()))
+            .filter(pod -> senderParentDeployment.equals(pod.getPodGroup()))
             .map(Pod::getIp)
             .collect(Collectors.toList());
 

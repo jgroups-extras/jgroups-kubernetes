@@ -6,7 +6,12 @@ import org.jgroups.protocols.kubernetes.stream.StreamProvider;
 import org.jgroups.util.Util;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 
 import static org.jgroups.protocols.kubernetes.Utils.openStream;
 import static org.jgroups.protocols.kubernetes.Utils.urlencode;
@@ -92,6 +97,37 @@ public class Client {
         return parseJsonResult(result, namespace, labels);
     }
 
+    /**
+     * get pod group during Rolling Update
+     * @param pod - json returned by k8s
+     * @return
+     */
+    String getPodGroup(Json pod) {
+        Json meta = Optional.ofNullable(pod.at("metadata")).orElse(null);
+        Json labels = Optional.ofNullable(meta)
+                .map(podMetadata -> podMetadata.at("labels"))
+                .orElse(null);
+        String group = Optional.ofNullable(labels)
+                .map(l -> l.at("pod-template-hash"))
+                .map(Json::asString)
+                .orElse(null);
+
+        if (group == null) {
+            log.warn("metadata.labels.pod-template-hash not found in pod json. Impossible to reliably determine pod group during Rolling Update");
+            // keep backward-compatible behavior
+            group = Optional.ofNullable(labels)
+                    .map(l -> l.at("deployment"))
+                    .map(Json::asString)
+                    .orElse(null);
+        }
+
+        log.debug("pod %s, group %s", Optional.ofNullable(meta)
+                .map(m -> m.at("name"))
+                .map(Json::asString)
+                .orElse(null), group);
+        return group;
+    }
+
     protected List<Pod> parseJsonResult(String input, String namespace, String labels) {
         if(input == null)
             return Collections.emptyList();
@@ -109,11 +145,8 @@ public class Client {
         List<Json> items=json.at("items").asJsonList();
         List<Pod> pods=new ArrayList<>();
         for(Json obj: items) {
-            String parentDeployment = Optional.ofNullable(obj.at("metadata"))
-                  .map(podMetadata -> podMetadata.at("labels"))
-                  .map(podLabels -> podLabels.at("deployment"))
-                  .map(Json::asString)
-                  .orElse(null);
+            String parentDeployment = getPodGroup(obj);
+
             String name = Optional.ofNullable(obj.at("metadata"))
                   .map(podMetadata -> podMetadata.at("name"))
                   .map(Json::asString)
@@ -126,10 +159,10 @@ public class Client {
                   .orElse(null);
             }
             boolean running = podRunning(podStatus);
-            if(podIP == null || !running) {
-                log.trace("Skipping pod %s since it's IP is %s or running is %s", name, podIP, Boolean.toString(running));
+            if(podIP == null) {
+                log.trace("Skipping pod %s since it's IP is %s", name, podIP);
             } else {
-                pods.add(new Pod(name, podIP, parentDeployment));
+                pods.add(new Pod(name, podIP, parentDeployment, running));
             }
         }
         log.trace("getPods(%s, %s) = %s", namespace, labels, pods);

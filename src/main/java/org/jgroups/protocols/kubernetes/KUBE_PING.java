@@ -108,6 +108,7 @@ public class KUBE_PING extends Discovery {
           " 'old' and 'new' during that process")
     protected boolean split_clusters_during_rolling_update;
 
+
     protected Client  client;
 
     protected int     tp_bind_port;
@@ -194,6 +195,10 @@ public class KUBE_PING extends Discovery {
         super.destroy();
     }
 
+    private PhysicalAddress getCurrentPhysicalAddress(Address addr) {
+        return (PhysicalAddress)down(new Event(Event.GET_PHYSICAL_ADDRESS, addr));
+    }
+
     public void findMembers(List<Address> members, boolean initial_discovery, Responses responses) {
         List<Pod>             hosts=readAll();
         List<PhysicalAddress> cluster_members=new ArrayList<>(hosts != null? hosts.size() : 16);
@@ -201,8 +206,7 @@ public class KUBE_PING extends Discovery {
         PingData              data=null;
 
         if(!use_ip_addrs || !initial_discovery) {
-            physical_addr=(PhysicalAddress)down(new Event(Event.GET_PHYSICAL_ADDRESS, local_addr));
-
+            physical_addr = getCurrentPhysicalAddress(local_addr);
             // https://issues.jboss.org/browse/JGRP-1670
             data=new PingData(local_addr, false, NameCache.get(local_addr), physical_addr);
             if(members != null && members.size() <= max_members_in_discovery_request)
@@ -213,6 +217,8 @@ public class KUBE_PING extends Discovery {
             if(log.isTraceEnabled())
                 log.trace("%s: hosts fetched from Kubernetes: %s", local_addr, hosts);
             for(Pod host: hosts) {
+                if (!host.isReady())
+                    continue;
                 for(int i=0; i <= port_range; i++) {
                     try {
                         IpAddress addr=new IpAddress(host.getIp(), tp_bind_port + i);
@@ -236,19 +242,21 @@ public class KUBE_PING extends Discovery {
         if (split_clusters_during_rolling_update) {
             if(physical_addr != null) {
                 String senderIp = ((IpAddress)physical_addr).getIpAddress().getHostAddress();
-                String senderParentDeployment = hosts.stream()
+                // Please note we search for sender parent group through all pods, ever not ready. It's because JGroup discovery is performed
+                // before Wildfly can respond to http liveness probe.
+                String senderPodGroup = hosts.stream()
                       .filter(pod -> senderIp.contains(pod.getIp()))
-                      .map(Pod::getParentDeployment)
+                      .map(Pod::getPodGroup)
                       .findFirst().orElse(null);
-                if(senderParentDeployment != null) {
+                if(senderPodGroup != null) {
                     Set<String> allowedAddresses = hosts.stream()
-                          .filter(pod -> senderParentDeployment.equals(pod.getParentDeployment()))
+                          .filter(pod -> senderPodGroup.equals(pod.getPodGroup()))
                           .map(Pod::getIp)
                           .collect(Collectors.toSet());
                     for(Iterator<PhysicalAddress> memberIterator = cluster_members.iterator(); memberIterator.hasNext();) {
                         IpAddress podAddress = (IpAddress) memberIterator.next();
                         if(!allowedAddresses.contains(podAddress.getIpAddress().getHostAddress())) {
-                            log.trace("removing pod %s from cluster members list since its parent domain is different than senders (%s). Allowed hosts: %s", podAddress, senderParentDeployment, allowedAddresses);
+                            log.trace("removing pod %s from cluster members list since its parent domain is different than senders (%s). Allowed hosts: %s", podAddress, senderPodGroup, allowedAddresses);
                             memberIterator.remove();
                         }
                     }
