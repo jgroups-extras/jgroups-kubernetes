@@ -108,7 +108,7 @@ public class KUBE_PING extends Discovery {
           " 'old' and 'new' during that process", systemProperty="KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE")
     protected boolean split_clusters_during_rolling_update;
 
-    @Property(description="Introduces similar behaviour to Kubernetes Services (using DNS) with publishNotReadyAddresses set to true." +
+    @Property(description="Introduces similar behaviour to Kubernetes Services (using DNS) with publishNotReadyAddresses set to true. " +
             "By default it's true", systemProperty="KUBERNETES_USE_NOT_READY_ADDRESSES")
     protected boolean useNotReadyAddresses = true;
 
@@ -246,7 +246,7 @@ public class KUBE_PING extends Discovery {
             if(physical_addr != null) {
                 String senderIp = ((IpAddress)physical_addr).getIpAddress().getHostAddress();
                 // Please note we search for sender parent group through all pods, ever not ready. It's because JGroup discovery is performed
-                // before Wildfly can respond to http readiness probe.
+                // before WildFly can respond to http readiness probe.
                 hosts.stream()
                         .filter(p -> p.getPodGroup() == null)
                         .forEach(p -> log.warn("Pod %s doesn't have group assigned. Impossible to reliably determine pod group during Rolling Update."));
