@@ -91,7 +91,7 @@ public class Client {
 
 
     public List<Pod> getPods(String namespace, String labels, boolean dump_requests) throws Exception {
-        String result=fetchFromKubernetes("pods", namespace, labels, dump_requests);
+        String result = fetchFromKubernetes("pods", namespace, labels, dump_requests);
         if(result == null)
             return Collections.emptyList();
         return parseJsonResult(result, namespace, labels);
@@ -107,16 +107,25 @@ public class Client {
         Json labels = Optional.ofNullable(meta)
                 .map(podMetadata -> podMetadata.at("labels"))
                 .orElse(null);
+
+        // This works for Deployment Config
         String group = Optional.ofNullable(labels)
                 .map(l -> l.at("pod-template-hash"))
                 .map(Json::asString)
                 .orElse(null);
 
         if (group == null) {
-            log.warn("metadata.labels.pod-template-hash not found in pod json. Impossible to reliably determine pod group during Rolling Update");
-            // keep backward-compatible behavior
+            // Ok, maybe, it's a Deployment and has a valid deployment flag?
             group = Optional.ofNullable(labels)
                     .map(l -> l.at("deployment"))
+                    .map(Json::asString)
+                    .orElse(null);
+        }
+
+        if (group == null) {
+            // Final check, maybe it's a StatefulSet?
+            group = Optional.ofNullable(labels)
+                    .map(l -> l.at("controller-revision-hash"))
                     .map(Json::asString)
                     .orElse(null);
         }
@@ -146,7 +155,6 @@ public class Client {
         List<Pod> pods=new ArrayList<>();
         for(Json obj: items) {
             String parentDeployment = getPodGroup(obj);
-
             String name = Optional.ofNullable(obj.at("metadata"))
                   .map(podMetadata -> podMetadata.at("name"))
                   .map(Json::asString)

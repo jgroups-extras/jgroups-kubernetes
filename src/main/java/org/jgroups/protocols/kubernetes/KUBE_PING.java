@@ -105,7 +105,7 @@ public class KUBE_PING extends Discovery {
 
     @Property(description="The standard behavior during Rolling Update is to put all Pods in the same cluster. In" +
           " cases (application level incompatibility) this causes problems. One might decide to split clusters to" +
-          " 'old' and 'new' during that process")
+          " 'old' and 'new' during that process", systemProperty="SPLIT_CLUSTERS_DURING_ROLLING_UPDATE")
     protected boolean split_clusters_during_rolling_update;
 
 
@@ -243,7 +243,11 @@ public class KUBE_PING extends Discovery {
             if(physical_addr != null) {
                 String senderIp = ((IpAddress)physical_addr).getIpAddress().getHostAddress();
                 // Please note we search for sender parent group through all pods, ever not ready. It's because JGroup discovery is performed
-                // before Wildfly can respond to http liveness probe.
+                // before Wildfly can respond to http readiness probe.
+                hosts.stream()
+                        .filter(p -> p.getPodGroup() == null)
+                        .forEach(p -> log.warn("Pod %s doesn't have group assigned. Impossible to reliably determine pod group during Rolling Update."));
+
                 String senderPodGroup = hosts.stream()
                       .filter(pod -> senderIp.contains(pod.getIp()))
                       .map(Pod::getPodGroup)

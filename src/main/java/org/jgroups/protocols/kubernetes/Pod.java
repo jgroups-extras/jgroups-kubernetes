@@ -1,5 +1,7 @@
 package org.jgroups.protocols.kubernetes;
 
+import java.util.Objects;
+
 public class Pod {
 
    private final String name;
@@ -13,10 +15,6 @@ public class Pod {
       this.ip = ip;
       this.podGroup = podGroup;
       this.isReady = isReady;
-   }
-
-   public Pod(String name, String ip, String podGroup) {
-      this(name, ip, podGroup, false);
    }
 
    public String getName() {
@@ -51,9 +49,9 @@ public class Pod {
 
       Pod pod = (Pod) o;
 
-      if (name != null ? !name.equals(pod.name) : pod.name != null) return false;
-      if (ip != null ? !ip.equals(pod.ip) : pod.ip != null) return false;
-      return podGroup != null ? podGroup.equals(pod.podGroup) : pod.podGroup == null;
+      if (!Objects.equals(name, pod.name)) return false;
+      if (!Objects.equals(ip, pod.ip)) return false;
+      return Objects.equals(podGroup, pod.podGroup);
    }
 
    @Override

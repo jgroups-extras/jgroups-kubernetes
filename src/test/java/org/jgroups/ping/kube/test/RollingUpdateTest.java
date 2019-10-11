@@ -53,6 +53,7 @@ public class RollingUpdateTest {
       KUBE_PING_FOR_TESTING testedProtocol = new KUBE_PING_FOR_TESTING("/openshift_rolling_update.json");
       testedProtocol.setValue("split_clusters_during_rolling_update", true);
 
+      //when //then
       testPutOnlyNodesWithTheSameParentDuringRollingUpdate(testedProtocol);
    }
 
@@ -61,6 +62,18 @@ public class RollingUpdateTest {
       //given
       KUBE_PING_FOR_TESTING testedProtocol = new KUBE_PING_FOR_TESTING("/replicaset_rolling_update.json");
       testedProtocol.setValue("split_clusters_during_rolling_update", true);
+
+      //when //then
+      testPutOnlyNodesWithTheSameParentDuringRollingUpdate(testedProtocol);
+   }
+
+   @Test
+   public void testPutOnlyNodesWithTheSameParentDuringRollingUpdateStatefulSet() throws Exception {
+      //given
+      KUBE_PING_FOR_TESTING testedProtocol = new KUBE_PING_FOR_TESTING("/statefulset_rolling_update.json");
+      testedProtocol.setValue("split_clusters_during_rolling_update", true);
+
+      //when //then
       testPutOnlyNodesWithTheSameParentDuringRollingUpdate(testedProtocol);
    }
 

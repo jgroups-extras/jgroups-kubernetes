@@ -1,0 +1,1091 @@
+{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "k8s.v1.cni.cncf.io/networks-status": "[{\n    \"name\": \"openshift-sdn\",\n    \"interface\": \"eth0\",\n    \"ips\": [\n        \"10.128.0.221\"\n    ],\n    \"default\": true,\n    \"dns\": {}\n}]",
+          "openshift.io/scc": "restricted"
+        },
+        "creationTimestamp": "2019-10-10T08:33:38Z",
+        "generateName": "keycloak-",
+        "labels": {
+          "application": "keycloak",
+          "component": "keycloak",
+          "controller-revision-hash": "keycloak-5f6594785b",
+          "statefulset.kubernetes.io/pod-name": "keycloak-0"
+        },
+        "name": "keycloak-0",
+        "namespace": "keycloak",
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "StatefulSet",
+            "name": "keycloak",
+            "uid": "d6e308ff-eb37-11e9-ba11-52fdfc072182"
+          }
+        ],
+        "resourceVersion": "239934",
+        "selfLink": "/api/v1/namespaces/keycloak/pods/keycloak-0",
+        "uid": "a8111f90-eb38-11e9-ba11-52fdfc072182"
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "DB_SERVICE_PREFIX_MAPPING",
+                "value": "keycloak-postgresql=DB"
+              },
+              {
+                "name": "TX_DATABASE_PREFIX_MAPPING",
+                "value": "keycloak-postgresql=DB"
+              },
+              {
+                "name": "DB_JNDI",
+                "value": "java:jboss/datasources/KeycloakDS"
+              },
+              {
+                "name": "DB_SCHEMA",
+                "value": "public"
+              },
+              {
+                "name": "DB_USERNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "user",
+                    "name": "keycloak-db-secret"
+                  }
+                }
+              },
+              {
+                "name": "DB_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "password",
+                    "name": "keycloak-db-secret"
+                  }
+                }
+              },
+              {
+                "name": "DB_DATABASE",
+                "value": "root"
+              },
+              {
+                "name": "JGROUPS_PING_PROTOCOL",
+                "value": "dns.DNS_PING"
+              },
+              {
+                "name": "OPENSHIFT_DNS_PING_SERVICE_NAME",
+                "value": "keycloak-discovery.keycloak.svc.cluster.local"
+              },
+              {
+                "name": "SSO_ADMIN_USERNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "ADMIN_USERNAME",
+                    "name": "credential-example-keycloak"
+                  }
+                }
+              },
+              {
+                "name": "SSO_ADMIN_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "ADMIN_PASSWORD",
+                    "name": "credential-example-keycloak"
+                  }
+                }
+              }
+            ],
+            "image": "registry.access.redhat.com/redhat-sso-7/sso73-openshift:1.0",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/auth/realms/master",
+                "port": 8080,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 60,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "name": "keycloak",
+            "ports": [
+              {
+                "containerPort": 8443,
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 9990,
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8778,
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/auth/realms/master",
+                "port": 8080,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "resources": {},
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID"
+                ]
+              },
+              "runAsUser": 1000470000
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/etc/x509/https",
+                "name": "sso-x509-https-secret"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "default-token-kv98v",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "hostname": "keycloak-0",
+        "imagePullSecrets": [
+          {
+            "name": "default-dockercfg-gm7sc"
+          }
+        ],
+        "nodeName": "crc-vsqrt-master-0",
+        "priority": 0,
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+          "fsGroup": 1000470000,
+          "seLinuxOptions": {
+            "level": "s0:c22,c4"
+          }
+        },
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          }
+        ],
+        "volumes": [
+          {
+            "name": "sso-x509-https-secret",
+            "secret": {
+              "defaultMode": 420,
+              "optional": true,
+              "secretName": "sso-x509-https-secret"
+            }
+          },
+          {
+            "name": "default-token-kv98v",
+            "secret": {
+              "defaultMode": 420,
+              "secretName": "default-token-kv98v"
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-10T08:35:44Z",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:05:00Z",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:05:00Z",
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-10T08:35:44Z",
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "containerID": "cri-o://54d7258086f50cbbfa16ef98cf78aa76f9b56c3f1529320d49740c79c79d314a",
+            "image": "registry.access.redhat.com/redhat-sso-7/sso73-openshift:1.0",
+            "imageID": "registry.access.redhat.com/redhat-sso-7/sso73-openshift@sha256:35740d1dbebbb4dc39ea9ce4736d5cc54675a984b1ec0f9bef67eb48e93ffe2d",
+            "lastState": {
+              "terminated": {
+                "containerID": "cri-o://44739a5e5056958f79b7241451715e8463a2cdf84c88616e4a94c779d6846022",
+                "exitCode": 127,
+                "finishedAt": "2019-10-11T06:04:05Z",
+                "reason": "Error",
+                "startedAt": "2019-10-11T06:02:21Z"
+              }
+            },
+            "name": "keycloak",
+            "ready": true,
+            "restartCount": 2,
+            "state": {
+              "running": {
+                "startedAt": "2019-10-11T06:04:05Z"
+              }
+            }
+          }
+        ],
+        "hostIP": "192.168.130.11",
+        "phase": "Running",
+        "podIP": "127.0.0.1",
+        "qosClass": "BestEffort",
+        "startTime": "2019-10-10T08:35:44Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "k8s.v1.cni.cncf.io/networks-status": "[{\n    \"name\": \"openshift-sdn\",\n    \"interface\": \"eth0\",\n    \"ips\": [\n        \"10.128.0.234\"\n    ],\n    \"default\": true,\n    \"dns\": {}\n}]",
+          "openshift.io/scc": "restricted"
+        },
+        "creationTimestamp": "2019-10-11T06:26:03Z",
+        "deletionGracePeriodSeconds": 30,
+        "deletionTimestamp": "2019-10-11T06:53:17Z",
+        "generateName": "keycloak-",
+        "labels": {
+          "application": "keycloak",
+          "component": "keycloak",
+          "controller-revision-hash": "keycloak-5f6594785b",
+          "statefulset.kubernetes.io/pod-name": "keycloak-1"
+        },
+        "name": "keycloak-1",
+        "namespace": "keycloak",
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "StatefulSet",
+            "name": "keycloak",
+            "uid": "d6e308ff-eb37-11e9-ba11-52fdfc072182"
+          }
+        ],
+        "resourceVersion": "249940",
+        "selfLink": "/api/v1/namespaces/keycloak/pods/keycloak-1",
+        "uid": "0037cefc-ebf0-11e9-8261-52fdfc072182"
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "DB_SERVICE_PREFIX_MAPPING",
+                "value": "keycloak-postgresql=DB"
+              },
+              {
+                "name": "TX_DATABASE_PREFIX_MAPPING",
+                "value": "keycloak-postgresql=DB"
+              },
+              {
+                "name": "DB_JNDI",
+                "value": "java:jboss/datasources/KeycloakDS"
+              },
+              {
+                "name": "DB_SCHEMA",
+                "value": "public"
+              },
+              {
+                "name": "DB_USERNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "user",
+                    "name": "keycloak-db-secret"
+                  }
+                }
+              },
+              {
+                "name": "DB_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "password",
+                    "name": "keycloak-db-secret"
+                  }
+                }
+              },
+              {
+                "name": "DB_DATABASE",
+                "value": "root"
+              },
+              {
+                "name": "JGROUPS_PING_PROTOCOL",
+                "value": "dns.DNS_PING"
+              },
+              {
+                "name": "OPENSHIFT_DNS_PING_SERVICE_NAME",
+                "value": "keycloak-discovery.keycloak.svc.cluster.local"
+              },
+              {
+                "name": "SSO_ADMIN_USERNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "ADMIN_USERNAME",
+                    "name": "credential-example-keycloak"
+                  }
+                }
+              },
+              {
+                "name": "SSO_ADMIN_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "ADMIN_PASSWORD",
+                    "name": "credential-example-keycloak"
+                  }
+                }
+              }
+            ],
+            "image": "registry.access.redhat.com/redhat-sso-7/sso73-openshift:1.0",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/auth/realms/master",
+                "port": 8080,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 60,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "name": "keycloak",
+            "ports": [
+              {
+                "containerPort": 8443,
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 9990,
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8778,
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/auth/realms/master",
+                "port": 8080,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "resources": {},
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID"
+                ]
+              },
+              "runAsUser": 1000470000
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/etc/x509/https",
+                "name": "sso-x509-https-secret"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "default-token-kv98v",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "hostname": "keycloak-1",
+        "imagePullSecrets": [
+          {
+            "name": "default-dockercfg-gm7sc"
+          }
+        ],
+        "nodeName": "crc-vsqrt-master-0",
+        "priority": 0,
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+          "fsGroup": 1000470000,
+          "seLinuxOptions": {
+            "level": "s0:c22,c4"
+          }
+        },
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          }
+        ],
+        "volumes": [
+          {
+            "name": "sso-x509-https-secret",
+            "secret": {
+              "defaultMode": 420,
+              "optional": true,
+              "secretName": "sso-x509-https-secret"
+            }
+          },
+          {
+            "name": "default-token-kv98v",
+            "secret": {
+              "defaultMode": 420,
+              "secretName": "default-token-kv98v"
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:26:04Z",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:26:51Z",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:26:51Z",
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:26:03Z",
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "containerID": "cri-o://90c1daf447b9373e52ebf401f892b529a0fd740508a5ba9ec8d365267ece311f",
+            "image": "registry.access.redhat.com/redhat-sso-7/sso73-openshift:1.0",
+            "imageID": "registry.access.redhat.com/redhat-sso-7/sso73-openshift@sha256:35740d1dbebbb4dc39ea9ce4736d5cc54675a984b1ec0f9bef67eb48e93ffe2d",
+            "lastState": {},
+            "name": "keycloak",
+            "ready": true,
+            "restartCount": 0,
+            "state": {
+              "running": {
+                "startedAt": "2019-10-11T06:26:12Z"
+              }
+            }
+          }
+        ],
+        "hostIP": "192.168.130.11",
+        "phase": "Running",
+        "podIP": "10.128.0.234",
+        "qosClass": "BestEffort",
+        "startTime": "2019-10-11T06:26:04Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "k8s.v1.cni.cncf.io/networks-status": "[{\n    \"name\": \"openshift-sdn\",\n    \"interface\": \"eth0\",\n    \"ips\": [\n        \"10.128.0.237\"\n    ],\n    \"default\": true,\n    \"dns\": {}\n}]",
+          "openshift.io/scc": "restricted"
+        },
+        "creationTimestamp": "2019-10-11T06:51:40Z",
+        "generateName": "keycloak-",
+        "labels": {
+          "application": "keycloak",
+          "component": "keycloak",
+          "controller-revision-hash": "keycloak-86d5dbd654",
+          "statefulset.kubernetes.io/pod-name": "keycloak-2"
+        },
+        "name": "keycloak-2",
+        "namespace": "keycloak",
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "StatefulSet",
+            "name": "keycloak",
+            "uid": "d6e308ff-eb37-11e9-ba11-52fdfc072182"
+          }
+        ],
+        "resourceVersion": "249935",
+        "selfLink": "/api/v1/namespaces/keycloak/pods/keycloak-2",
+        "uid": "941c535c-ebf3-11e9-8261-52fdfc072182"
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "DB_SERVICE_PREFIX_MAPPING",
+                "value": "keycloak-postgresql=DB"
+              },
+              {
+                "name": "TEST",
+                "value": "test"
+              },
+              {
+                "name": "TX_DATABASE_PREFIX_MAPPING",
+                "value": "keycloak-postgresql=DB"
+              },
+              {
+                "name": "DB_JNDI",
+                "value": "java:jboss/datasources/KeycloakDS"
+              },
+              {
+                "name": "DB_SCHEMA",
+                "value": "public"
+              },
+              {
+                "name": "DB_USERNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "user",
+                    "name": "keycloak-db-secret"
+                  }
+                }
+              },
+              {
+                "name": "DB_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "password",
+                    "name": "keycloak-db-secret"
+                  }
+                }
+              },
+              {
+                "name": "DB_DATABASE",
+                "value": "root"
+              },
+              {
+                "name": "JGROUPS_PING_PROTOCOL",
+                "value": "dns.DNS_PING"
+              },
+              {
+                "name": "OPENSHIFT_DNS_PING_SERVICE_NAME",
+                "value": "keycloak-discovery.keycloak.svc.cluster.local"
+              },
+              {
+                "name": "SSO_ADMIN_USERNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "ADMIN_USERNAME",
+                    "name": "credential-example-keycloak"
+                  }
+                }
+              },
+              {
+                "name": "SSO_ADMIN_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "ADMIN_PASSWORD",
+                    "name": "credential-example-keycloak"
+                  }
+                }
+              }
+            ],
+            "image": "registry.access.redhat.com/redhat-sso-7/sso73-openshift:1.0",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/auth/realms/master",
+                "port": 8080,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 60,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "name": "keycloak",
+            "ports": [
+              {
+                "containerPort": 8443,
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8080,
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 9990,
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8778,
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/auth/realms/master",
+                "port": 8080,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "resources": {},
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID"
+                ]
+              },
+              "runAsUser": 1000470000
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/etc/x509/https",
+                "name": "sso-x509-https-secret"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "default-token-kv98v",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "hostname": "keycloak-2",
+        "imagePullSecrets": [
+          {
+            "name": "default-dockercfg-gm7sc"
+          }
+        ],
+        "nodeName": "crc-vsqrt-master-0",
+        "priority": 0,
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+          "fsGroup": 1000470000,
+          "seLinuxOptions": {
+            "level": "s0:c22,c4"
+          }
+        },
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          }
+        ],
+        "volumes": [
+          {
+            "name": "sso-x509-https-secret",
+            "secret": {
+              "defaultMode": 420,
+              "optional": true,
+              "secretName": "sso-x509-https-secret"
+            }
+          },
+          {
+            "name": "default-token-kv98v",
+            "secret": {
+              "defaultMode": 420,
+              "secretName": "default-token-kv98v"
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:51:40Z",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:52:47Z",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:52:47Z",
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:51:40Z",
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "containerID": "cri-o://b2a41f7f247d5b8eafdf0540df8c501b38cdafc27e136738788406dbf1f2d6c5",
+            "image": "registry.access.redhat.com/redhat-sso-7/sso73-openshift:1.0",
+            "imageID": "registry.access.redhat.com/redhat-sso-7/sso73-openshift@sha256:35740d1dbebbb4dc39ea9ce4736d5cc54675a984b1ec0f9bef67eb48e93ffe2d",
+            "lastState": {},
+            "name": "keycloak",
+            "ready": true,
+            "restartCount": 0,
+            "state": {
+              "running": {
+                "startedAt": "2019-10-11T06:51:48Z"
+              }
+            }
+          }
+        ],
+        "hostIP": "192.168.130.11",
+        "phase": "Running",
+        "podIP": "10.128.0.237",
+        "qosClass": "BestEffort",
+        "startTime": "2019-10-11T06:51:40Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "k8s.v1.cni.cncf.io/networks-status": "[{\n    \"name\": \"openshift-sdn\",\n    \"interface\": \"eth0\",\n    \"ips\": [\n        \"10.128.0.220\"\n    ],\n    \"default\": true,\n    \"dns\": {}\n}]",
+          "openshift.io/scc": "restricted"
+        },
+        "creationTimestamp": "2019-10-10T08:27:47Z",
+        "generateName": "keycloak-postgresql-666b764458-",
+        "labels": {
+          "application": "keycloak",
+          "component": "database",
+          "pod-template-hash": "666b764458"
+        },
+        "name": "keycloak-postgresql-666b764458-tv6pk",
+        "namespace": "keycloak",
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "keycloak-postgresql-666b764458",
+            "uid": "d6cf7e74-eb37-11e9-ba11-52fdfc072182"
+          }
+        ],
+        "resourceVersion": "239070",
+        "selfLink": "/api/v1/namespaces/keycloak/pods/keycloak-postgresql-666b764458-tv6pk",
+        "uid": "d6d53608-eb37-11e9-ba11-52fdfc072182"
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "POSTGRES_USER",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "user",
+                    "name": "keycloak-db-secret"
+                  }
+                }
+              },
+              {
+                "name": "PGUSER",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "user",
+                    "name": "keycloak-db-secret"
+                  }
+                }
+              },
+              {
+                "name": "POSTGRES_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "password",
+                    "name": "keycloak-db-secret"
+                  }
+                }
+              },
+              {
+                "name": "POSTGRES_DB",
+                "value": "root"
+              },
+              {
+                "name": "PGDATA",
+                "value": "/var/lib/postgresql/data/pgdata"
+              }
+            ],
+            "image": "postgres:9.5",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "failureThreshold": 3,
+              "initialDelaySeconds": 30,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "tcpSocket": {
+                "port": 5432
+              },
+              "timeoutSeconds": 1
+            },
+            "name": "keycloak-postgresql",
+            "ports": [
+              {
+                "containerPort": 5432,
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "/bin/sh",
+                  "-c",
+                  "psql -h 127.0.0.1 -U $POSTGRES_USER -q -d $POSTGRES_DB -c 'SELECT 1'"
+                ]
+              },
+              "failureThreshold": 3,
+              "initialDelaySeconds": 5,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "resources": {},
+            "securityContext": {
+              "capabilities": {
+                "drop": [
+                  "KILL",
+                  "MKNOD",
+                  "SETGID",
+                  "SETUID"
+                ]
+              },
+              "runAsUser": 1000470000
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/pgsql/data",
+                "name": "keycloak-postgresql-claim"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "default-token-kv98v",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "imagePullSecrets": [
+          {
+            "name": "default-dockercfg-gm7sc"
+          }
+        ],
+        "nodeName": "crc-vsqrt-master-0",
+        "priority": 0,
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+          "fsGroup": 1000470000,
+          "seLinuxOptions": {
+            "level": "s0:c22,c4"
+          }
+        },
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          }
+        ],
+        "volumes": [
+          {
+            "name": "keycloak-postgresql-claim",
+            "persistentVolumeClaim": {
+              "claimName": "keycloak-postgresql-claim"
+            }
+          },
+          {
+            "name": "default-token-kv98v",
+            "secret": {
+              "defaultMode": 420,
+              "secretName": "default-token-kv98v"
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-10T08:27:47Z",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:02:48Z",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-11T06:02:48Z",
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-10T08:27:47Z",
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "containerID": "cri-o://81a311d85b6f408cbae534e90c6fa12d074ea1cd742e0a59c4ca1cdf897ec6e7",
+            "image": "docker.io/library/postgres:9.5",
+            "imageID": "docker.io/library/postgres@sha256:57b963715ad4ca28481c5e9ab9acb769cc3e3868a9d4389681ebc7260a45e68c",
+            "lastState": {
+              "terminated": {
+                "containerID": "cri-o://1c7cf65c299a7a048c4501df40cfcb9b810f81e30dddd8bcab92ce6163fa6f2b",
+                "exitCode": 255,
+                "finishedAt": "2019-10-11T06:01:43Z",
+                "reason": "Error",
+                "startedAt": "2019-10-10T08:28:44Z"
+              }
+            },
+            "name": "keycloak-postgresql",
+            "ready": true,
+            "restartCount": 1,
+            "state": {
+              "running": {
+                "startedAt": "2019-10-11T06:02:18Z"
+              }
+            }
+          }
+        ],
+        "hostIP": "192.168.130.11",
+        "phase": "Running",
+        "podIP": "10.128.0.220",
+        "qosClass": "BestEffort",
+        "startTime": "2019-10-10T08:27:47Z"
+      }
+    }
+  ],
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": "",
+    "selfLink": ""
+  }
+}
