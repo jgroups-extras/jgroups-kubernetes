@@ -105,9 +105,12 @@ public class KUBE_PING extends Discovery {
 
     @Property(description="The standard behavior during Rolling Update is to put all Pods in the same cluster. In" +
           " cases (application level incompatibility) this causes problems. One might decide to split clusters to" +
-          " 'old' and 'new' during that process")
+          " 'old' and 'new' during that process", systemProperty="KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE")
     protected boolean split_clusters_during_rolling_update;
 
+    @Property(description="Introduces similar behaviour to Kubernetes Services (using DNS) with publishNotReadyAddresses set to true. " +
+            "By default it's true", systemProperty="KUBERNETES_USE_NOT_READY_ADDRESSES")
+    protected boolean useNotReadyAddresses = true;
 
     protected Client  client;
 
@@ -217,7 +220,7 @@ public class KUBE_PING extends Discovery {
             if(log.isTraceEnabled())
                 log.trace("%s: hosts fetched from Kubernetes: %s", local_addr, hosts);
             for(Pod host: hosts) {
-                if (!host.isReady())
+                if (!host.isReady() && !useNotReadyAddresses)
                     continue;
                 for(int i=0; i <= port_range; i++) {
                     try {
@@ -243,7 +246,11 @@ public class KUBE_PING extends Discovery {
             if(physical_addr != null) {
                 String senderIp = ((IpAddress)physical_addr).getIpAddress().getHostAddress();
                 // Please note we search for sender parent group through all pods, ever not ready. It's because JGroup discovery is performed
-                // before Wildfly can respond to http liveness probe.
+                // before WildFly can respond to http readiness probe.
+                hosts.stream()
+                        .filter(p -> p.getPodGroup() == null)
+                        .forEach(p -> log.warn("Pod %s doesn't have group assigned. Impossible to reliably determine pod group during Rolling Update."));
+
                 String senderPodGroup = hosts.stream()
                       .filter(pod -> senderIp.contains(pod.getIp()))
                       .map(Pod::getPodGroup)
