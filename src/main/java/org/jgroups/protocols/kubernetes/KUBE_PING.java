@@ -105,9 +105,12 @@ public class KUBE_PING extends Discovery {
 
     @Property(description="The standard behavior during Rolling Update is to put all Pods in the same cluster. In" +
           " cases (application level incompatibility) this causes problems. One might decide to split clusters to" +
-          " 'old' and 'new' during that process", systemProperty="SPLIT_CLUSTERS_DURING_ROLLING_UPDATE")
+          " 'old' and 'new' during that process", systemProperty="KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE")
     protected boolean split_clusters_during_rolling_update;
 
+    @Property(description="Introduces similar behaviour to Kubernetes Services (using DNS) with publishNotReadyAddresses set to true." +
+            "By default it's true", systemProperty="KUBERNETES_USE_NOT_READY_ADDRESSES")
+    protected boolean useNotReadyAddresses = true;
 
     protected Client  client;
 
@@ -217,7 +220,7 @@ public class KUBE_PING extends Discovery {
             if(log.isTraceEnabled())
                 log.trace("%s: hosts fetched from Kubernetes: %s", local_addr, hosts);
             for(Pod host: hosts) {
-                if (!host.isReady())
+                if (!host.isReady() && !useNotReadyAddresses)
                     continue;
                 for(int i=0; i <= port_range; i++) {
                     try {
