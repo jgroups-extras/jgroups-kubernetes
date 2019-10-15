@@ -127,51 +127,51 @@ namespace `"default"` will be returned.
 
 === KUBE_PING configuration
 
-[align="left",width="90%",cols="3,3,10",options="header"]
+[align="left",width="90%",cols="3,3,3,10",options="header"]
 |===============
-|Attribute name | System property | Description
+| Attribute name | System property | Default | Description
 
-| port_range || Number of additional ports to be probed for membership. A port_range of 0 does not
-                  probe additional ports. Example: `initial_hosts=A[7800] port_range=0` probes `A:7800`, `port_range=1`
-                  probes `A:7800` and `A:7801`
+| port_range || 1 | Number of additional ports to be probed for membership. A port_range of 0 does not
+                    probe additional ports. Example: `initial_hosts=A[7800] port_range=0` probes `A:7800`, `port_range=1`
+                    probes `A:7800` and `A:7801`
 
-| connectTimeout | KUBERNETES_CONNECT_TIMEOUT | Max time (in millis) to wait for a connection to the Kubernetes server. If exceeded, an exception will be thrown
+| connectTimeout | KUBERNETES_CONNECT_TIMEOUT | 5000 | Maximum time (in milliseconds) to wait for a connection to the Kubernetes server. If exceeded, an exception will be thrown.
 
-| readTimeout | KUBERNETES_READ_TIMEOUT | Max time (in millis) to wait for a response from the Kubernetes server
+| readTimeout | KUBERNETES_READ_TIMEOUT | 30000 | Maximum time in milliseconds to wait for a response from the Kubernetes server.
 
-| operationAttempts | KUBERNETES_OPERATION_ATTEMPTS | Max number of attempts to send discovery requests
+| operationAttempts | KUBERNETES_OPERATION_ATTEMPTS | 3 | Maximum number of attempts to send discovery requests.
 
-| operationSleep | KUBERNETES_OPERATION_SLEEP | Time (in millis) between operation attempts
+| operationSleep | KUBERNETES_OPERATION_SLEEP | 1000 | Time in milliseconds between operation attempts.
 
-| masterProtocol | KUBERNETES_MASTER_PROTOCOL | http or https (default). Used to send the initial discovery request to the Kubernetes server
+| masterProtocol | KUBERNETES_MASTER_PROTOCOL | "https" | Schema http or https to be used to send the initial discovery request to the Kubernetes server.
 
-| masterHost | KUBERNETES_SERVICE_HOST | The URL of the Kubernetes server
+| masterHost | KUBERNETES_SERVICE_HOST || The URL of the Kubernetes server.
 
-| masterPort | KUBERNETES_SERVICE_PORT | The port on which the Kubernetes server is listening
+| masterPort | KUBERNETES_SERVICE_PORT || The port on which the Kubernetes server is listening.
 
-| apiVersion | KUBERNETES_API_VERSION | The version of the protocol to the Kubernetes server
+| apiVersion | KUBERNETES_API_VERSION | "v1" | The version of the protocol to the Kubernetes server.
 
-| namespace | KUBERNETES_NAMESPACE | The namespace to be used (leaving this undefined uses `"default"`)
+| namespace | KUBERNETES_NAMESPACE | "default" | The namespace to be used.
 
-| labels | KUBERNETES_LABELS | The labels to use in the discovery request to the Kubernetes server
+| labels | KUBERNETES_LABELS || The labels to use in the discovery request to the Kubernetes server.
 
-| clientCertFile | KUBERNETES_CLIENT_CERTIFICATE_FILE | Certificate to access the Kubernetes server
+| clientCertFile | KUBERNETES_CLIENT_CERTIFICATE_FILE || Certificate to access the Kubernetes server.
 
-| clientKeyFile | KUBERNETES_CLIENT_KEY_FILE | Client key file (store)
+| clientKeyFile | KUBERNETES_CLIENT_KEY_FILE || Client key file (store).
 
-| clientKeyPassword | KUBERNETES_CLIENT_KEY_PASSWORD | The password to access the client key store
+| clientKeyPassword | KUBERNETES_CLIENT_KEY_PASSWORD || The password to access the client key store.
 
-| clientKeyAlgo | KUBERNETES_CLIENT_KEY_ALGO | The algorithm used by the client
+| clientKeyAlgo | KUBERNETES_CLIENT_KEY_ALGO | "RSA" | The algorithm used by the client.
 
-| caCertFile | KUBERNETES_CA_CERTIFICATE_FILE | Client CA certificate
+| caCertFile | KUBERNETES_CA_CERTIFICATE_FILE | "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" | Client CA certificate.
 
-| saTokenFile | SA_TOKEN_FILE | Token file
+| saTokenFile | SA_TOKEN_FILE | "/var/run/secrets/kubernetes.io/serviceaccount/token" | Token file.
 
-| dump_requests || Dumps all discovery requests and responses to the Kubernetes server to stdout when true
+| dump_requests || false | Dumps all discovery requests and responses to the Kubernetes server to stdout when true.
 
-| split_clusters_during_rolling_update | KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE | During the Rolling Update, prevents from putting all Pods into a single cluster
+| split_clusters_during_rolling_update | KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE | false | During the Rolling Update, prevents from putting all Pods into a single cluster.
 
-| useNotReadyAddresses | KUBERNETES_USE_NOT_READY_ADDRESSES | True if initial discovery should take unready Pods into consideration. Default is `true`.
+| useNotReadyAddresses | KUBERNETES_USE_NOT_READY_ADDRESSES | true | True if initial discovery should take unready Pods into consideration.
 
 |===============
 
