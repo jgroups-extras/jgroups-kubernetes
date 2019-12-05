@@ -3,7 +3,7 @@
 
     <groupId>org.jgroups.kubernetes</groupId>
     <artifactId>jgroups-kubernetes</artifactId>
-    <version>1.0.14-SNAPSHOT</version>
+    <version>1.0.14.Final</version>
     <packaging>jar</packaging>
     <name>KUBE_PING</name>
     <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
@@ -53,7 +53,7 @@
     </scm>
 
     <properties>
-        <version.jgroups>4.1.0.Final</version.jgroups>
+        <version.jgroups>4.1.8.Final</version.jgroups>
         <version.junit>4.12</version.junit>
         <version.assertj>3.8.0</version.assertj>
         <maven.compiler.source>1.8</maven.compiler.source>
