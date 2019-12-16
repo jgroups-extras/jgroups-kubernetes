@@ -55,7 +55,7 @@
     <properties>
         <version.jgroups>4.1.8.Final</version.jgroups>
         <version.junit>4.12</version.junit>
-        <version.assertj>3.8.0</version.assertj>
+        <version.assertj>3.14.0</version.assertj>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
