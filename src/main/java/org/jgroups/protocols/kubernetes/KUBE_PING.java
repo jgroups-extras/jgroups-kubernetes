@@ -193,11 +193,6 @@ public class KUBE_PING extends Discovery {
                 || System.getenv(property_name) != null;
     }
 
-    @Override public void destroy() {
-        client=null;
-        super.destroy();
-    }
-
     private PhysicalAddress getCurrentPhysicalAddress(Address addr) {
         return (PhysicalAddress)down(new Event(Event.GET_PHYSICAL_ADDRESS, addr));
     }
