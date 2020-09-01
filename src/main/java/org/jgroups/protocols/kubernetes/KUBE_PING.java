@@ -9,7 +9,6 @@ import org.jgroups.conf.ClassConfigurator;
 import org.jgroups.protocols.Discovery;
 import org.jgroups.protocols.PingData;
 import org.jgroups.protocols.PingHeader;
-import org.jgroups.protocols.TP;
 import org.jgroups.protocols.kubernetes.stream.CertificateStreamProvider;
 import org.jgroups.protocols.kubernetes.stream.StreamProvider;
 import org.jgroups.protocols.kubernetes.stream.TokenStreamProvider;
@@ -136,8 +135,6 @@ public class KUBE_PING extends Discovery {
 
     public void init() throws Exception {
         super.init();
-
-        TP transport=getTransport();
         tp_bind_port=transport.getBindPort();
         if(tp_bind_port <= 0)
             throw new IllegalArgumentException(String.format("%s only works with  %s.bind_port > 0",
@@ -185,7 +182,7 @@ public class KUBE_PING extends Discovery {
             log.warn("%s is deprecated, please remove it and use %s instead", deprecated_name, property_name);
     }
 
-    private boolean isPropertyDefined(String property_name) {
+    private static boolean isPropertyDefined(String property_name) {
         return System.getProperty(property_name) != null
                 || System.getenv(property_name) != null;
     }
