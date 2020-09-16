@@ -228,7 +228,7 @@ subjects:
 
 apiVersion: v1
 items:
-- apiVersion: extensions/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     annotations:
@@ -237,6 +237,8 @@ items:
   spec:
     replicas: 3
     selector:
+      matchLabels:
+        run: ispn-perf-test
     template:
       metadata:
         labels:
@@ -245,7 +247,7 @@ items:
         serviceAccountName: jgroups-kubeping-service-account
         containers:
         - args:
-          - /opt/jgroups/IspnPerfTest/bin/kube.sh
+          - /opt/ispn/IspnPerfTest/bin/kube.sh
           - -nohup
           env:
           - name: KUBERNETES_NAMESPACE
