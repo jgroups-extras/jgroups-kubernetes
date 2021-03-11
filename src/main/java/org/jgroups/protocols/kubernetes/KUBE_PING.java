@@ -116,6 +116,8 @@ public class KUBE_PING extends Discovery {
 
     protected int     tp_bind_port;
 
+    private boolean   failedJsonErrorReported = false;
+
     public boolean isDynamic() {
         return false; // bind_port in the transport needs to be fixed (cannot be 0)
     }
@@ -301,11 +303,16 @@ public class KUBE_PING extends Discovery {
     protected List<Pod> readAll() {
         if(isClusteringEnabled() && client != null) {
             try {
-                return client.getPods(namespace, labels, dump_requests);
+                List<Pod> pods = client.getPods(namespace, labels, dump_requests);
+                failedJsonErrorReported = false;
+                return pods;
             }
             catch(Exception e) {
-                log.warn("failed getting JSON response from Kubernetes %s for cluster [%s], namespace [%s], labels [%s]; encountered [%s: %s]",
-                         client.info(), cluster_name, namespace, labels, e.getClass().getName(), e.getMessage());
+                if (!failedJsonErrorReported) {
+                    failedJsonErrorReported = true;
+                    log.warn("failed getting JSON response from Kubernetes %s for cluster [%s], namespace [%s], labels [%s]; encountered [%s: %s]",
+                            client.info(), cluster_name, namespace, labels, e.getClass().getName(), e.getMessage());
+                }
             }
         }
         return Collections.emptyList();
