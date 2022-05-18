@@ -23,7 +23,7 @@ pipeline {
         
         stage('Deploy SNAPSHOT') {
             when {
-                branch 'master'
+                branch 'main'
             }
             steps {
                 configFileProvider([configFile(fileId: 'maven-settings-with-deploy-snapshot', variable: 'MAVEN_SETTINGS')]) {
