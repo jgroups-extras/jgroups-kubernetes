@@ -49,7 +49,7 @@
         <connection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</connection>
         <developerConnection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</developerConnection>
         <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
-        <tag>master</tag>
+        <tag>main</tag>
     </scm>
 
     <properties>
