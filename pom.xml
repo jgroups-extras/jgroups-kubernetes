@@ -59,14 +59,14 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <insecure.repositories>ERROR</insecure.repositories>
 
         <!-- nexus-staging-maven-plugin -->
         <autoReleaseAfterClose>true</autoReleaseAfterClose>
         <nexus.server.id>jboss-releases-repository</nexus.server.id>
         <nexus.server.url>https://repository.jboss.org/nexus</nexus.server.url>
         <nexus.snapshot.server.id>jboss-snapshots-repository</nexus.snapshot.server.id>
-        <nexus.snapshot.server.url>https://repository.jboss.org/nexus/content/repositories/snapshots/
-        </nexus.snapshot.server.url>
+        <nexus.snapshot.server.url>https://repository.jboss.org/nexus/content/repositories/snapshots/</nexus.snapshot.server.url>
     </properties>
 
 
@@ -151,6 +151,36 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-java-version</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedRepositories>
+                                    <message>To build this project, don't use maven repositories over HTTP. Please use HTTPS in your settings.xml or run the build with property insecure.repositories=WARN</message>
+                                    <level>${insecure.repositories}</level>
+                                    <bannedRepositories>
+                                        <bannedRepository>http://*</bannedRepository>
+                                    </bannedRepositories>
+                                    <bannedPluginRepositories>
+                                        <bannedPluginRepository>http://*</bannedPluginRepository>
+                                    </bannedPluginRepositories>
+                                </bannedRepositories>
+                                <requireJavaVersion>
+                                    <message>To build this project JDK 11 (or greater) is required. Please install it.</message>
+                                    <version>11</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
                 <extensions>true</extensions>
@@ -187,6 +217,11 @@
 
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>3.0.0</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
