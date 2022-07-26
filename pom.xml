@@ -53,7 +53,7 @@
     </scm>
 
     <properties>
-        <version.jgroups>5.2.2.Final</version.jgroups>
+        <version.jgroups>5.2.4.Final</version.jgroups>
         <version.junit>4.13.2</version.junit>
         <version.assertj>3.22.0</version.assertj>
         <maven.compiler.source>1.8</maven.compiler.source>
