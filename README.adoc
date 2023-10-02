@@ -2,7 +2,7 @@
 
 `KUBE_PING` is a discovery protocol for JGroups cluster nodes managed by Kubernetes.
 
-NOTE: another discovery protocol, which is container-agnostic (docker, openshift, kubernetes), is
+NOTE: Another discovery protocol, which is container-agnostic (docker, openshift, kubernetes), is
 `DNS_PING` (http://www.jgroups.org/manual5/index.html#_dns_ping). This could be considered as an alternative.
 
 Since Kubernetes is in charge of launching nodes, it knows the IP addresses of all pods it started, and is therefore
