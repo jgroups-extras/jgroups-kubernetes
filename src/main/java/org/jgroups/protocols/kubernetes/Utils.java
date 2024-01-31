@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
@@ -153,6 +154,24 @@ public final class Utils {
             cl.close();
         } catch (Exception e) {
         }
+    }
+
+    /**
+     * Sanitizes a map of HTTP headers - all entries where the key equals "Authorization" (case-insensitive) are
+     * overridden to mask the original authorization data.
+     *
+     * @param headers HTTP header map
+     * @return map where all "Authorization" entries are masked
+     */
+    public static Map<String, String> sanitizeHttpHeaders(Map<String, String> headers) {
+        HashMap<String, String> newHeaders = new HashMap<>(headers);
+        // Iterate over all keys to find all case combinations
+        newHeaders.keySet().forEach(key -> {
+            if (key != null && key.equalsIgnoreCase("Authorization")) {
+                newHeaders.put(key, "***");
+            }
+        });
+        return newHeaders;
     }
 
     private Utils() {}

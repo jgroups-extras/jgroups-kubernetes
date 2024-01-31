@@ -1,5 +1,7 @@
 package org.jgroups.protocols.kubernetes.stream;
 
+import org.jgroups.protocols.kubernetes.Utils;
+
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -12,7 +14,8 @@ public abstract class BaseStreamProvider implements StreamProvider {
 
     public URLConnection openConnection(String url, Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException {
         if (log.isLoggable(Level.FINE)) {
-            log.log(Level.FINE, String.format("%s opening connection: url [%s], headers [%s], connectTimeout [%s], readTimeout [%s]", getClass().getSimpleName(), url, headers, connectTimeout, readTimeout));
+            log.log(Level.FINE, String.format("%s opening connection: url [%s], headers [%s], connectTimeout [%s], readTimeout [%s]",
+                    getClass().getSimpleName(), url, Utils.sanitizeHttpHeaders(headers), connectTimeout, readTimeout));
         }
         URLConnection connection = new URL(url).openConnection();
         if (headers != null) {
