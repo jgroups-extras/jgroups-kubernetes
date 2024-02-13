@@ -49,13 +49,12 @@
         <connection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</connection>
         <developerConnection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</developerConnection>
         <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
-        <tag>master</tag>
     </scm>
 
     <properties>
         <version.jgroups>4.2.4.Final</version.jgroups>
-        <version.junit>4.13</version.junit>
-        <version.assertj>3.16.0</version.assertj>
+        <version.junit>4.13.2</version.junit>
+        <version.assertj>3.25.3</version.assertj>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
