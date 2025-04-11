@@ -23,7 +23,7 @@ jobs:
           - 11
           - 17
           - 21
-          - 22
+          - 24
     steps:
       - name: Checkout
         uses: actions/checkout@v4
