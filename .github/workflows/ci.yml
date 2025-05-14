@@ -14,16 +14,17 @@ jobs:
     strategy:
       matrix:
         os:
+          - macos-latest
           - ubuntu-latest
           - windows-latest
-          - macos-latest
         # Keep this list as: all supported LTS JDKs, the latest GA JDK, and optionally the latest EA JDK (if available).
-        # https://www.oracle.com/java/technologies/java-se-support-roadmap.html
+        # Reference: https://adoptium.net/support/
         java:
           - 11
           - 17
           - 21
           - 24
+          - 25-ea
     steps:
       - name: Checkout
         uses: actions/checkout@v4
