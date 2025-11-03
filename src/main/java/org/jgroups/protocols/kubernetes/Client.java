@@ -8,6 +8,7 @@ import org.jgroups.util.Util;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +22,6 @@ import static org.jgroups.protocols.kubernetes.Utils.urlencode;
  */
 public class Client {
     protected final String              masterUrl;
-    protected final Map<String, String> headers;
     protected final int                 connectTimeout;
     protected final int                 readTimeout;
     protected final int                 operationAttempts;
@@ -30,29 +30,19 @@ public class Client {
     protected final String              info;
     protected final Log                 log;
 
-    public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts,
+    public Client(String masterUrl, int connectTimeout, int readTimeout, int operationAttempts,
                   long operationSleep, StreamProvider streamProvider, Log log) {
         this.masterUrl = masterUrl;
-        this.headers = headers;
         this.connectTimeout = connectTimeout;
         this.readTimeout = readTimeout;
         this.operationAttempts = operationAttempts;
         this.operationSleep = operationSleep;
         this.streamProvider = streamProvider;
         this.log=log;
-        Map<String, String> maskedHeaders=new TreeMap<>();
-        if (headers != null) {
-            for (Map.Entry<String, String> header : headers.entrySet()) {
-                String key = header.getKey();
-                String value = header.getValue();
-                if ("Authorization".equalsIgnoreCase(key) && value != null)
-                    value = "#MASKED:" + value.length() + "#";
-                maskedHeaders.put(key, value);
-            }
-        }
-        info=String.format("%s[masterUrl=%s, headers=%s, connectTimeout=%s, readTimeout=%s, operationAttempts=%s, " +
+
+        info=String.format("%s[masterUrl=%s, connectTimeout=%s, readTimeout=%s, operationAttempts=%s, " +
                              "operationSleep=%s, streamProvider=%s]",
-                           getClass().getSimpleName(), masterUrl, maskedHeaders, connectTimeout, readTimeout,
+                           getClass().getSimpleName(), masterUrl, connectTimeout, readTimeout,
                            operationAttempts, operationSleep, streamProvider);
     }
 
@@ -71,7 +61,7 @@ public class Client {
         InputStream stream=null;
         String retval=null;
         try {
-            stream=openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider);
+            stream=openStream(url, new HashMap<>(), connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider);
             retval=Util.readContents(stream);
             if(dump_requests)
                 System.out.printf("--> %s\n<-- %s\n", url, retval);
@@ -231,19 +221,16 @@ public class Client {
             return false;
         }
         // 5. ready condition must be "True"
-        Boolean readyCondition = Boolean.FALSE;
+        boolean readyCondition = Boolean.FALSE;
         List<Json> conditions = podStatus.at("conditions").asJsonList();
         // walk through all the conditions and find type=="Ready" and get the value of the status property
         for(Json condition: conditions) {
             String type = condition.at("type").asString();
             if(type.equalsIgnoreCase("Ready")) {
-                readyCondition = new Boolean(condition.at("status").asString());
+                readyCondition = Boolean.parseBoolean(condition.at("status").asString());
             }
         }
-        log.trace(  "conditions with type==\"Ready\" has status property value = %s", readyCondition.toString());
-        if(!readyCondition.booleanValue()) {
-            return false;
-        }
-        return true;
+        log.trace(  "conditions with type==\"Ready\" has status property value = %s", Boolean.toString(readyCondition));
+        return readyCondition;
     }
 }

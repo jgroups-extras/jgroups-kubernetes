@@ -1,12 +1,14 @@
 package org.jgroups.protocols.kubernetes.stream;
 
 import static org.jgroups.protocols.kubernetes.Utils.openFile;
+import static org.jgroups.protocols.kubernetes.Utils.readFileToString;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,20 +33,27 @@ public class TokenStreamProvider extends BaseStreamProvider {
 
     private static final Logger log = Logger.getLogger(TokenStreamProvider.class.getName());
 
-    private String token;
+    private final TokenProvider tokenProvider;
 
-    private String caCertFile;
+    private final String caCertFile;
 
-    private SSLSocketFactory factory;
+    private volatile SSLSocketFactory factory;
 
-    public TokenStreamProvider(String token, String caCertFile) {
-        this.token = token;
+    public TokenStreamProvider(TokenProvider tokenProvider, String caCertFile) {
+       this.tokenProvider = tokenProvider;
         this.caCertFile = caCertFile;
     }
 
     @Override
     public InputStream openStream(String url, Map<String, String> headers, int connectTimeout, int readTimeout)
             throws IOException {
+        String saToken = tokenProvider.getToken();
+        if (saToken != null) {
+           // curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+           // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labelSelector=application%3Deap-app
+           headers.put("Authorization", "Bearer " + saToken);
+        }
+
         URLConnection connection = openConnection(url, headers, connectTimeout, readTimeout);
 
         if (connection instanceof HttpsURLConnection) {
@@ -60,15 +69,10 @@ public class TokenStreamProvider extends BaseStreamProvider {
             }
         }
 
-        if (token != null) {
-            // curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
-            // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labelSelector=application%3Deap-app
-            headers.put("Authorization", "Bearer " + token);
-        }
         return connection.getInputStream();
     }
 
-    static TrustManager[] configureCaCert(String caCertFile) throws Exception {
+   static TrustManager[] configureCaCert(String caCertFile) throws Exception {
         if (caCertFile != null && !caCertFile.isEmpty()) {
             try {
                 InputStream pemInputStream = openFile(caCertFile);
