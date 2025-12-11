@@ -11,6 +11,7 @@ import org.jgroups.protocols.PingData;
 import org.jgroups.protocols.PingHeader;
 import org.jgroups.protocols.kubernetes.stream.CertificateStreamProvider;
 import org.jgroups.protocols.kubernetes.stream.StreamProvider;
+import org.jgroups.protocols.kubernetes.stream.TokenProvider;
 import org.jgroups.protocols.kubernetes.stream.TokenStreamProvider;
 import org.jgroups.stack.IpAddress;
 import org.jgroups.util.NameCache;
@@ -149,7 +150,6 @@ public class KUBE_PING extends Discovery {
             return; // no further initialization necessary
         }
         log.info("namespace %s set; clustering enabled", namespace);
-        Map<String,String> headers=new HashMap<>();
         StreamProvider streamProvider;
         if(clientCertFile != null) {
             if(masterProtocol == null)
@@ -157,16 +157,10 @@ public class KUBE_PING extends Discovery {
             streamProvider=new CertificateStreamProvider(clientCertFile, clientKeyFile, clientKeyPassword, clientKeyAlgo, caCertFile);
         }
         else {
-            String saToken=readFileToString(saTokenFile);
-            if(saToken != null) {
-                // curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
-                // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labelSelector=application%3Deap-app
-                headers.put("Authorization", "Bearer " + saToken);
-            }
-            streamProvider = new TokenStreamProvider(saToken, caCertFile);
+           streamProvider = new TokenStreamProvider(new TokenProvider(saTokenFile), caCertFile);
         }
         String url=String.format("%s://%s:%s/api/%s", masterProtocol, masterHost, masterPort, apiVersion);
-        client=new Client(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, log);
+        client=new Client(url, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, log);
         log.debug("KubePING configuration: " + toString());
     }
 
