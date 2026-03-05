@@ -17,10 +17,22 @@
 package org.jgroups.protocols.kubernetes.stream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.HashMap;
+import java.util.Map;
 import java.security.cert.X509Certificate;
 import java.util.stream.Stream;
 
@@ -33,7 +45,7 @@ import org.junit.Test;
  */
 public class StreamProviderTest {
 
-    private static String CA_FILE = StreamProviderTest.class.getResource("/certificates/ca.crt").getFile();
+    private static final String CA_FILE = StreamProviderTest.class.getResource("/certificates/ca.crt").getFile();
 
     @Test
     public void testTokenStreamProviderCaCert() throws Exception {
@@ -43,6 +55,41 @@ public class StreamProviderTest {
     @Test
     public void testCertificateStreamProviderCaCert() throws Exception {
         testConfigureCaCert(CertificateStreamProvider.configureCaCert(CA_FILE));
+    }
+
+    @Test
+    public void testTokenStreamProviderDoesNotMutateSharedHeaders() throws Exception {
+        Path tokenFile = Files.createTempFile("sa-token", ".txt");
+        Files.write(tokenFile, "token-value".getBytes(StandardCharsets.UTF_8));
+        try {
+            final AtomicReference<Map<String, String>> capturedHeaders = new AtomicReference<>();
+            TokenStreamProvider provider = new TokenStreamProvider(tokenFile.toString(), null) {
+                @Override
+                public URLConnection openConnection(String url, Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException {
+                    capturedHeaders.set(new HashMap<>(headers));
+                    return new URLConnection(new URL(url)) {
+                        @Override
+                        public void connect() {
+                        }
+
+                        @Override
+                        public InputStream getInputStream() {
+                            return new ByteArrayInputStream(new byte[0]);
+                        }
+                    };
+                }
+            };
+
+            Map<String, String> sharedHeaders = new HashMap<>();
+            sharedHeaders.put("Accept", "application/json");
+            provider.openStream("http://localhost", sharedHeaders, 0, 0).close();
+
+            assertTrue(sharedHeaders.containsKey("Accept"));
+            assertFalse(sharedHeaders.containsKey(TokenStreamProvider.AUTHORIZATION));
+            assertEquals("Bearer token-value", capturedHeaders.get().get(TokenStreamProvider.AUTHORIZATION));
+        } finally {
+            Files.deleteIfExists(tokenFile);
+        }
     }
 
     private static void testConfigureCaCert(TrustManager[] trustManagers) {
