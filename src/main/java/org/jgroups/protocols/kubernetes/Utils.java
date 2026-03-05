@@ -3,6 +3,7 @@ package org.jgroups.protocols.kubernetes;
 
 import org.jgroups.protocols.kubernetes.stream.OpenStream;
 import org.jgroups.protocols.kubernetes.stream.StreamProvider;
+import org.jgroups.protocols.kubernetes.stream.TokenStreamProvider;
 
 import java.io.*;
 import java.net.URLEncoder;
@@ -167,7 +168,7 @@ public final class Utils {
         HashMap<String, String> newHeaders = new HashMap<>(headers);
         // Iterate over all keys to find all case combinations
         newHeaders.keySet().forEach(key -> {
-            if (key != null && key.equalsIgnoreCase("Authorization")) {
+            if (key != null && key.equalsIgnoreCase(TokenStreamProvider.AUTHORIZATION)) {
                 newHeaders.put(key, "***");
             }
         });

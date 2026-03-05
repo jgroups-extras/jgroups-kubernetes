@@ -3,6 +3,7 @@ package org.jgroups.protocols.kubernetes;
 import mjson.Json;
 import org.jgroups.logging.Log;
 import org.jgroups.protocols.kubernetes.stream.StreamProvider;
+import org.jgroups.protocols.kubernetes.stream.TokenStreamProvider;
 import org.jgroups.util.Util;
 
 import java.io.InputStream;
@@ -45,7 +46,7 @@ public class Client {
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 String key = header.getKey();
                 String value = header.getValue();
-                if ("Authorization".equalsIgnoreCase(key) && value != null)
+                if (TokenStreamProvider.AUTHORIZATION.equalsIgnoreCase(key) && value != null)
                     value = "#MASKED:" + value.length() + "#";
                 maskedHeaders.put(key, value);
             }
