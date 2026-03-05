@@ -1,6 +1,7 @@
 package org.jgroups.protocols.kubernetes.stream;
 
 import static org.jgroups.protocols.kubernetes.Utils.openFile;
+import static org.jgroups.protocols.kubernetes.Utils.readFileToString;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -10,11 +11,14 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Level;
@@ -23,6 +27,7 @@ import java.util.logging.Logger;
 /**
  * Copied and adapted version from openshift-ping repository. A warning message is issued if ca cert file is undefined or not
  * found rather than always using insecure stream or being mandatory and eventually failing.
+ * Token refresh is modeled after approach in {@literal io.fabric8.kubernetes.client.utils.TokenRefreshInterceptor}.
  *
  * @author <a href="mailto:rmartine@redhat.com">Ricardo Martinelli</a>
  * @author Radoslav Husar
@@ -31,24 +36,38 @@ public class TokenStreamProvider extends BaseStreamProvider {
 
     private static final Logger log = Logger.getLogger(TokenStreamProvider.class.getName());
 
-    private String token;
+    private final String caCertFile;
+    private final String saTokenFile;
+    private volatile String cachedSaToken;
+    private volatile Instant lastSaTokenRefreshTimestamp = Instant.MIN;
+    private static final Duration REFRESH_INTERVAL = Duration.ofMinutes(1);
 
-    private String caCertFile;
+    public static final String AUTHORIZATION = "Authorization";
 
-    private SSLSocketFactory factory;
+    private volatile SSLSocketFactory factory;
 
-    public TokenStreamProvider(String token, String caCertFile) {
-        this.token = token;
+    public TokenStreamProvider(String saTokenFile, String caCertFile) {
+        this.saTokenFile = saTokenFile;
         this.caCertFile = caCertFile;
     }
 
     @Override
-    public InputStream openStream(String url, Map<String, String> headers, int connectTimeout, int readTimeout)
-            throws IOException {
+    public InputStream openStream(String url, Map<String, String> headers, int connectTimeout, int readTimeout) throws IOException {
+        if (isTimeToRefresh()) {
+            refreshToken();
+        }
+
+        String token = cachedSaToken;
+        if (token != null) {
+            // curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+            // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labelSelector=application%3Deap-app
+            headers.put(AUTHORIZATION, "Bearer " + token);
+        }
+
         URLConnection connection = openConnection(url, headers, connectTimeout, readTimeout);
 
         if (connection instanceof HttpsURLConnection) {
-            HttpsURLConnection httpsConnection = HttpsURLConnection.class.cast(connection);
+            HttpsURLConnection httpsConnection = (HttpsURLConnection) connection;
             //httpsConnection.setHostnameVerifier(InsecureStreamProvider.INSECURE_HOSTNAME_VERIFIER);
             httpsConnection.setSSLSocketFactory(getSSLSocketFactory());
             if (log.isLoggable(Level.FINE)) {
@@ -60,12 +79,30 @@ public class TokenStreamProvider extends BaseStreamProvider {
             }
         }
 
-        if (token != null) {
-            // curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
-            // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labelSelector=application%3Deap-app
-            headers.put("Authorization", "Bearer " + token);
+        if (connection instanceof HttpURLConnection) {
+            int responseCode = ((HttpURLConnection) connection).getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                refreshToken();
+                throw new IOException("Received HTTP 401 Unauthorized from Kubernetes API server; token refreshed for retry");
+            }
         }
+
         return connection.getInputStream();
+    }
+
+    private boolean isTimeToRefresh() {
+        return lastSaTokenRefreshTimestamp.plus(REFRESH_INTERVAL).isBefore(Instant.now());
+    }
+
+    private synchronized void refreshToken() {
+        try {
+            String token = readFileToString(saTokenFile);
+            cachedSaToken = token != null ? token.trim() : null;
+            lastSaTokenRefreshTimestamp = Instant.now();
+            log.fine(String.format("Refreshed service account token from file '%s'.", saTokenFile));
+        } catch (IOException e) {
+            log.log(Level.WARNING, String.format("Failed to refresh service account token from file '%s'.", saTokenFile), e);
+        }
     }
 
     static TrustManager[] configureCaCert(String caCertFile) throws Exception {
