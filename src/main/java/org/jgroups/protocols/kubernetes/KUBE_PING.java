@@ -19,7 +19,6 @@ import org.jgroups.util.Responses;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.jgroups.protocols.kubernetes.Utils.readFileToString;
 
 /**
  * Kubernetes based discovery protocol. Uses the Kubernetes master to fetch the IP addresses of all pods that have
@@ -157,17 +156,11 @@ public class KUBE_PING extends Discovery {
             streamProvider=new CertificateStreamProvider(clientCertFile, clientKeyFile, clientKeyPassword, clientKeyAlgo, caCertFile);
         }
         else {
-            String saToken=readFileToString(saTokenFile);
-            if(saToken != null) {
-                // curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
-                // https://172.30.0.2:443/api/v1/namespaces/dward/pods?labelSelector=application%3Deap-app
-                headers.put("Authorization", "Bearer " + saToken);
-            }
-            streamProvider = new TokenStreamProvider(saToken, caCertFile);
+            streamProvider = new TokenStreamProvider(saTokenFile, caCertFile);
         }
         String url=String.format("%s://%s:%s/api/%s", masterProtocol, masterHost, masterPort, apiVersion);
         client=new Client(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, log);
-        log.debug("KubePING configuration: " + toString());
+        log.debug("KUBE_PING configuration: " + this);
     }
 
     private void checkDeprecatedProperties() {
@@ -321,7 +314,7 @@ public class KUBE_PING extends Discovery {
 
     @Override
     public String toString() {
-        return String.format("KubePing{namespace='%s', labels='%s'}", namespace, labels);
+        return String.format("KUBE_PING{namespace='%s', labels='%s'}", namespace, labels);
     }
 
 
