@@ -1,4 +1,5 @@
-name: CI
+name: Maven
+
 on:
   push:
     branches:
@@ -6,11 +7,17 @@ on:
   pull_request:
     branches:
       - '*'
+  merge_group:
+    types:
+      - checks_requested
+
 permissions:
   contents: read
+
 jobs:
-  ci:
+  build-and-test:
     runs-on: ${{ matrix.os }}
+
     strategy:
       matrix:
         os:
@@ -23,14 +30,26 @@ jobs:
           - 17
           - 21
           - 25
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
           cache: maven
-      - name: Build with Maven
-        run: mvn --batch-mode --no-transfer-progress clean verify
+
+      - name: Build and Test with Maven
+        run: ./mvnw --batch-mode --no-transfer-progress verify
+
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: ${{ matrix.os }}-${{ matrix.java }}-test-reports
+          path: |
+            **/surefire-reports/*
+            **/failsafe-reports/*
