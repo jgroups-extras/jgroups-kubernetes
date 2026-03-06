@@ -32,11 +32,12 @@ public class Client {
     protected final int                 operationAttempts;
     protected final long                operationSleep;
     protected final StreamProvider      streamProvider;
+    protected final boolean             preferIPv6;
     protected final String              info;
     protected final Log                 log;
 
     public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts,
-                  long operationSleep, StreamProvider streamProvider, Log log) {
+                  long operationSleep, StreamProvider streamProvider, boolean preferIPv6, Log log) {
         this.masterUrl = masterUrl;
         this.headers = headers;
         this.connectTimeout = connectTimeout;
@@ -44,6 +45,7 @@ public class Client {
         this.operationAttempts = operationAttempts;
         this.operationSleep = operationSleep;
         this.streamProvider = streamProvider;
+        this.preferIPv6 = preferIPv6;
         this.log=log;
         Map<String, String> maskedHeaders=new TreeMap<>();
         if (headers != null) {
@@ -74,7 +76,7 @@ public class Client {
             url = url + "?labelSelector=" + urlencode(labels);
 
         InputStream stream=null;
-        String retval=null;
+        String retval;
         try {
             stream=openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider);
             retval=Util.readContents(stream);
@@ -83,7 +85,6 @@ public class Client {
             return retval;
         }
         catch(Throwable t) {
-            retval=t.getMessage();
             if(dump_requests)
                 System.out.printf("--> %s\n<-- ERROR: %s\n", url, t.getMessage());
             throw t;
@@ -92,8 +93,6 @@ public class Client {
             Util.close(stream);
         }
     }
-
-
 
     public List<Pod> getPods(String namespace, String labels, boolean dump_requests) throws Exception {
         String result = fetchFromKubernetes("pods", namespace, labels, dump_requests);
@@ -166,7 +165,30 @@ public class Client {
             JsonObject metadata = obj.getJsonObject("metadata");
             String name = metadata != null ? metadata.getString("name", null) : null;
             JsonObject podStatus = obj.getJsonObject("status");
-            String podIP = podStatus != null ? podStatus.getString("podIP", null) : null;
+            String podIP = null;
+            if(podStatus != null) {
+                // For dual-stack clusters, podIPs contains all addresses; pick one based on preference
+                JsonArray podIPs = podStatus.getJsonArray("podIPs");
+                if(podIPs != null && !podIPs.isEmpty()) {
+                    for(JsonValue entry : podIPs) {
+                        String candidate = entry.asJsonObject().getString("ip", null);
+                        if(candidate == null) continue;
+                        boolean isIPv6 = candidate.contains(":");
+                        if(preferIPv6 == isIPv6) {
+                            podIP = candidate;
+                            break;
+                        }
+                    }
+                    // Fall back to the first entry if no address matches the preferred stack
+                    if(podIP == null) {
+                        podIP = podIPs.getJsonObject(0).getString("ip", null);
+                    }
+                }
+                // Final fallback: use the single podIP field (backward compatibility / single-stack)
+                if(podIP == null) {
+                    podIP = podStatus.getString("podIP", null);
+                }
+            }
             boolean running = podRunning(podStatus);
             if(podIP == null) {
                 log.trace("Skipping pod %s since its IP is %s", name, podIP);
