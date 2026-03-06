@@ -54,6 +54,7 @@
 
     <properties>
         <version.jgroups>5.5.2.Final</version.jgroups>
+        <version.mjson>1.4.2</version.mjson>
         <version.junit>4.13.2</version.junit>
         <version.assertj>3.27.7</version.assertj>
         <maven.compiler.source>17</maven.compiler.source>
@@ -88,6 +89,12 @@
             <groupId>org.jgroups</groupId>
             <artifactId>jgroups</artifactId>
             <version>${version.jgroups}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.sharegov</groupId>
+            <artifactId>mjson</artifactId>
+            <version>${version.mjson}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -168,10 +175,70 @@
                     <failOnError>false</failOnError>
                 </configuration>
             </plugin>
+            <!-- Used to work around the fact that the shade plugin always skips provided scope -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-mjson</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.sharegov</groupId>
+                                    <artifactId>mjson</artifactId>
+                                    <version>${version.mjson}</version>
+                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                                    <!-- Exclude manifest as to avoid conflict during shade:shade -->
+                                    <excludes>META-INF/**</excludes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <includes>
+                                    <!-- Doesn't actually include as it skips provided scope; used to workaround automatic inclusion -->
+                                    <include>org.sharegov:mjson</include>
+                                </includes>
+                            </artifactSet>
+                            <relocations>
+                                <relocation>
+                                    <pattern>mjson</pattern>
+                                    <shadedPattern>org.jgroups.kubernetes.shaded.mjson</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
 
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.7.0</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
@@ -199,6 +266,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
                     <version>3.4.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.6.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
