@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 /**
  * Kubernetes based discovery protocol. Uses the Kubernetes master to fetch the IP addresses of all pods that have
  * been created, then pings each pods separately. The ports are defined by bind_port in TP plus port_range.
+ *
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  * @author Sebastian Łaskawiec
  * @author Bela Ban
@@ -176,7 +177,10 @@ public class KUBE_PING extends Discovery {
             streamProvider = new TokenStreamProvider(saTokenFile, caCertFile);
         }
         String url=String.format("%s://%s:%s/api/%s", masterProtocol, masterHost, masterPort, apiVersion);
-        client=new Client(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, log);
+        // Discover pod IPs of the transport's address family; a wildcard bind address can reach either, so use the primary pod IP
+        InetAddress bindAddr=transport.getBindAddr();
+        Class<? extends InetAddress> preferredAddressType=(bindAddr == null || bindAddr.isAnyLocalAddress()) ? null : bindAddr.getClass();
+        client=new Client(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, preferredAddressType, log);
         log.debug("KUBE_PING configuration: " + this);
     }
 
@@ -217,8 +221,8 @@ public class KUBE_PING extends Discovery {
     public void findMembers(List<Address> members, boolean initial_discovery, Responses responses) {
         List<Pod>             hosts=readAll();
         List<PhysicalAddress> cluster_members=new ArrayList<>(hosts != null? hosts.size() : 16);
-        PhysicalAddress       physical_addr=null;
-        PingData              data=null;
+        PhysicalAddress       physical_addr;
+        PingData              data;
 
         physical_addr = getCurrentPhysicalAddress(local_addr);
         // https://redhat.atlassian.net/browse/JGRP-1670

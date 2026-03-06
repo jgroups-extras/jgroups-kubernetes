@@ -6,6 +6,7 @@ import org.jgroups.protocols.kubernetes.Client;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,8 +25,12 @@ public class TestClient extends Client {
     }
 
     public TestClient(String jsonFile) throws URISyntaxException, IOException {
+        this(jsonFile, null);
+    }
+
+    public TestClient(String jsonFile, Class<? extends InetAddress> preferredAddressType) throws URISyntaxException, IOException {
         super(null, null, 0, 0, 0, 0,
-              null, LogFactory.getLog(TestClient.class));
+              null, preferredAddressType, LogFactory.getLog(TestClient.class));
         String json = readFileToString(new File(TestClient.class.getResource(jsonFile).toURI()));
         OPS.put("pods", json);
     }
