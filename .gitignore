@@ -17,3 +17,4 @@ dist/wildfly/docker/wildfly-openshift.zip
 hs_err_pid*
 target/
 release.properties
+dependency-reduced-pom.xml
