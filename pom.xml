@@ -1,20 +1,24 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-parent</artifactId>
+        <version>52</version>
+        <relativePath />
+    </parent>
+
     <groupId>org.jgroups.kubernetes</groupId>
     <artifactId>jgroups-kubernetes</artifactId>
     <version>3.0.0.Final-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>KUBE_PING</name>
+    <name>JGroups Kubernetes – kubernetes.KUBE_PING</name>
+    <description>JGroups discovery protocol for Kubernetes</description>
     <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
-
-    <description>
-        JGroups discovery protocol for Kubernetes
-    </description>
 
     <organization>
         <name>JBoss, a division of Red Hat</name>
-        <url>http://www.jboss.org</url>
+        <url>https://www.jboss.org</url>
     </organization>
 
     <developers>
@@ -29,6 +33,17 @@
         <developer>
             <name>Bela Ban</name>
             <email>belaban@gmail.com</email>
+        </developer>
+        <developer>
+            <name>Radoslav Husar</name>
+            <email>rhusar@ibm.com</email>
+            <roles>
+                <role>developer</role>
+                <role>maintainer</role>
+            </roles>
+            <url>https://github.com/rhusar</url>
+            <organization>IBM</organization>
+            <organizationUrl>https://www.ibm.com</organizationUrl>
         </developer>
     </developers>
 
@@ -45,50 +60,39 @@
         <url>https://github.com/jgroups-extras/jgroups-kubernetes/issues</url>
     </issueManagement>
 
+    <ciManagement>
+        <system>GitHub Actions</system>
+        <url>https://github.com/jgroups-extras/jgroups-kubernetes/actions</url>
+    </ciManagement>
+
     <scm>
-        <connection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</connection>
-        <developerConnection>scm:git:git@github.com:jgroups-extras/jgroups-kubernetes.git</developerConnection>
+        <connection>scm:git:git://github.com/jgroups-extras/jgroups-kubernetes.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jgroups-extras/jgroups-kubernetes.git</developerConnection>
         <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
-        <tag>main</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
+        <!-- JBoss Parent overrides -->
+        <maven.compiler.release>17</maven.compiler.release>
+        <jdk.min.version>${maven.compiler.release}</jdk.min.version>
+        <nexus.staging.tag>${project.groupId}-${project.version}</nexus.staging.tag>
+
+        <!-- https://mvnrepository.com/artifact/org.jgroups/jgroups -->
         <version.jgroups>5.5.4.Final</version.jgroups>
         <version.junit>4.13.2</version.junit>
         <version.assertj>3.27.7</version.assertj>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <insecure.repositories>ERROR</insecure.repositories>
-
-        <!-- nexus-staging-maven-plugin -->
-        <autoReleaseAfterClose>true</autoReleaseAfterClose>
-        <nexus.server.id>jboss-releases-repository</nexus.server.id>
-        <nexus.server.url>https://repository.jboss.org/nexus</nexus.server.url>
-        <nexus.snapshot.server.id>jboss-snapshots-repository</nexus.snapshot.server.id>
-        <nexus.snapshot.server.url>https://repository.jboss.org/nexus/content/repositories/snapshots/</nexus.snapshot.server.url>
     </properties>
 
-
-    <distributionManagement>
-        <repository>
-            <id>${nexus.server.id}</id>
-            <name>JBoss Releases Repository</name>
-            <url>${nexus.server.url}</url>
-        </repository>
-        <snapshotRepository>
-            <id>${nexus.snapshot.server.id}</id>
-            <url>${nexus.snapshot.server.url}</url>
-        </snapshotRepository>
-    </distributionManagement>
-
-
     <dependencies>
+        <!-- Runtime dependencies -->
         <dependency>
             <groupId>org.jgroups</groupId>
             <artifactId>jgroups</artifactId>
             <version>${version.jgroups}</version>
         </dependency>
+
+        <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -107,101 +111,15 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>enforce-java-version</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <bannedRepositories>
-                                    <message>To build this project, don't use maven repositories over HTTP. Please use HTTPS in your settings.xml or run the build with property insecure.repositories=WARN</message>
-                                    <level>${insecure.repositories}</level>
-                                    <bannedRepositories>
-                                        <bannedRepository>http://*</bannedRepository>
-                                    </bannedRepositories>
-                                    <bannedPluginRepositories>
-                                        <bannedPluginRepository>http://*</bannedPluginRepository>
-                                    </bannedPluginRepositories>
-                                </bannedRepositories>
-                                <requireJavaVersion>
-                                    <message>To build this project JDK 11 (or greater) is required. Please install it.</message>
-                                    <version>11</version>
-                                </requireJavaVersion>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <extensions>true</extensions>
+                <artifactId>maven-release-plugin</artifactId>
                 <configuration>
-                    <!-- See configuration details at http://books.sonatype.com/nexus-book/reference/staging-deployment.html -->
-                    <nexusUrl>${nexus.server.url}</nexusUrl>
-                    <serverId>${nexus.server.id}</serverId>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <inherited>true</inherited>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <!-- JDK8 has become extremely strict with JavaDoc problems -->
-                    <failOnError>false</failOnError>
+                    <arguments>-DskipTests</arguments>
+                    <!-- Temporarily until Nexus stabilizes keep SCM pushes manual -->
+                    <pushChanges>false</pushChanges>
+                    <localCheckout>true</localCheckout>
                 </configuration>
             </plugin>
         </plugins>
-
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>3.6.2</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.12.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>3.3.1</version>
-                    <configuration>
-                        <tagNameFormat>@{project.version}</tagNameFormat>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.7.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>3.4.0</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
     </build>
-</project>
 
+</project>
