@@ -167,7 +167,7 @@ public class KUBE_PING extends Discovery {
         }
         String url=String.format("%s://%s:%s/api/%s", masterProtocol, masterHost, masterPort, apiVersion);
         client=new Client(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, log);
-        log.debug("KubePING configuration: " + toString());
+        log.debug("KubePING configuration: " + this);
     }
 
     private void checkDeprecatedProperties() {
@@ -233,7 +233,7 @@ public class KUBE_PING extends Discovery {
 
         if (split_clusters_during_rolling_update) {
             if(physical_addr != null) {
-                String senderIp = ((IpAddress)physical_addr).getIpAddress().getHostAddress();
+                String senderIp = physical_addr.getIpAddress().getHostAddress();
                 // Please note we search for sender parent group through all pods, ever not ready. It's because JGroup discovery is performed
                 // before WildFly can respond to http readiness probe.
                 hosts.stream()
