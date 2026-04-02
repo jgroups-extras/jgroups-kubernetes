@@ -149,14 +149,6 @@ public final class Utils {
         return value;
     }
 
-    public static void close(AutoCloseable cl) {
-        if (cl == null) return;
-        try {
-            cl.close();
-        } catch (Exception e) {
-        }
-    }
-
     /**
      * Sanitizes a map of HTTP headers - all entries where the key equals "Authorization" (case-insensitive) are
      * overridden to mask the original authorization data.
