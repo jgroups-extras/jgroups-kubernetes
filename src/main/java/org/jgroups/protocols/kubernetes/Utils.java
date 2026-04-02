@@ -7,6 +7,7 @@ import org.jgroups.protocols.kubernetes.stream.TokenStreamProvider;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -99,11 +100,7 @@ public final class Utils {
     }
 
     public static String urlencode(String s) {
-        try {
-            return s != null ? URLEncoder.encode(s, "UTF-8") : null;
-        } catch (UnsupportedEncodingException uee) {
-            throw new RuntimeException(String.format("Could not encode String [%s] as UTF-8 (which should always be supported).", s), uee);
-        }
+        return s != null ? URLEncoder.encode(s, StandardCharsets.UTF_8) : null;
     }
 
     public static <V> V execute(Callable<V> callable, int attempts, long sleep) {
