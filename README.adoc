@@ -134,47 +134,62 @@ namespace `"default"` will be returned.
 |===============
 | Attribute name | System property | Default | Description
 
+// Core properties
+
 | port_range || `1` | Number of additional ports to be probed for membership. A port_range of 0 does not
-                    probe additional ports. Example: `initial_hosts=A[7800] port_range=0` probes `A:7800`, `port_range=1`
-                    probes `A:7800` and `A:7801`
+probe additional ports. Example: `initial_hosts=A[7800] port_range=0` probes `A:7800`, `port_range=1`
+probes `A:7800` and `A:7801`
 
-| connectTimeout | KUBERNETES_CONNECT_TIMEOUT | `5000` | Maximum time (in milliseconds) to wait for a connection to the Kubernetes server. If exceeded, an exception will be thrown.
+// Note: namespace and labels also support deprecated OPENSHIFT_KUBE_PING_NAMESPACE and OPENSHIFT_KUBE_PING_LABELS system properties respectively.
+| namespace | KUBERNETES_NAMESPACE | `default` | The namespace to use when fetching pod lists from the Kubernetes API server.
 
-| readTimeout | KUBERNETES_READ_TIMEOUT | `30000` | Maximum time in milliseconds to wait for a response from the Kubernetes server.
+| labels | KUBERNETES_LABELS || The labels to use when fetching pod lists from the Kubernetes API server.
+
+
+
+// Kubernetes API server properties
+
+| masterProtocol | KUBERNETES_MASTER_PROTOCOL | `https` | Scheme (http or https) to be used to connect to the Kubernetes API server.
+
+| masterHost | KUBERNETES_SERVICE_HOST || The hostname of the Kubernetes API server.
+
+| masterPort | KUBERNETES_SERVICE_PORT || The port on which the Kubernetes API server is listening.
+
+| apiVersion | KUBERNETES_API_VERSION | `v1` | The API version to use when communicating with the Kubernetes API server.
+
+// Kubernetes API server connection properties
+
+| connectTimeout | KUBERNETES_CONNECT_TIMEOUT | `5000` | Maximum time in milliseconds to wait for a connection to the Kubernetes API server. If exceeded, an exception will be thrown.
+
+| readTimeout | KUBERNETES_READ_TIMEOUT | `30000` | Maximum time in milliseconds to wait for a response from the Kubernetes API server.
 
 | operationAttempts | KUBERNETES_OPERATION_ATTEMPTS | `3` | Maximum number of attempts to send discovery requests.
 
 | operationSleep | KUBERNETES_OPERATION_SLEEP | `1000` | Time in milliseconds between operation attempts.
 
-| masterProtocol | KUBERNETES_MASTER_PROTOCOL | `https` | Schema http or https to be used to send the initial discovery request to the Kubernetes server.
+// Kubernetes API server security properties
 
-| masterHost | KUBERNETES_SERVICE_HOST || The URL of the Kubernetes server.
+| clientCertFile | KUBERNETES_CLIENT_CERTIFICATE_FILE || Path to the client certificate file to access the Kubernetes API server.
 
-| masterPort | KUBERNETES_SERVICE_PORT || The port on which the Kubernetes server is listening.
+| clientKeyFile | KUBERNETES_CLIENT_KEY_FILE || Path to the client key file.
 
-| apiVersion | KUBERNETES_API_VERSION | `v1` | The version of the protocol to the Kubernetes server.
+| clientKeyPassword | KUBERNETES_CLIENT_KEY_PASSWORD || The password to access the client key file.
 
-| namespace | KUBERNETES_NAMESPACE | `default` | The namespace to be used.
+| clientKeyAlgo | KUBERNETES_CLIENT_KEY_ALGO | `RSA` | The algorithm used by the client key.
 
-| labels | KUBERNETES_LABELS || The labels to use in the discovery request to the Kubernetes server.
+| caCertFile | KUBERNETES_CA_CERTIFICATE_FILE | `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt` | Path to the CA certificate bundle used to verify the serving certificate of the Kubernetes API server. If the specified file is unavailable, a warning message is issued.
 
-| clientCertFile | KUBERNETES_CLIENT_CERTIFICATE_FILE || Certificate to access the Kubernetes server.
+| saTokenFile | SA_TOKEN_FILE | `/var/run/secrets/kubernetes.io/serviceaccount/token` | Path to the Service Account Token file.
 
-| clientKeyFile | KUBERNETES_CLIENT_KEY_FILE || Client key file (store).
+// Kubernetes API server advanced properties
 
-| clientKeyPassword | KUBERNETES_CLIENT_KEY_PASSWORD || The password to access the client key store.
+| split_clusters_during_rolling_update | KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE | `false` | The standard behavior during Rolling Update is to put all Pods in the same cluster. In cases (application level incompatibility) this causes problems. One might decide to split clusters to 'old' and 'new' during that process.
 
-| clientKeyAlgo | KUBERNETES_CLIENT_KEY_ALGO | `RSA` | The algorithm used by the client.
+| useNotReadyAddresses | KUBERNETES_USE_NOT_READY_ADDRESSES | `true` | Introduces similar behaviour to Kubernetes Services (using DNS) with publishNotReadyAddresses set to true.
 
-| caCertFile | KUBERNETES_CA_CERTIFICATE_FILE | `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt` | Client CA certificate.
+// Misc properties
 
-| saTokenFile | SA_TOKEN_FILE | `/var/run/secrets/kubernetes.io/serviceaccount/token` | Token file.
-
-| dump_requests || `false` | Dumps all discovery requests and responses to the Kubernetes server to stdout when true.
-
-| split_clusters_during_rolling_update | KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE | `false` | During the Rolling Update, prevents from putting all Pods into a single cluster.
-
-| useNotReadyAddresses | KUBERNETES_USE_NOT_READY_ADDRESSES | `true` | True if initial discovery should take unready Pods into consideration.
+| dump_requests || `false` | Dumps all discovery requests and responses to the Kubernetes API server to stdout when true.
 
 |===============
 

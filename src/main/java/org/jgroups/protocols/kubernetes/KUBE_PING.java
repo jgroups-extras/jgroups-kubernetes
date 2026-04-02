@@ -39,73 +39,88 @@ public class KUBE_PING extends Discovery {
 
     @Property(description="Number of additional ports to be probed for membership. A port_range of 0 does not " +
       "probe additional ports. Example: initial_hosts=A[7800] port_range=0 probes A:7800, port_range=1 probes " +
-      "A:7800 and A:7801")
+      "A:7800 and A:7801.")
     protected int    port_range=1;
 
-    @Property(description="Max time (in millis) to wait for a connection to the Kubernetes server. If exceeded, " +
-      "an exception will be thrown", systemProperty="KUBERNETES_CONNECT_TIMEOUT")
+    @Property(description="Maximum time in milliseconds to wait for a connection to the Kubernetes API server. " +
+            "If exceeded, an exception will be thrown.",
+            systemProperty="KUBERNETES_CONNECT_TIMEOUT")
     protected int    connectTimeout=5000;
 
-    @Property(description="Max time (in millis) to wait for a response from the Kubernetes server",
-      systemProperty="KUBERNETES_READ_TIMEOUT")
+    @Property(description="Maximum time in milliseconds to wait for a response from the Kubernetes API server.",
+            systemProperty="KUBERNETES_READ_TIMEOUT")
     protected int    readTimeout=30000;
 
-    @Property(description="Max number of attempts to send discovery requests", systemProperty="KUBERNETES_OPERATION_ATTEMPTS")
+    @Property(description="Maximum number of attempts to send discovery requests.",
+            systemProperty="KUBERNETES_OPERATION_ATTEMPTS")
     protected int    operationAttempts=3;
 
-    @Property(description="Time (in millis) between operation attempts", systemProperty="KUBERNETES_OPERATION_SLEEP")
+    @Property(description="Time in milliseconds between operation attempts.",
+            systemProperty="KUBERNETES_OPERATION_SLEEP")
     protected long   operationSleep=1000;
 
-    @Property(description="https (default) or http. Used to send the initial discovery request to the Kubernetes server",
-      systemProperty="KUBERNETES_MASTER_PROTOCOL")
+    @Property(description="Scheme (http or https) to be used to connect to the Kubernetes API server.",
+            systemProperty="KUBERNETES_MASTER_PROTOCOL")
     protected String  masterProtocol="https";
 
-    @Property(description="The URL of the Kubernetes server", systemProperty="KUBERNETES_SERVICE_HOST")
+    @Property(description="The hostname of the Kubernetes API server.",
+            systemProperty="KUBERNETES_SERVICE_HOST")
     protected String  masterHost;
 
-    @Property(description="The port on which the Kubernetes server is listening", systemProperty="KUBERNETES_SERVICE_PORT")
+    @Property(description="The port on which the Kubernetes API server is listening.",
+            systemProperty="KUBERNETES_SERVICE_PORT")
     protected int     masterPort;
 
-    @Property(description="The version of the protocol to the Kubernetes server", systemProperty="KUBERNETES_API_VERSION")
+    @Property(description="The API version to use when communicating with the Kubernetes API server.",
+            systemProperty="KUBERNETES_API_VERSION")
     protected String  apiVersion="v1";
 
-    @Property(description="namespace", systemProperty={"KUBERNETES_NAMESPACE", "OPENSHIFT_KUBE_PING_NAMESPACE"})
+    @Property(description="The namespace to use when fetching pod lists from the Kubernetes API server.",
+            systemProperty={"KUBERNETES_NAMESPACE", "OPENSHIFT_KUBE_PING_NAMESPACE"})
     protected String  namespace="default";
 
-    @Property(description="The labels to use in the discovery request to the Kubernetes server",
-      systemProperty={"KUBERNETES_LABELS", "OPENSHIFT_KUBE_PING_LABELS"})
+    @Property(description="The labels to use when fetching pod lists from the Kubernetes API server.",
+            systemProperty={"KUBERNETES_LABELS", "OPENSHIFT_KUBE_PING_LABELS"})
     protected String  labels;
 
-    @Property(description="Certificate to access the Kubernetes server", systemProperty="KUBERNETES_CLIENT_CERTIFICATE_FILE")
+    @Property(description="Path to the client certificate file to access the Kubernetes API server.",
+            systemProperty="KUBERNETES_CLIENT_CERTIFICATE_FILE")
     protected String  clientCertFile;
 
-    @Property(description="Client key file (store)", systemProperty="KUBERNETES_CLIENT_KEY_FILE")
+    @Property(description="Path to the client key file.",
+            systemProperty="KUBERNETES_CLIENT_KEY_FILE")
     protected String  clientKeyFile;
 
-    @Property(description="The password to access the client key store", systemProperty="KUBERNETES_CLIENT_KEY_PASSWORD")
+    @Property(description="The password to access the client key file.",
+            systemProperty="KUBERNETES_CLIENT_KEY_PASSWORD")
     protected String  clientKeyPassword;
 
-    @Property(description="The algorithm used by the client", systemProperty="KUBERNETES_CLIENT_KEY_ALGO")
+    @Property(description="The algorithm used by the client key.",
+            systemProperty="KUBERNETES_CLIENT_KEY_ALGO")
     protected String  clientKeyAlgo="RSA";
 
-    @Property(description = "Location of certificate bundle used to verify the serving certificate of the apiserver. If the specified file is unavailable, "
-            + "a warning message is issued.", systemProperty = "KUBERNETES_CA_CERTIFICATE_FILE")
+    @Property(description = "Path to the CA certificate bundle used to verify the serving certificate of the Kubernetes API server. " +
+            "If the specified file is unavailable, a warning message is issued.",
+            systemProperty = "KUBERNETES_CA_CERTIFICATE_FILE")
     protected String  caCertFile="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
 
-    @Property(description="Token file", systemProperty="SA_TOKEN_FILE")
+    @Property(description="Path to the Service Account Token file.",
+            systemProperty="SA_TOKEN_FILE")
     protected String  saTokenFile="/var/run/secrets/kubernetes.io/serviceaccount/token";
-
-    @Property(description="Dumps all discovery requests and responses to the Kubernetes server to stdout when true")
-    protected boolean dump_requests;
 
     @Property(description="The standard behavior during Rolling Update is to put all Pods in the same cluster. In" +
           " cases (application level incompatibility) this causes problems. One might decide to split clusters to" +
-          " 'old' and 'new' during that process", systemProperty="KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE")
+          " 'old' and 'new' during that process.",
+            systemProperty="KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE")
     protected boolean split_clusters_during_rolling_update;
 
     @Property(description="Introduces similar behaviour to Kubernetes Services (using DNS) with publishNotReadyAddresses set to true. " +
-            "By default it's true", systemProperty="KUBERNETES_USE_NOT_READY_ADDRESSES")
+            "By default it's true.",
+            systemProperty="KUBERNETES_USE_NOT_READY_ADDRESSES")
     protected boolean useNotReadyAddresses = true;
+
+    @Property(description="Dumps all discovery requests and responses to the Kubernetes API server to stdout when true.")
+    protected boolean dump_requests;
 
     protected Client  client;
 
