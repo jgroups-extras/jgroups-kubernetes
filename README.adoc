@@ -371,3 +371,15 @@ as when running locally in https://github.com/kubernetes/minikube[minikube].
 
 The only difference is that on GKE, contrary to minikube, IP multicasting is not available. This means that the `probe.sh`
 command has to be run as `probe.sh -addr localhost` instead of simply running `probe.sh`.
+
+
+== Support Matrix
+
+|===
+|Version/Branch |JGroups Version |Base JDK Version
+
+|https://github.com/jgroups-extras/jgroups-kubernetes/tree/main[`3.x`/`main`] |`5.5.x` |17
+|https://github.com/jgroups-extras/jgroups-kubernetes/tree/2.x[`2.x`]         |`5.4.x` |8
+|https://github.com/jgroups-extras/jgroups-kubernetes/tree/1.x[`1.x`]         |`4.2.x` |8
+|https://github.com/jgroups-extras/jgroups-kubernetes/tree/0.9.x[`0.9.x`]     |`3.x`   |8
+|===
