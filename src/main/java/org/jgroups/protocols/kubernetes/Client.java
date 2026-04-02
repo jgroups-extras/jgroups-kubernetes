@@ -1,17 +1,21 @@
 package org.jgroups.protocols.kubernetes;
 
-import mjson.Json;
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonValue;
 import org.jgroups.logging.Log;
 import org.jgroups.protocols.kubernetes.stream.StreamProvider;
 import org.jgroups.protocols.kubernetes.stream.TokenStreamProvider;
 import org.jgroups.util.Util;
 
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 
 import static org.jgroups.protocols.kubernetes.Utils.openStream;
@@ -100,76 +104,72 @@ public class Client {
 
     /**
      * get pod group during Rolling Update
-     * @param pod - json returned by k8s
-     * @return
+     * @param pod - JsonObject returned by k8s
+     * @return pod group string, or null if not determinable
      */
-    String getPodGroup(Json pod) {
-        Json meta = Optional.ofNullable(pod.at("metadata")).orElse(null);
-        Json labels = Optional.ofNullable(meta)
-                .map(podMetadata -> podMetadata.at("labels"))
-                .orElse(null);
+    String getPodGroup(JsonObject pod) {
+        JsonObject meta = pod.getJsonObject("metadata");
+        if (meta == null) {
+            log.debug("pod %s, group %s", null, null);
+            return null;
+        }
+        JsonObject labels = meta.getJsonObject("labels");
 
-        // This works for Deployment Config
-        String group = Optional.ofNullable(labels)
-                .map(l -> l.at("pod-template-hash"))
-                .map(Json::asString)
-                .orElse(null);
+        String group = null;
+        if (labels != null) {
+            // This works for Deployment Config
+            group = labels.getString("pod-template-hash", null);
+        }
 
-        if (group == null) {
+        if (group == null && labels != null) {
             // Ok, maybe, it's a Deployment and has a valid deployment flag?
-            group = Optional.ofNullable(labels)
-                    .map(l -> l.at("deployment"))
-                    .map(Json::asString)
-                    .orElse(null);
+            group = labels.getString("deployment", null);
         }
 
-        if (group == null) {
+        if (group == null && labels != null) {
             // Final check, maybe it's a StatefulSet?
-            group = Optional.ofNullable(labels)
-                    .map(l -> l.at("controller-revision-hash"))
-                    .map(Json::asString)
-                    .orElse(null);
+            group = labels.getString("controller-revision-hash", null);
         }
 
-        log.debug("pod %s, group %s", Optional.ofNullable(meta)
-                .map(m -> m.at("name"))
-                .map(Json::asString)
-                .orElse(null), group);
+        log.debug("pod %s, group %s", meta.getString("name", null), group);
         return group;
     }
 
     protected List<Pod> parseJsonResult(String input, String namespace, String labels) {
         if(input == null)
             return Collections.emptyList();
-        Json json=Json.read(input);
 
-        if(json == null || !json.isObject()) {
-            log.error("JSON is not a map: %s", json);
+        JsonValue value;
+        try (JsonReader reader = Json.createReader(new StringReader(input))) {
+            value = reader.read();
+        } catch (Exception e) {
+            log.error("Failed to parse JSON: %s", e.getMessage());
             return Collections.emptyList();
         }
 
-        if(!json.has("items")) {
+        if(!(value instanceof JsonObject)) {
+            log.error("JSON is not a map: %s", value);
+            return Collections.emptyList();
+        }
+        JsonObject json = value.asJsonObject();
+
+        if(!json.containsKey("items")) {
             log.error("JSON object is missing property \"items\": %s", json);
             return Collections.emptyList();
         }
-        List<Json> items=json.at("items").asJsonList();
+
+        JsonArray items = json.getJsonArray("items");
         List<Pod> pods=new ArrayList<>();
-        for(Json obj: items) {
+        for(JsonValue item: items) {
+            JsonObject obj = item.asJsonObject();
             String parentDeployment = getPodGroup(obj);
-            String name = Optional.ofNullable(obj.at("metadata"))
-                  .map(podMetadata -> podMetadata.at("name"))
-                  .map(Json::asString)
-                  .orElse(null);
-            Json podStatus = Optional.ofNullable(obj.at("status")).orElse(null);
-            String podIP = null;
-            if(podStatus != null) {
-                podIP = Optional.ofNullable(podStatus.at("podIP"))
-                  .map(Json::asString)
-                  .orElse(null);
-            }
+            JsonObject metadata = obj.getJsonObject("metadata");
+            String name = metadata != null ? metadata.getString("name", null) : null;
+            JsonObject podStatus = obj.getJsonObject("status");
+            String podIP = podStatus != null ? podStatus.getString("podIP", null) : null;
             boolean running = podRunning(podStatus);
             if(podIP == null) {
-                log.trace("Skipping pod %s since it's IP is %s", name, podIP);
+                log.trace("Skipping pod %s since its IP is %s", name, podIP);
             } else {
                 pods.add(new Pod(name, podIP, parentDeployment, running));
             }
@@ -177,74 +177,70 @@ public class Client {
         log.trace("getPods(%s, %s) = %s", namespace, labels, pods);
         return pods;
     }
-    
+
     /**
      * Helper method to determine if a pod is considered running or not.
-     * 
-     * @param podStatus a Json object expected to contain the "status" object of a pod
+     *
+     * @param podStatus a JsonObject expected to contain the "status" object of a pod
      * @return true if the pod is considered available, false otherwise
      */
-    protected boolean podRunning(Json podStatus) {
+    protected boolean podRunning(JsonObject podStatus) {
         if(podStatus == null) {
             return false;
         }
-        
+
         /*
          * A pod can only be considered 'running' if the following conditions are all true:
          * 1. status.phase == "Running",
          * 2. status.message is Undefined (does not exist)
          * 3. status.reason is Undefined (does not exist)
          * 4. all of status.containerStatuses[*].ready == true
-         * 5. for conditions[*].type == "Ready" conditions[*].status must be "True" 
+         * 5. for conditions[*].type == "Ready" conditions[*].status must be "True"
          */
         // walk through each condition step by step
         // 1 status.phase
         log.trace("Determining pod status");
-        String phase = Optional.ofNullable(podStatus.at("phase"))
-                .map(Json::asString)
-                .orElse("not running");
+        String phase = podStatus.getString("phase", "not running");
         log.trace("  status.phase=%s", phase);
         if(!phase.equalsIgnoreCase("Running")) {
             return false;
         }
         // 2. and 3. status.message and status.reason
-        String statusMessage = Optional.ofNullable(podStatus.at("message"))
-                .map(Json::asString)
-                .orElse(null);
-        String statusReason = Optional.ofNullable(podStatus.at("reason"))
-                .map(Json::asString)
-                .orElse(null);
+        String statusMessage = podStatus.getString("message", null);
+        String statusReason = podStatus.getString("reason", null);
         log.trace("  status.message=%s and status.reason=%s", statusMessage, statusReason);
         if(statusMessage != null || statusReason != null) {
             return false;
         }
         // 4. status.containerStatuses.ready
-        List<Json> containerStatuses = Optional.ofNullable(podStatus.at("containerStatuses"))
-                .map(Json::asJsonList)
-                .orElse(Collections.emptyList());
+        JsonArray containerStatuses = podStatus.getJsonArray("containerStatuses");
         boolean ready = true;
         // if we have no containerStatuses, we don't check for it and consider this condition as passed
-        for(Json containerStatus: containerStatuses) {
-            ready = ready && containerStatus.at("ready").asBoolean();
+        if(containerStatuses != null) {
+            for(JsonValue containerStatusValue: containerStatuses) {
+                JsonObject containerStatus = containerStatusValue.asJsonObject();
+                ready = ready && containerStatus.getBoolean("ready");
+            }
         }
         log.trace("  containerStatuses[].status of all container is %s", Boolean.toString(ready));
         if(!ready) {
             return false;
         }
         // 5. ready condition must be "True"
-        Boolean readyCondition = Boolean.FALSE;
-        List<Json> conditions = podStatus.at("conditions").asJsonList();
-        // walk through all the conditions and find type=="Ready" and get the value of the status property
-        for(Json condition: conditions) {
-            String type = condition.at("type").asString();
-            if(type.equalsIgnoreCase("Ready")) {
-                readyCondition = new Boolean(condition.at("status").asString());
+        boolean readyCondition = false;
+        JsonArray conditions = podStatus.getJsonArray("conditions");
+        if(conditions != null) {
+            // walk through all the conditions and find type=="Ready" and get the value of the status property
+            for(JsonValue conditionValue: conditions) {
+                JsonObject condition = conditionValue.asJsonObject();
+                String type = condition.getString("type", null);
+                if("Ready".equalsIgnoreCase(type)) {
+                    readyCondition = Boolean.parseBoolean(condition.getString("status", null));
+                }
             }
         }
-        log.trace(  "conditions with type==\"Ready\" has status property value = %s", readyCondition.toString());
-        if(!readyCondition.booleanValue()) {
-            return false;
-        }
-        return true;
+        log.trace("  conditions with type==\"Ready\" has status property value = %s", readyCondition);
+
+        return readyCondition;
     }
 }
