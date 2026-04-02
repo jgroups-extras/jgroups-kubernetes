@@ -219,7 +219,10 @@ public class Client {
         if(containerStatuses != null) {
             for(JsonValue containerStatusValue: containerStatuses) {
                 JsonObject containerStatus = containerStatusValue.asJsonObject();
-                ready = ready && containerStatus.getBoolean("ready");
+                if(!containerStatus.getBoolean("ready", false)) {
+                    ready = false;
+                    break;
+                }
             }
         }
         log.trace("  containerStatuses[].status of all container is %s", Boolean.toString(ready));
