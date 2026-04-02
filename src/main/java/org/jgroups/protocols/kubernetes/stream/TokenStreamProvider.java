@@ -107,8 +107,7 @@ public class TokenStreamProvider extends BaseStreamProvider {
 
     static TrustManager[] configureCaCert(String caCertFile) throws Exception {
         if (caCertFile != null && !caCertFile.isEmpty()) {
-            try {
-                InputStream pemInputStream = openFile(caCertFile);
+            try (InputStream pemInputStream = openFile(caCertFile)) {
                 CertificateFactory certFactory = CertificateFactory.getInstance("X509");
 
                 KeyStore trustStore = KeyStore.getInstance("JKS");
