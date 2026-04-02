@@ -179,7 +179,7 @@ probes `A:7800` and `A:7801`
 
 | caCertFile | KUBERNETES_CA_CERTIFICATE_FILE | `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt` | Path to the CA certificate bundle used to verify the serving certificate of the Kubernetes API server. If the specified file is unavailable, a warning message is issued.
 
-| saTokenFile | SA_TOKEN_FILE | `/var/run/secrets/kubernetes.io/serviceaccount/token` | Path to the Service Account Token file.
+| saTokenFile | KUBERNETES_SA_TOKEN_FILE | `/var/run/secrets/kubernetes.io/serviceaccount/token` | Path to the Service Account Token file.
 
 // Kubernetes API server advanced properties
 
