@@ -105,7 +105,7 @@ public class KUBE_PING extends Discovery {
     protected String  caCertFile="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
 
     @Property(description="Path to the Service Account Token file.",
-            systemProperty="SA_TOKEN_FILE")
+            systemProperty={"KUBERNETES_SA_TOKEN_FILE", "SA_TOKEN_FILE"})
     protected String  saTokenFile="/var/run/secrets/kubernetes.io/serviceaccount/token";
 
     @Property(description="The standard behavior during Rolling Update is to put all Pods in the same cluster. In" +
@@ -181,6 +181,7 @@ public class KUBE_PING extends Discovery {
     private void checkDeprecatedProperties() {
         checkDeprecatedProperty("KUBERNETES_NAMESPACE", "OPENSHIFT_KUBE_PING_NAMESPACE");
         checkDeprecatedProperty("KUBERNETES_LABELS", "OPENSHIFT_KUBE_PING_LABELS");
+        checkDeprecatedProperty("KUBERNETES_SA_TOKEN_FILE", "SA_TOKEN_FILE");
     }
 
     private void checkDeprecatedProperty(String property_name, String deprecated_name) {
