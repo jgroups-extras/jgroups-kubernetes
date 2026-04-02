@@ -193,7 +193,7 @@ public class KUBE_PING extends Discovery {
         PingData              data=null;
 
         physical_addr = getCurrentPhysicalAddress(local_addr);
-        // https://issues.jboss.org/browse/JGRP-1670
+        // https://redhat.atlassian.net/browse/JGRP-1670
         data=new PingData(local_addr, false, NameCache.get(local_addr), physical_addr);
         if(members != null && members.size() <= max_members_in_discovery_request)
             data.mbrs(members);
