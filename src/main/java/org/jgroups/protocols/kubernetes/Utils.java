@@ -7,6 +7,7 @@ import org.jgroups.protocols.kubernetes.stream.TokenStreamProvider;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,22 +25,22 @@ import java.util.logging.Logger;
 public final class Utils {
     private static final Logger log = Logger.getLogger(Utils.class.getName());
 
-    public static final InputStream openStream(String url, Map<String, String> headers, int connectTimeout, int readTimeout, int attempts, long sleep, StreamProvider streamProvider) throws Exception {
+    public static InputStream openStream(String url, Map<String, String> headers, int connectTimeout, int readTimeout, int attempts, long sleep, StreamProvider streamProvider) throws Exception {
         return execute(new OpenStream(streamProvider, url, headers, connectTimeout, readTimeout), attempts, sleep, true);
     }
 
-    public static final InputStream openFile(String name) throws FileNotFoundException {
+    public static InputStream openFile(String name) throws FileNotFoundException {
         if (name != null) {
             return new BufferedInputStream(new FileInputStream(name));
         }
         return null;
     }
 
-    public static final String readFileToString(String name) throws IOException {
+    public static String readFileToString(String name) throws IOException {
         return name != null? readFileToString(new File(name)) : null;
     }
 
-    public static final String readFileToString(File file) throws IOException {
+    public static String readFileToString(File file) throws IOException {
         if (file != null && file.canRead()) {
             Path path = FileSystems.getDefault().getPath(file.getCanonicalPath());
             byte[] bytes = Files.readAllBytes(path);
@@ -49,11 +50,11 @@ public final class Utils {
     }
 
 
-    public static final String getSystemProperty(final String key, final String def) {
+    public static String getSystemProperty(final String key, final String def) {
         return getSystemProperty(key, def, false);
     }
 
-    public static final String getSystemProperty(final String key, final String def, final boolean trimToNull) {
+    public static String getSystemProperty(final String key, final String def, final boolean trimToNull) {
         if (key != null) {
             String val = AccessController.doPrivileged((PrivilegedAction<String>)() -> System.getProperty(key));
             if (trimToNull) {
@@ -67,15 +68,15 @@ public final class Utils {
     }
 
 
-    public static final String getSystemEnv(final String key) {
+    public static String getSystemEnv(final String key) {
         return getSystemEnv(key, null);
      }
 
-    public static final String getSystemEnv(final String key, final String def) {
+    public static String getSystemEnv(final String key, final String def) {
         return getSystemEnv(key, def, false);
     }
 
-    public static final String getSystemEnv(final String key, final String def, final boolean trimToNull) {
+    public static String getSystemEnv(final String key, final String def, final boolean trimToNull) {
         if (key != null) {
             String val = AccessController.doPrivileged((PrivilegedAction<String>)() -> System.getenv(key));
             if (trimToNull) {
@@ -88,7 +89,7 @@ public final class Utils {
         return def;
     }
 
-    public static final String trimToNull(String s) {
+    public static String trimToNull(String s) {
         if (s != null) {
             s = s.trim();
             if (s.isEmpty()) {
@@ -98,15 +99,11 @@ public final class Utils {
         return s;
     }
 
-    public static final String urlencode(String s) {
-        try {
-            return s != null ? URLEncoder.encode(s, "UTF-8") : null;
-        } catch (UnsupportedEncodingException uee) {
-            throw new RuntimeException(String.format("Could not encode String [%s] as UTF-8 (which should always be supported).", s), uee);
-        }
+    public static String urlencode(String s) {
+        return s != null ? URLEncoder.encode(s, StandardCharsets.UTF_8) : null;
     }
 
-    public static final <V> V execute(Callable<V> callable, int attempts, long sleep) {
+    public static <V> V execute(Callable<V> callable, int attempts, long sleep) {
         try {
             return execute(callable, attempts, sleep, false);
         } catch (Exception e) {
@@ -115,7 +112,7 @@ public final class Utils {
         }
     }
 
-    public static final <V> V execute(Callable<V> callable, int attempts, long sleep, boolean throwOnFail) throws Exception {
+    public static <V> V execute(Callable<V> callable, int attempts, long sleep, boolean throwOnFail) throws Exception {
         V value = null;
         int tries = attempts;
         Throwable lastFail = null;
@@ -147,14 +144,6 @@ public final class Utils {
             }
         }
         return value;
-    }
-
-    public static void close(AutoCloseable cl) {
-        if (cl == null) return;
-        try {
-            cl.close();
-        } catch (Exception e) {
-        }
     }
 
     /**

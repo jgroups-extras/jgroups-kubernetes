@@ -69,12 +69,11 @@ public class CertificateStreamProvider extends BaseStreamProvider {
     }
 
     private static KeyManager[] configureClientCert(String clientCertFile, String clientKeyFile, char[] clientKeyPassword, String clientKeyAlgo) throws Exception {
-        try {
-            InputStream certInputStream = openFile(clientCertFile);
+        try (InputStream certInputStream = openFile(clientCertFile);
+             InputStream keyInputStream = openFile(clientKeyFile)) {
             CertificateFactory certFactory = CertificateFactory.getInstance("X509");
             X509Certificate cert = (X509Certificate)certFactory.generateCertificate(certInputStream);
 
-            InputStream keyInputStream = openFile(clientKeyFile);
             PEMReader reader = new PEMReader(keyInputStream);
             RSAPrivateCrtKeySpec keySpec = new PKCS1EncodedKeySpec(reader.getDerBytes()).getKeySpec();
             KeyFactory kf = KeyFactory.getInstance(clientKeyAlgo);
@@ -98,8 +97,7 @@ public class CertificateStreamProvider extends BaseStreamProvider {
 
     static TrustManager[] configureCaCert(String caCertFile) throws Exception {
         if (caCertFile != null && !caCertFile.isEmpty()) {
-            try {
-                InputStream pemInputStream = openFile(caCertFile);
+            try (InputStream pemInputStream = openFile(caCertFile)) {
                 CertificateFactory certFactory = CertificateFactory.getInstance("X509");
 
                 KeyStore trustStore = KeyStore.getInstance("JKS");
