@@ -133,7 +133,7 @@ namespace `"default"` will be returned.
 [align="left",cols="3,1,10",options="header"]
 |===
 | Attribute Name +
-System Property
+Environment variable
 | Default
 | Description
 
@@ -145,102 +145,102 @@ System Property
 probe additional ports. Example: `initial_hosts=A[7800] port_range=0` probes `A:7800`, `port_range=1`
 probes `A:7800` and `A:7801`
 
-// Note: namespace and labels also support deprecated OPENSHIFT_KUBE_PING_NAMESPACE and OPENSHIFT_KUBE_PING_LABELS system properties respectively.
+// Note: namespace and labels also support deprecated OPENSHIFT_KUBE_PING_NAMESPACE and OPENSHIFT_KUBE_PING_LABELS environment variables respectively.
 | `namespace` +
-System property: `KUBERNETES_NAMESPACE`
+Environment variable: `KUBERNETES_NAMESPACE`
 | `default`
 | The namespace to use when fetching pod lists from the Kubernetes API server.
 
 | `labels` +
-System property: `KUBERNETES_LABELS`
+Environment variable: `KUBERNETES_LABELS`
 |
 | The labels to use when fetching pod lists from the Kubernetes API server.
 
 // Kubernetes API server properties
 
 | `masterProtocol` +
-System property: `KUBERNETES_MASTER_PROTOCOL`
+Environment variable: `KUBERNETES_MASTER_PROTOCOL`
 | `https`
 | Scheme (http or https) to be used to connect to the Kubernetes API server.
 
 | `masterHost` +
-System property: `KUBERNETES_SERVICE_HOST`
+Environment variable: `KUBERNETES_SERVICE_HOST`
 |
 | The hostname of the Kubernetes API server.
 
 | `masterPort` +
-System property: `KUBERNETES_SERVICE_PORT`
+Environment variable: `KUBERNETES_SERVICE_PORT`
 |
 | The port on which the Kubernetes API server is listening.
 
 | `apiVersion` +
-System property: `KUBERNETES_API_VERSION`
+Environment variable: `KUBERNETES_API_VERSION`
 | `v1`
 | The API version to use when communicating with the Kubernetes API server.
 
 // Kubernetes API server connection properties
 
 | `connectTimeout` +
-System property: `KUBERNETES_CONNECT_TIMEOUT`
+Environment variable: `KUBERNETES_CONNECT_TIMEOUT`
 | `5000`
 | Maximum time in milliseconds to wait for a connection to the Kubernetes API server. If exceeded, an exception will be thrown.
 
 | `readTimeout` +
-System property: `KUBERNETES_READ_TIMEOUT`
+Environment variable: `KUBERNETES_READ_TIMEOUT`
 | `30000`
 | Maximum time in milliseconds to wait for a response from the Kubernetes API server.
 
 | `operationAttempts` +
-System property: `KUBERNETES_OPERATION_ATTEMPTS`
+Environment variable: `KUBERNETES_OPERATION_ATTEMPTS`
 | `3`
 | Maximum number of attempts to send discovery requests.
 
 | `operationSleep` +
-System property: `KUBERNETES_OPERATION_SLEEP`
+Environment variable: `KUBERNETES_OPERATION_SLEEP`
 | `1000`
 | Time in milliseconds between operation attempts.
 
 // Kubernetes API server security properties
 
 | `clientCertFile` +
-System property: `KUBERNETES_CLIENT_CERTIFICATE_FILE`
+Environment variable: `KUBERNETES_CLIENT_CERTIFICATE_FILE`
 |
 | Path to the client certificate file to access the Kubernetes API server.
 
 | `clientKeyFile` +
-System property: `KUBERNETES_CLIENT_KEY_FILE`
+Environment variable: `KUBERNETES_CLIENT_KEY_FILE`
 |
 | Path to the client key file.
 
 | `clientKeyPassword` +
-System property: `KUBERNETES_CLIENT_KEY_PASSWORD`
+Environment variable: `KUBERNETES_CLIENT_KEY_PASSWORD`
 |
 | The password to access the client key file.
 
 | `clientKeyAlgo` +
-System property: `KUBERNETES_CLIENT_KEY_ALGO`
+Environment variable: `KUBERNETES_CLIENT_KEY_ALGO`
 | `RSA`
 | The algorithm used by the client key.
 
 | `caCertFile` +
-System property: `KUBERNETES_CA_CERTIFICATE_FILE`
+Environment variable: `KUBERNETES_CA_CERTIFICATE_FILE`
 | `/var/run/secrets/kubernetes.io/serviceaccount/ca.crt`
 | Path to the CA certificate bundle used to verify the serving certificate of the Kubernetes API server. If the specified file is unavailable, a warning message is issued.
 
 | `saTokenFile` +
-System property: `KUBERNETES_SA_TOKEN_FILE`
+Environment variable: `KUBERNETES_SA_TOKEN_FILE`
 | `/var/run/secrets/kubernetes.io/serviceaccount/token`
 | Path to the Service Account Token file.
 
 // Kubernetes API server advanced properties
 
 | `split_clusters_during_rolling_update` +
-System property: `KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE`
+Environment variable: `KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE`
 | `false`
 | The standard behavior during Rolling Update is to put all Pods in the same cluster. In cases (application level incompatibility) this causes problems. One might decide to split clusters to 'old' and 'new' during that process.
 
 | `useNotReadyAddresses` +
-System property: `KUBERNETES_USE_NOT_READY_ADDRESSES`
+Environment variable: `KUBERNETES_USE_NOT_READY_ADDRESSES`
 | `true`
 | Introduces similar behaviour to Kubernetes Services (using DNS) with publishNotReadyAddresses set to true.
 
