@@ -10,7 +10,7 @@
 
     <groupId>org.jgroups.kubernetes</groupId>
     <artifactId>jgroups-kubernetes</artifactId>
-    <version>3.0.0.Final-SNAPSHOT</version>
+    <version>3.0.0.Final</version>
     <packaging>jar</packaging>
     <name>JGroups Kubernetes – kubernetes.KUBE_PING</name>
     <description>JGroups discovery protocol for Kubernetes</description>
@@ -69,7 +69,7 @@
         <connection>scm:git:git://github.com/jgroups-extras/jgroups-kubernetes.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jgroups-extras/jgroups-kubernetes.git</developerConnection>
         <url>https://github.com/jgroups-extras/jgroups-kubernetes</url>
-        <tag>HEAD</tag>
+        <tag>3.0.0.Final</tag>
     </scm>
 
     <properties>
