@@ -75,7 +75,8 @@
     <properties>
         <!-- JBoss Parent overrides -->
         <maven.compiler.release>8</maven.compiler.release>
-        <jdk.min.version>${maven.compiler.release}</jdk.min.version>
+        <maven.compiler.testRelease>11</maven.compiler.testRelease>
+        <jdk.min.version>11</jdk.min.version>
         <nexus.staging.tag>${project.groupId}-${project.version}</nexus.staging.tag>
 
         <!-- https://mvnrepository.com/artifact/org.jgroups/jgroups -->
