@@ -79,7 +79,7 @@
         <nexus.staging.tag>${project.groupId}-${project.version}</nexus.staging.tag>
 
         <!-- https://mvnrepository.com/artifact/org.jgroups/jgroups -->
-        <version.jgroups>5.4.11.Final</version.jgroups>
+        <version.jgroups>5.4.12.Final</version.jgroups>
         <version.junit>4.13.2</version.junit>
         <version.assertj>3.27.7</version.assertj>
     </properties>
