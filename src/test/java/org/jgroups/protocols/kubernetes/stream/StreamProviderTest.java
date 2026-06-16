@@ -33,7 +33,7 @@ import org.junit.Test;
  */
 public class StreamProviderTest {
 
-    private static String CA_FILE = StreamProviderTest.class.getResource("/certificates/ca.crt").getFile();
+    private static final String CA_FILE = StreamProviderTest.class.getResource("/certificates/ca.crt").getFile();
 
     @Test
     public void testTokenStreamProviderCaCert() throws Exception {
