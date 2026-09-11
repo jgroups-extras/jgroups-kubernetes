@@ -30,6 +30,7 @@ jobs:
           - 17
           - 21
           - 25
+          - 26
 
     steps:
       - name: Checkout
