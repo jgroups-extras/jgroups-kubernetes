@@ -16,6 +16,7 @@ import org.jgroups.stack.IpAddress;
 import org.jgroups.util.NameCache;
 import org.jgroups.util.Responses;
 
+import java.net.Inet6Address;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -156,6 +157,8 @@ public class KUBE_PING extends Discovery {
             throw new IllegalArgumentException(String.format("%s only works with  %s.bind_port > 0",
                                                              KUBE_PING.class.getSimpleName(), transport.getClass().getSimpleName()));
 
+        boolean preferIPv6 = transport.getBindAddr() instanceof Inet6Address;
+
         checkDeprecatedProperties();
 
         if(namespace == null) {
@@ -174,7 +177,7 @@ public class KUBE_PING extends Discovery {
             streamProvider = new TokenStreamProvider(saTokenFile, caCertFile);
         }
         String url=String.format("%s://%s:%s/api/%s", masterProtocol, masterHost, masterPort, apiVersion);
-        client=new Client(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, log);
+        client=new Client(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, preferIPv6, log);
         log.debug("KUBE_PING configuration: " + this);
     }
 

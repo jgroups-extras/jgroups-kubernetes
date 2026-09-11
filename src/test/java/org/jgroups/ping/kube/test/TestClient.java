@@ -24,8 +24,12 @@ public class TestClient extends Client {
     }
 
     public TestClient(String jsonFile) throws URISyntaxException, IOException {
+        this(jsonFile, false);
+    }
+
+    public TestClient(String jsonFile, boolean preferIPv6) throws URISyntaxException, IOException {
         super(null, null, 0, 0, 0, 0,
-              null, LogFactory.getLog(TestClient.class));
+              null, preferIPv6, LogFactory.getLog(TestClient.class));
         String json = readFileToString(new File(TestClient.class.getResource(jsonFile).toURI()));
         OPS.put("pods", json);
     }
