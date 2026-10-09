@@ -9,9 +9,11 @@ import org.jgroups.protocols.kubernetes.Pod;
 import org.jgroups.protocols.pbcast.GMS;
 import org.jgroups.protocols.pbcast.NAKACK2;
 import org.jgroups.stack.IpAddress;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -77,6 +79,32 @@ public class RollingUpdateTest {
       testPutOnlyNodesWithTheSameParentDuringRollingUpdate(testedProtocol);
    }
 
+   @Test
+   public void testPutOnlyNodesWithTheSameParentDuringRollingUpdateIPv6() throws Exception {
+      //given
+      InetAddress ipv6Loopback = InetAddress.getByName("::1");
+      Assume.assumeTrue("IPv6 loopback not available", isBindable(ipv6Loopback));
+      KUBE_PING_FOR_TESTING testedProtocol = new KUBE_PING_FOR_TESTING("/pods_rolling_update_ipv6.json");
+      testedProtocol.setValue("split_clusters_during_rolling_update", true);
+
+      //when
+      sendInitialDiscovery(testedProtocol, ipv6Loopback);
+      Set<InetAddress> membersUsedForDiscovery = testedProtocol.getCollectedMessages().stream()
+            .map(e -> ((IpAddress)e.getDest()).getIpAddress())
+            .collect(Collectors.toSet());
+
+      //then
+      Assertions.assertThat(membersUsedForDiscovery).containsExactlyInAnyOrder(ipv6Loopback, InetAddress.getByName("fd00::2"));
+   }
+
+   private static boolean isBindable(InetAddress address) {
+      try (ServerSocket ignored = new ServerSocket(0, 1, address)) {
+         return true;
+      } catch (Exception e) {
+         return false;
+      }
+   }
+
    private void testPutOnlyNodesWithTheSameParentDuringRollingUpdate(KUBE_PING_FOR_TESTING testedProtocol) throws Exception {
       //when
       sendInitialDiscovery(testedProtocol);
@@ -97,8 +125,12 @@ public class RollingUpdateTest {
    }
 
    private static void sendInitialDiscovery(KUBE_PING kubePingProtocol) throws Exception {
+      sendInitialDiscovery(kubePingProtocol, InetAddress.getLoopbackAddress());
+   }
+
+   private static void sendInitialDiscovery(KUBE_PING kubePingProtocol, InetAddress bindAddress) throws Exception {
       new JChannel(
-            new TCP().setValue("bind_addr", InetAddress.getLoopbackAddress()).setValue("bind_port", findFreePort()),
+            new TCP().setValue("bind_addr", bindAddress).setValue("bind_port", findFreePort()),
             kubePingProtocol,
             new NAKACK2(),
             new GMS().setValue("join_timeout", 1)

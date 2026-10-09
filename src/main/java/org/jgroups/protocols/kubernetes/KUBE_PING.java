@@ -16,6 +16,8 @@ import org.jgroups.stack.IpAddress;
 import org.jgroups.util.NameCache;
 import org.jgroups.util.Responses;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -198,6 +200,16 @@ public class KUBE_PING extends Discovery {
                 || System.getenv(property_name) != null;
     }
 
+    private static InetAddress toInetAddress(String ip) {
+        try {
+            // Pod IPs are literals, so this does not perform a DNS lookup
+            return InetAddress.getByName(ip);
+        }
+        catch(UnknownHostException e) {
+            return null;
+        }
+    }
+
     private PhysicalAddress getCurrentPhysicalAddress(Address addr) {
         return (PhysicalAddress)down(new Event(Event.GET_PHYSICAL_ADDRESS, addr));
     }
@@ -242,7 +254,8 @@ public class KUBE_PING extends Discovery {
 
         if (split_clusters_during_rolling_update) {
             if(physical_addr != null) {
-                String senderIp = physical_addr.getIpAddress().getHostAddress();
+                // Compare parsed addresses since Kubernetes reports IPv6 addresses compressed (e.g. fd00::1) unlike InetAddress.getHostAddress()
+                InetAddress senderIp = physical_addr.getIpAddress();
                 // Please note we search for sender parent group through all pods, ever not ready. It's because JGroup discovery is performed
                 // before WildFly can respond to http readiness probe.
                 hosts.stream()
@@ -250,17 +263,17 @@ public class KUBE_PING extends Discovery {
                         .forEach(p -> log.warn("Pod %s doesn't have group assigned. Impossible to reliably determine pod group during Rolling Update."));
 
                 String senderPodGroup = hosts.stream()
-                      .filter(pod -> senderIp.contains(pod.getIp()))
+                      .filter(pod -> senderIp.equals(toInetAddress(pod.getIp())))
                       .map(Pod::getPodGroup)
                       .findFirst().orElse(null);
                 if(senderPodGroup != null) {
-                    Set<String> allowedAddresses = hosts.stream()
+                    Set<InetAddress> allowedAddresses = hosts.stream()
                           .filter(pod -> senderPodGroup.equals(pod.getPodGroup()))
-                          .map(Pod::getIp)
+                          .map(pod -> toInetAddress(pod.getIp()))
                           .collect(Collectors.toSet());
                     for(Iterator<PhysicalAddress> memberIterator = cluster_members.iterator(); memberIterator.hasNext();) {
                         IpAddress podAddress = (IpAddress) memberIterator.next();
-                        if(!allowedAddresses.contains(podAddress.getIpAddress().getHostAddress())) {
+                        if(!allowedAddresses.contains(podAddress.getIpAddress())) {
                             log.trace("removing pod %s from cluster members list since its parent domain is different than senders (%s). Allowed hosts: %s", podAddress, senderPodGroup, allowedAddresses);
                             memberIterator.remove();
                         }
