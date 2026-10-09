@@ -3,6 +3,8 @@ package org.jgroups.ping.kube.test;
 
 import static org.junit.Assert.assertEquals;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.util.List;
 
 import org.jgroups.protocols.kubernetes.Client;
@@ -50,7 +52,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testParsingPodGroupOpenshift() throws Exception {
+    public void testParsingPodGroupOpenShift() throws Exception {
         //given
         Client client = new TestClient("/replicaset_rolling_update.json");
 
@@ -61,5 +63,74 @@ public class ClientTest {
         assertEquals("6569c544b", podGroup);
     }
 
+    @Test
+    public void testDualStackPrefersIPv4() throws Exception {
+        //given
+        Client client = new TestClient("/pods_dualstack.json", Inet4Address.class);
+
+        //when
+        List<Pod> pods = client.getPods(null, null, false);
+
+        //then
+        assertEquals(2, pods.size());
+        assertEquals("10.131.0.53", pods.get(0).getIp());
+        assertEquals("10.129.3.155", pods.get(1).getIp());
+    }
+
+    @Test
+    public void testDualStackPrefersIPv6() throws Exception {
+        //given
+        Client client = new TestClient("/pods_dualstack.json", Inet6Address.class);
+
+        //when
+        List<Pod> pods = client.getPods(null, null, false);
+
+        //then
+        assertEquals(2, pods.size());
+        assertEquals("fd00:10:128:3::34", pods.get(0).getIp());
+        assertEquals("fd00:10:128:4::55", pods.get(1).getIp());
+    }
+
+    @Test
+    public void testDualStackIPv6PrimaryPrefersIPv4() throws Exception {
+        //given
+        Client client = new TestClient("/pods_dualstack_ipv6_primary.json", Inet4Address.class);
+
+        //when
+        List<Pod> pods = client.getPods(null, null, false);
+
+        //then
+        assertEquals(2, pods.size());
+        assertEquals("10.131.0.53", pods.get(0).getIp());
+        assertEquals("10.129.3.155", pods.get(1).getIp());
+    }
+
+    @Test
+    public void testDualStackWithoutPreferenceUsesPrimaryIP() throws Exception {
+        //given
+        Client client = new TestClient("/pods_dualstack_ipv6_primary.json", null);
+
+        //when
+        List<Pod> pods = client.getPods(null, null, false);
+
+        //then
+        assertEquals(2, pods.size());
+        assertEquals("fd00:10:128:3::34", pods.get(0).getIp());
+        assertEquals("fd00:10:128:4::55", pods.get(1).getIp());
+    }
+
+    @Test
+    public void testSingleStackFallsBackToPrimaryIP() throws Exception {
+        //given (pods.json has no podIPs and IPv4 primary IPs only)
+        Client client = new TestClient("/pods.json", Inet6Address.class);
+
+        //when
+        List<Pod> pods = client.getPods(null, null, false);
+
+        //then
+        assertEquals(2, pods.size());
+        assertEquals("127.0.0.1", pods.get(0).getIp());
+        assertEquals("192.168.0.1", pods.get(1).getIp());
+    }
 
 }

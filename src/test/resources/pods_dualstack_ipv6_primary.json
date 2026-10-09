@@ -1,0 +1,80 @@
+{
+  "kind": "PodList",
+  "apiVersion": "v1",
+  "items": [
+    {
+      "metadata": {
+        "name": "eap-app-1-43wra",
+        "namespace": "rhusar"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "eap-app",
+            "ports": [
+              {
+                "name": "ping",
+                "containerPort": 8888,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ],
+        "serviceAccount": "default",
+        "host": "localhost"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True"
+          }
+        ],
+        "hostIP": "10.131.0.1",
+        "podIP": "fd00:10:128:3::34",
+        "podIPs": [
+          { "ip": "fd00:10:128:3::34" },
+          { "ip": "10.131.0.53" }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "eap-app-1-dctpw",
+        "namespace": "rhusar"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "eap-app",
+            "ports": [
+              {
+                "name": "ping",
+                "containerPort": 8888,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ],
+        "serviceAccount": "default",
+        "host": "localhost"
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True"
+          }
+        ],
+        "hostIP": "10.129.3.1",
+        "podIP": "fd00:10:128:4::55",
+        "podIPs": [
+          { "ip": "fd00:10:128:4::55" },
+          { "ip": "10.129.3.155" }
+        ]
+      }
+    }
+  ]
+}
