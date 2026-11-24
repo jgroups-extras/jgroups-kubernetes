@@ -1,0 +1,99 @@
+{
+  "kind": "PodList",
+  "apiVersion": "v1",
+  "items": [
+    {
+      "metadata": {
+        "name": "app-old-a",
+        "namespace": "test",
+        "labels": {
+          "pod-template-hash": "old"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "app"
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True"
+          }
+        ],
+        "podIP": "::1",
+        "podIPs": [
+          {
+            "ip": "::1"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "app-old-b",
+        "namespace": "test",
+        "labels": {
+          "pod-template-hash": "old"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "app"
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True"
+          }
+        ],
+        "podIP": "fd00::2",
+        "podIPs": [
+          {
+            "ip": "fd00::2"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "app-new-a",
+        "namespace": "test",
+        "labels": {
+          "pod-template-hash": "new"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "app"
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True"
+          }
+        ],
+        "podIP": "fd00::3",
+        "podIPs": [
+          {
+            "ip": "fd00::3"
+          }
+        ]
+      }
+    }
+  ]
+}

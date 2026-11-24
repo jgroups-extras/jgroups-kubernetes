@@ -12,6 +12,9 @@ import org.jgroups.util.Util;
 
 import java.io.InputStream;
 import java.io.StringReader;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +26,7 @@ import static org.jgroups.protocols.kubernetes.Utils.urlencode;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
+ * @author Radoslav Husar
  */
 public class Client {
     protected final String              masterUrl;
@@ -32,11 +36,25 @@ public class Client {
     protected final int                 operationAttempts;
     protected final long                operationSleep;
     protected final StreamProvider      streamProvider;
+    protected final Class<? extends InetAddress> preferredAddressType;
     protected final String              info;
     protected final Log                 log;
 
+    /**
+     * @deprecated use {@link #Client(String, Map, int, int, int, long, StreamProvider, Class, Log)} instead
+     */
+    @Deprecated(since = "3.0.1", forRemoval = true)
     public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts,
                   long operationSleep, StreamProvider streamProvider, Log log) {
+        this(masterUrl, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider, null, log);
+    }
+
+    /**
+     * @param preferredAddressType the address family ({@link Inet4Address} or {@link Inet6Address}) of the pod IPs to
+     *                             discover; if null, or if a pod has no IP of that family, the primary pod IP is used
+     */
+    public Client(String masterUrl, Map<String, String> headers, int connectTimeout, int readTimeout, int operationAttempts,
+                  long operationSleep, StreamProvider streamProvider, Class<? extends InetAddress> preferredAddressType, Log log) {
         this.masterUrl = masterUrl;
         this.headers = headers;
         this.connectTimeout = connectTimeout;
@@ -44,7 +62,9 @@ public class Client {
         this.operationAttempts = operationAttempts;
         this.operationSleep = operationSleep;
         this.streamProvider = streamProvider;
+        this.preferredAddressType = preferredAddressType;
         this.log=log;
+
         Map<String, String> maskedHeaders=new TreeMap<>();
         if (headers != null) {
             for (Map.Entry<String, String> header : headers.entrySet()) {
@@ -56,9 +76,10 @@ public class Client {
             }
         }
         info=String.format("%s[masterUrl=%s, headers=%s, connectTimeout=%s, readTimeout=%s, operationAttempts=%s, " +
-                             "operationSleep=%s, streamProvider=%s]",
+                             "operationSleep=%s, streamProvider=%s, preferredAddressType=%s]",
                            getClass().getSimpleName(), masterUrl, maskedHeaders, connectTimeout, readTimeout,
-                           operationAttempts, operationSleep, streamProvider);
+                           operationAttempts, operationSleep, streamProvider,
+                           preferredAddressType != null ? preferredAddressType.getSimpleName() : null);
     }
 
     public String info() {
@@ -74,7 +95,7 @@ public class Client {
             url = url + "?labelSelector=" + urlencode(labels);
 
         InputStream stream=null;
-        String retval=null;
+        String retval;
         try {
             stream=openStream(url, headers, connectTimeout, readTimeout, operationAttempts, operationSleep, streamProvider);
             retval=Util.readContents(stream);
@@ -83,7 +104,6 @@ public class Client {
             return retval;
         }
         catch(Throwable t) {
-            retval=t.getMessage();
             if(dump_requests)
                 System.out.printf("--> %s\n<-- ERROR: %s\n", url, t.getMessage());
             throw t;
@@ -92,8 +112,6 @@ public class Client {
             Util.close(stream);
         }
     }
-
-
 
     public List<Pod> getPods(String namespace, String labels, boolean dump_requests) throws Exception {
         String result = fetchFromKubernetes("pods", namespace, labels, dump_requests);
@@ -167,6 +185,24 @@ public class Client {
             String name = metadata != null ? metadata.getString("name", null) : null;
             JsonObject podStatus = obj.getJsonObject("status");
             String podIP = podStatus != null ? podStatus.getString("podIP", null) : null;
+            // Dual-stack pods list an IP of each family in podIPs; prefer the one matching the transport unless the primary IP already does
+            if(podStatus != null && preferredAddressType != null && (podIP == null || addressType(podIP) != preferredAddressType)) {
+                JsonArray podIPs = podStatus.getJsonArray("podIPs");
+                String preferredIP = null;
+                if(podIPs != null) {
+                    for(JsonValue entry : podIPs) {
+                        String ip = entry.asJsonObject().getString("ip", null);
+                        if(ip != null && addressType(ip) == preferredAddressType) {
+                            preferredIP = ip;
+                            break;
+                        }
+                    }
+                }
+                if(preferredIP != null)
+                    podIP = preferredIP;
+                else if(podIP != null)
+                    log.debug("Pod %s has no %s IP, using primary pod IP %s", name, preferredAddressType.getSimpleName(), podIP);
+            }
             boolean running = podRunning(podStatus);
             if(podIP == null) {
                 log.trace("Skipping pod %s since its IP is %s", name, podIP);
@@ -176,6 +212,18 @@ public class Client {
         }
         log.trace("getPods(%s, %s) = %s", namespace, labels, pods);
         return pods;
+    }
+
+    /**
+     * Determines the address family of a pod IP without parsing it; Kubernetes reports pod IPs as IP addresses, never
+     * as hostnames.
+     *
+     * @param ip an IPv4 or IPv6 address literal
+     * @return {@link Inet6Address} if the literal is an IPv6 address, {@link Inet4Address} otherwise
+     * @see <a href="https://kubernetes.io/docs/reference/kubernetes-api/core/pod-v1/#PodStatus">PodStatus podIP and podIPs</a>
+     */
+    private static Class<? extends InetAddress> addressType(String ip) {
+        return ip.contains(":") ? Inet6Address.class : Inet4Address.class;
     }
 
     /**
